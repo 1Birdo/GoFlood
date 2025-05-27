@@ -1,48 +1,60 @@
-# ☾☼☽ Advanced Golang C2 Framework ☾☼☽
+# ☾☼☽ Advanced Botnet C2 Framework
 
-![Go Version](https://img.shields.io/badge/go-1.21+-blue.svg)
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+![Go](https://img.shields.io/badge/Go-1.20+-00ADD8?logo=go)
+![License](https://img.shields.io/badge/License-MIT-blue)
+![Platform](https://img.shields.io/badge/Platform-Linux%20|%20Windows-lightgrey)
 
-A high-performance command and control (C2) server written in Go, featuring TLS encryption, rate limiting, attack queuing, and multi-user management with privilege levels.
+A high-performance, encrypted Command and Control (C2) server with advanced features for botnet management, written in Go with military-grade security.
 
-## ✨ Features
+## 🔥 Features
 
-- **Secure Communications**: TLS 1.3 with mutual authentication and certificate pinning
-- **Multi-User System**: Role-based access control (Owner/Admin/Pro/Basic)
-- **Attack Management**: 
-  - 8+ attack methods (!udpflood, !synflood, etc.)
-  - Attack queuing with priority system
-  - Daily attack limits per user
-- **Bot Network**: 
-  - Real-time bot tracking
-  - Automatic reconnection
-- **Audit System**: 
-  - Comprehensive logging
-  - Log rotation
-- **User-Friendly Interface**:
-  - Animated text effects
-  - Color-coded prompts
-  - Interactive help system
+### ⚡ Core Capabilities
+- **TLS 1.3 Encrypted Communications** (AES-256-GCM, CHACHA20-POLY1305)
+- **Multi-Architecture Bot Support** (x86, x64, ARM, MIPS)
+- **Session-Based Authentication** with configurable timeout
+- **Rate-Limited Command Execution** to prevent abuse
+- **Priority-Based Attack Queueing** system
 
-## 📦 Installation
+### 🛡️ Security Features
+- **Certificate Pinning** with SHA-256 fingerprint verification
+- **Brute Force Protection** with account lockout
+- **IP/User Rate Limiting**
+- **Session Management** with concurrent session limits
+- **Reserved IP Blocking** (RFC 1918, localhost, etc.)
+
+### ⚙️ Attack Methods
+| Method       | Description                          | Required Level |
+|--------------|--------------------------------------|----------------|
+| `!udpflood`  | Standard UDP flood                   |             |
+| `!udpsmart`  | Smart UDP flood with optimized payload |             |
+| `!tcpflood`  | TCP connection flood                 |             |
+| `!synflood`  | SYN packet flood                     |             |
+| `!ackflood`  | ACK packet flood                     |             |
+| `!greflood`  | GRE IP encapsulation flood           |             |
+| `!dns`       | DNS amplification attack             |             |
+| `!http`      | HTTP/S flood attack                  |             |
+
+### 👑 User Management
+- **Multi-Level Access Control**:
+  - Owner (Full access)
+  - Admin (User management + attacks)
+  - Pro (Attacks only)
+  - Basic (Limited features)
+- **Password Policies** with bcrypt hashing
+- **Account Expiration** system
+- **Audit Logging** of all actions
+
+## 🚀 Installation
 
 ### Prerequisites
-- Go 1.21+
-- OpenSSL (for certificate generation)
+- Go 1.20+ installed
+- Linux/Windows server
+- Valid domain name (for TLS)
+- Basic firewall configuration (open ports)
 
 ### Quick Setup
-```bash
-# Clone the repository
-git clone https://github.com/yourusername/golang-c2.git
-cd golang-c2
 
-# Generate certificates (requires OpenSSL)
-mkdir -p certs
-openssl req -x509 -newkey rsa:4096 -keyout certs/key.pem -out certs/cert.pem -days 365 -nodes
-openssl req -newkey rsa:4096 -keyout certs/ca.key -out certs/ca.csr -nodes
-openssl x509 -req -in certs/ca.csr -signkey certs/ca.key -out certs/ca.crt
-
-# Build and run
-go build -o c2server main.go
-./c2server
-```
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/yourusername/botnet-c2.git
+   cd botnet-c2
