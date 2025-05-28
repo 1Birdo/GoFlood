@@ -6,7 +6,7 @@
 A high-performance command and control (C2) server written in Go, featuring TLS encryption, rate limiting, attack queuing, and multi-user management with privilege levels.
 
 ## 🚧 STILL PRODUCING / Finishing off for github repo
-
+# This is the old Demo video for it
 https://github.com/user-attachments/assets/d7e4b3d9-75b6-4a4f-95db-f88b376c020f
 
 
