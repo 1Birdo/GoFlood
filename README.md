@@ -51,3 +51,27 @@ openssl x509 -req -in certs/ca.csr -signkey certs/ca.key -out certs/ca.crt
 go build -o c2server main.go
 ./c2server
 ```
+
+Security Fundamentals
+
+TLS with certificate pinning (verifyCert)
+Rate limiting (IP and user-based)
+Secure password handling (bcrypt)
+Input sanitization (sanitizeInput)
+IP/port validation against reserved ranges
+Session management with timeouts
+
+Operational Features
+
+Attack queuing with priority system
+Audit logging with rotation
+
+Bot connection management
+User role hierarchy (Owner/Admin/Pro/Basic)
+Interactive terminal UI with colorized output
+
+Maintainability
+
+Configuration via JSON
+Structured logging
+Clear separation of concerns (auth, attacks, bots, etc.)
