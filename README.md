@@ -17,8 +17,9 @@ openssl s_client -connect [SERVER_IP]:[PORT] -cert client.crt -key client.key -C
 ```
 This ensures proper certificate authentication and encrypted communication with the command-and-control interface. Make sure all certificate files (.crt, .key, and CA bundle) are in your working directory before attempting to connect.
 
-# This is the old Demo video for it, Visuals have change for the better since then.
 https://github.com/user-attachments/assets/d7e4b3d9-75b6-4a4f-95db-f88b376c020f
+# This is the old Demo video for it, Visuals have change for the better since then.
+
 # Visuals / Colouring Theme has changed / customizable 
 
 ## ✨ Features
