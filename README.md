@@ -1,11 +1,15 @@
 # ☾☼☽ GolangV4 C2 Framework ☾☼☽
 
+
+## 🚧 STILL PRODUCING / Finishing off for github repo
+# Please Make a new branch or Favourite it to keep in touch with the details  
+
 ![Go Version](https://img.shields.io/badge/go-1.21+-blue.svg)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
 A high-performance command and control (C2) server written in Go, featuring TLS encryption, rate limiting, attack queuing, and multi-user management with privilege levels.
 
-## 🚧 STILL PRODUCING / Finishing off for github repo
+
 # This is the old Demo video for it, Visual have change
 https://github.com/user-attachments/assets/d7e4b3d9-75b6-4a4f-95db-f88b376c020f
 # Visuals / Colouring Theme has changed / customizable 
