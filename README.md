@@ -128,7 +128,6 @@ Ensure all certificate files (.crt, .key, and CA bundle) are in your working dir
 - **Contextual Help System**
 - **Customizable Themes**
 
-
 ## 🛡️ Security Features
 
 - **Certificate Pinning**: Prevents man-in-the-middle attacks
@@ -151,7 +150,4 @@ This project is licensed under the GNU General Public License v3.0 - see the [LI
 ## ⚠️ Disclaimer
 
 This software is intended for educational and authorized testing purposes only. Users are responsible for ensuring compliance with all applicable laws and regulations. The developers assume no liability for misuse of this software.
-
-
-
 **Star ⭐ this repository if you find it useful!**
