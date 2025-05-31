@@ -41,7 +41,7 @@ echo "-----------------------------------------------------"
 echo "[✓] Certificates generated successfully."
 
 echo ""
-echo "📡 To test the connection with OpenSSL as the client:"
+echo "📡 To test the connection with OpenSSL as the client / User:"
 echo ""
 echo "openssl s_client -connect 127.0.0.1:420 \\"
 echo "  -cert certs/client.crt -key certs/client.key \\"
