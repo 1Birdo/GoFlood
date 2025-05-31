@@ -19,48 +19,7 @@ This C2 framework provides a secure, scalable solution for network operations wi
 - **Attack Orchestration**: 8+ attack vectors with intelligent queuing
 - **Real-time Monitoring**: Live bot tracking and connection management
 - **Comprehensive Auditing**: Full activity logging with automatic rotation
-
-## ✨ Features
-
-### 🔒 Security
-- **TLS 1.3 Encryption** with mutual authentication
-- **Certificate Pinning** for enhanced security
-- **Rate Limiting** (IP and user-based)
-- **Secure Password Handling** using bcrypt
-- **Input Sanitization** and validation
-- **Session Management** with automatic timeouts
-
-### 👥 Multi-User Management
-- **Role-Based Access Control**: Owner, Admin, Pro, Basic
-- **Daily Attack Limits** per user tier
-- **User Authentication** with secure session handling
-- **Privilege Escalation Protection**
-
-### ⚔️ Attack Management
-- **8+ Attack Methods**: UDP flood, SYN flood, and more
-- **Priority Queue System** for attack orchestration
-- **Real-time Attack Monitoring**
-- **Automatic Failure Handling**
-
-### 🤖 Bot Network
-- **Real-time Bot Tracking**
-- **Automatic Reconnection**
-- **Connection Health Monitoring**
-- **Distributed Command Execution**
-
-### 📊 Monitoring & Logging
-- **Comprehensive Audit System**
-- **Automatic Log Rotation**
-- **Real-time Activity Monitoring**
-- **Structured Logging**
-
-### 🎨 User Experience
-- **Interactive Terminal UI**
-- **Color-coded Interface**
-- **Animated Text Effects**
-- **Contextual Help System**
-- **Customizable Themes**
-
+  
 ## 🚀 Quick Start
 
 ### Prerequisites
@@ -127,28 +86,48 @@ Ensure all certificate files (.crt, .key, and CA bundle) are in your working dir
 - **Admin**: Attack management, bot control
 - **Pro**: Limited attack capabilities
 - **Basic**: View-only access
+  
+## ✨ Features
 
-## 🔧 Configuration
+### 🔒 Security
+- **TLS 1.3 Encryption** with mutual authentication
+- **Certificate Pinning** for enhanced security
+- **Rate Limiting** (IP and user-based)
+- **Secure Password Handling** using bcrypt
+- **Input Sanitization** and validation
+- **Session Management** with automatic timeouts
 
-The server uses JSON configuration files for customization:
+### 👥 Multi-User Management
+- **Role-Based Access Control**: Owner, Admin, Pro, Basic
+- **Daily Attack Limits** per user tier
+- **User Authentication** with secure session handling
+- **Privilege Escalation Protection**
 
-```json
-{
-  "server": {
-    "port": 8443,
-    "max_connections": 100,
-    "timeout": 300
-  },
-  "security": {
-    "rate_limit": 10,
-    "max_failed_attempts": 5
-  },
-  "logging": {
-    "level": "info",
-    "rotate_days": 7
-  }
-}
-```
+### ⚔️ Attack Management
+- **8+ Attack Methods**: UDP flood, SYN flood, and more
+- **Priority Queue System** for attack orchestration
+- **Real-time Attack Monitoring**
+- **Automatic Failure Handling**
+
+### 🤖 Bot Network
+- **Real-time Bot Tracking**
+- **Automatic Reconnection**
+- **Connection Health Monitoring**
+- **Distributed Command Execution**
+
+### 📊 Monitoring & Logging
+- **Comprehensive Audit System**
+- **Automatic Log Rotation**
+- **Real-time Activity Monitoring**
+- **Structured Logging**
+
+### 🎨 User Experience
+- **Interactive Terminal UI**
+- **Color-coded Interface**
+- **Animated Text Effects**
+- **Contextual Help System**
+- **Customizable Themes**
+
 
 ## 🛡️ Security Features
 
@@ -165,14 +144,6 @@ The server uses JSON configuration files for customization:
 
 *Note: This is from an earlier version - current visuals and theming have been significantly improved.*
 
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
 ## 📄 License
 
 This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
@@ -181,11 +152,6 @@ This project is licensed under the GNU General Public License v3.0 - see the [LI
 
 This software is intended for educational and authorized testing purposes only. Users are responsible for ensuring compliance with all applicable laws and regulations. The developers assume no liability for misuse of this software.
 
-## 📞 Support
 
-- **Issues**: [GitHub Issues](https://github.com/yourusername/golang-c2/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/golang-c2/discussions)
-
----
 
 **Star ⭐ this repository if you find it useful!**
