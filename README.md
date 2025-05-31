@@ -9,11 +9,15 @@
 
 A high-performance command and control (C2) server written in Go, featuring TLS encryption, rate limiting, attack queuing, and multi-user management with privilege levels.
 
-`
-U Cannot use putty to connect to the CNC, The `**Best**` method atm is to use either  Openssl with the generated / Created Certificates.
-`
+To connect to the C2 server, you must use OpenSSL with the generated TLS certificates - standard SSH clients like PuTTY are not supported.
+The recommended connection method is:
 
-# This is the old Demo video for it, Visual have change
+```bash
+openssl s_client -connect [SERVER_IP]:[PORT] -cert client.crt -key client.key -CAfile ca.crt
+```
+This ensures proper certificate authentication and encrypted communication with the command-and-control interface. Make sure all certificate files (.crt, .key, and CA bundle) are in your working directory before attempting to connect.
+
+# This is the old Demo video for it, Visuals have change for the better since then.
 https://github.com/user-attachments/assets/d7e4b3d9-75b6-4a4f-95db-f88b376c020f
 # Visuals / Colouring Theme has changed / customizable 
 
