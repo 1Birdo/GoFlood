@@ -9,6 +9,13 @@ A high-performance command and control (C2) framework written in Go, featuring e
 
 > **⚠️ Development Status**: This project is currently in active development. Please star or watch the repository to stay updated with releases.
 
+## 📖 Documentation
+
+### Demo Video
+[View the demonstration video](https://github.com/user-attachments/assets/d7e4b3d9-75b6-4a4f-95db-f88b376c020f)
+
+*Note: This is from an earlier version - current visuals and theming have been significantly improved.*
+
 ## 🎯 Overview
 
 This C2 framework provides a secure, scalable solution for network operations with robust authentication, role-based access control, and real-time bot management. Built with modern Go practices and enterprise security standards.
@@ -135,13 +142,6 @@ Ensure all certificate files (.crt, .key, and CA bundle) are in your working dir
 - **IP Range Validation**: Blocks connections from reserved ranges
 - **Session Timeouts**: Automatic disconnection of idle sessions
 - **Audit Trail**: Complete logging of all activities
-
-## 📖 Documentation
-
-### Demo Video
-[View the demonstration video](https://github.com/user-attachments/assets/d7e4b3d9-75b6-4a4f-95db-f88b376c020f)
-
-*Note: This is from an earlier version - current visuals and theming have been significantly improved.*
 
 ## 📄 License
 
