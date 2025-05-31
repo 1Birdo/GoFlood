@@ -10,7 +10,7 @@
 A high-performance command and control (C2) server written in Go, featuring TLS encryption, rate limiting, attack queuing, and multi-user management with privilege levels.
 
 `
-U Cannot use putty to connect to the CNC, The *Best* method atm is to use either  Openssl with the generated / Created Certificates.
+U Cannot use putty to connect to the CNC, The 'Best' method atm is to use either  Openssl with the generated / Created Certificates.
 `
 
 # This is the old Demo video for it, Visual have change
