@@ -2,7 +2,7 @@
 
 
 ## 🚧 STILL PRODUCING / Finishing off for github repo
-# Please Make a new branch or Favourite it to keep in touch with the details  
+# Please Make a new branch or Favourite it to keep update-to-date with the Release 
 
 ![Go Version](https://img.shields.io/badge/go-1.21+-blue.svg)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
