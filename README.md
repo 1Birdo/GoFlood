@@ -80,14 +80,6 @@ Ensure all certificate files (.crt, .key, and CA bundle) are in your working dir
 
 ## 📋 Usage
 
-### Available Commands
-- `!help` - Display available commands
-- `!users` - List connected users
-- `!bots` - Show bot network status
-- `!attack` - Launch attack vectors
-- `!logs` - View audit logs
-- `!config` - Server configuration
-
 ### User Roles & Permissions
 - **Owner**: Full system access, user management
 - **Admin**: Attack management, bot control
