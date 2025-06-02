@@ -34,40 +34,6 @@ This C2 framework provides a secure, scalable solution for network operations wi
 - **OpenSSL** (for certificate generation)
 - **Linux/Unix Environment** (recommended)
 
-### Installation
-
-1. **Clone the Repository**
-   ```bash
-   git clone https://github.com/yourusername/golang-c2.git
-   cd golang-c2
-   ```
-
-2. **Generate TLS Certificates**
-   ```bash
-   # Create certificates directory
-   mkdir -p certs
-   
-   # Generate server certificate
-   openssl req -x509 -newkey rsa:4096 -keyout certs/key.pem -out certs/cert.pem -days 365 -nodes
-   
-   # Generate CA certificate
-   openssl req -newkey rsa:4096 -keyout certs/ca.key -out certs/ca.csr -nodes
-   openssl x509 -req -in certs/ca.csr -signkey certs/ca.key -out certs/ca.crt
-   
-   # Generate client certificates
-   openssl req -newkey rsa:2048 -keyout certs/client.key -out certs/client.csr -nodes
-   openssl x509 -req -in certs/client.csr -CA certs/ca.crt -CAkey certs/ca.key -out certs/client.crt -days 365
-   ```
-
-3. **Build and Run**
-   ```bash
-   # Build the server
-   go build -o c2server main.go
-   
-   # Run the server
-   ./c2server
-   ```
-
 ### Connecting to the Server
 
 **Important**: This C2 server requires OpenSSL for connection - standard SSH clients are not supported.
