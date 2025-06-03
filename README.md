@@ -1,111 +1,129 @@
-# GolangV4 C2 Framework
+# GolangV4 C2 Framework - Advanced Botnet Management System
 
 ![Go Version](https://img.shields.io/badge/go-1.21+-blue.svg)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 ![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)
-![Development Status](https://img.shields.io/badge/status-in%20development-yellow.svg)
+![Code Size](https://img.shields.io/github/languages/code-size/1Birdo/BotnetGoV4)
+![Last Commit](https://img.shields.io/github/last-commit/1Birdo/BotnetGoV4)
 
-A high-performance command and control (C2) framework written in Go, featuring enterprise-grade security with TLS 1.3 encryption, multi-user management, attack orchestration, and comprehensive audit logging.
+A high-performance Command and Control (C2) framework written in Go, designed for security research and network testing with enterprise-grade security features, multi-user management, and attack orchestration capabilities.
 
-> **⚠️ Development Status**: This project is currently in active development. Please star or watch the repository to stay updated with releases.
+## 📌 Key Features
 
-## 📖 Documentation
+### 🔐 Security & Authentication
+- **TLS 1.3 Encryption** with mutual certificate authentication
+- **Role-Based Access Control** (Owner/Admin/Pro/Basic)
+- **Two-Factor Authentication** (TOTP supported)
+- **IP-based rate limiting** and connection throttling
+- **Secure credential storage** with bcrypt hashing
 
-### Demo Video
-[View the demonstration video](https://github.com/user-attachments/assets/d7e4b3d9-75b6-4a4f-95db-f88b376c020f)
+### ⚡ Attack Management
+- **8+ Attack Vectors** including UDP/TCP/SYN floods
+- **Intelligent Attack Queuing** with priority system
+- **Real-time Attack Monitoring** with duration control
+- **Daily Attack Quotas** per user level
 
-*Note: This is from an earlier version - current visuals and theming have been significantly improved.*
+### 🤖 Bot Network
+- **Persistent Connections** with auto-reconnect
+- **Bot Performance Metrics** (latency, throughput)
+- **Cross-platform Agents** (architecture detection)
+- **Stealth Mode** with anti-debugging techniques
 
-## 🎯 Overview
+### 📊 Monitoring & Analytics
+- **Live Bot Statistics Dashboard**
+- **Comprehensive Audit Logging**
+- **Automatic Log Rotation**
+- **Session Activity Tracking**
 
-This C2 framework provides a secure, scalable solution for network operations with robust authentication, role-based access control, and real-time bot management. Built with modern Go practices and enterprise security standards.
-
-### Key Highlights
-- **Enterprise Security**: TLS 1.3 with mutual authentication and certificate pinning
-- **Scalable Architecture**: Multi-user system with role-based permissions
-- **Attack Orchestration**: 8+ attack vectors with intelligent queuing
-- **Real-time Monitoring**: Live bot tracking and connection management
-- **Comprehensive Auditing**: Full activity logging with automatic rotation
-  
 ## 🚀 Quick Start
 
 ### Prerequisites
-- **Go 1.21+**
-- **OpenSSL** (for certificate generation)
-- **Linux/Unix Environment** (recommended)
+- Go 1.21+ installed
+- OpenSSL for certificate management
+- Linux/Unix environment recommended
 
-### Connecting to the Server
-
-**Important**: This C2 server requires OpenSSL for connection - standard SSH clients are not supported.
-
+### Installation
 ```bash
-openssl s_client -connect [SERVER_IP]:[PORT] -cert client.crt -key client.key -CAfile ca.crt
+git clone https://github.com/1Birdo/BotnetGoV4.git
+cd BotnetGoV4
+go build -o c2 main.go
 ```
 
-Ensure all certificate files (.crt, .key, and CA bundle) are in your working directory before connecting.
+### Certificate Setup
+```bash
+# Generate CA and server certificates
+./generate_certs.sh
+```
 
-## 📋 Usage
+### Running the Server
+```bash
+./c2
+```
 
-### User Roles & Permissions
-- **Owner**: Full system access, user management
-- **Admin**: Attack management, bot control
-- **Pro**: Limited attack capabilities
-- **Basic**: View-only access
-  
-## ✨ Features
+### 🖥️ Client Connection
+```bash
+openssl s_client -connect [SERVER_IP]:[PORT] \
+  -cert client.crt -key client.key -CAfile ca.crt
+```
 
-### 🔒 Security
-- **TLS 1.3 Encryption** with mutual authentication
-- **Certificate Pinning** for enhanced security
-- **Rate Limiting** (IP and user-based)
-- **Secure Password Handling** using bcrypt
-- **Input Sanitization** and validation
-- **Session Management** with automatic timeouts
+## 📋 Command Reference
 
-### 👥 Multi-User Management
-- **Role-Based Access Control**: Owner, Admin, Pro, Basic
-- **Daily Attack Limits** per user tier
-- **User Authentication** with secure session handling
-- **Privilege Escalation Protection**
+### User Management
+| Command  | Description          | Access Level |
+|----------|----------------------|---------------|
+| adduser  | Create new user      | Owner/Admin   |
+| deluser  | Remove user          | Owner/Admin   |
+| resetpw  | Reset user password  | Owner/Admin   |
+| db       | View user database   | Owner/Admin   |
 
-### ⚔️ Attack Management
-- **8+ Attack Methods**: UDP flood, SYN flood, and more
-- **Priority Queue System** for attack orchestration
-- **Real-time Attack Monitoring**
-- **Automatic Failure Handling**
+### Attack Commands
+| Command     | Description        | Example Usage                  |
+|-------------|--------------------|--------------------------------|
+| !udpflood   | Standard UDP flood | !udpflood 1.1.1.1 80 60        |
+| !synflood   | SYN packet flood   | !synflood 1.1.1.1 443 30       |
+| !http       | HTTP layer 7 flood | !http example.com 80 120       |
+| queue       | View queued attacks| queue                          |
+| cancel      | Cancel queued attack| cancel 2                       |
 
-### 🤖 Bot Network
-- **Real-time Bot Tracking**
-- **Automatic Reconnection**
-- **Connection Health Monitoring**
-- **Distributed Command Execution**
+### Monitoring
+| Command | Description                |
+|---------|----------------------------|
+| bots    | Show connected bot count   |
+| ongoing | View active attacks        |
+| stats   | Detailed bot performance   |
+| logs    | View audit logs (Admin+)   |
 
-### 📊 Monitoring & Logging
-- **Comprehensive Audit System**
-- **Automatic Log Rotation**
-- **Real-time Activity Monitoring**
-- **Structured Logging**
+## 🛠️ Technical Architecture
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   C2 Server     │    │   Bot Clients   │    │   Target Host   │
+│                 │    │                 │    │                 │
+│  - User Auth    │◄──►│  - Auto-Connect │    │                 │
+│  - Attack Queue │    │  - Attack Exec  │───►│  - Under Attack │
+│  - Logging      │    │  - Stats Report │    │                 │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+```
 
-### 🎨 User Experience
-- **Interactive Terminal UI**
-- **Color-coded Interface**
-- **Animated Text Effects**
-- **Contextual Help System**
-- **Customizable Themes**
+## 🔒 Security Implementation
+- **Certificate Pinning**: Prevents MITM attacks
+- **Input Sanitization**: All user inputs are validated
+- **Session Timeouts**: Default 30 minute inactivity timeout
+- **IP Blacklisting**: Automatic blocking of suspicious IPs
+- **Encrypted Communications**: All traffic uses TLS 1.3
 
-## 🛡️ Security Features
+## 📜 License
+GNU General Public License v3.0 - See LICENSE for details.
 
-- **Certificate Pinning**: Prevents man-in-the-middle attacks
-- **Input Validation**: All user inputs are sanitized
-- **IP Range Validation**: Blocks connections from reserved ranges
-- **Session Timeouts**: Automatic disconnection of idle sessions
-- **Audit Trail**: Complete logging of all activities
+## ⚠️ Legal Disclaimer
+This software is intended for:
+- Authorized penetration testing
+- Security research
+- Educational purposes
 
-## 📄 License
+The developers assume no responsibility for unauthorized or illegal use.
+All users must comply with applicable laws and regulations.
 
-This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
+---
 
-## ⚠️ Disclaimer
-
-This software is intended for educational and authorized testing purposes only. Users are responsible for ensuring compliance with all applicable laws and regulations. The developers assume no liability for misuse of this software.
-**Star ⭐ this repository if you find it useful!**
+⭐ Star the repository if you find this project useful!  
+💬 Contributions and issues are welcome!
