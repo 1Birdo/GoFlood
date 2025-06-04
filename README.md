@@ -61,6 +61,8 @@ chmod +x build.sh
 | [🧨 Attack Management](https://github.com/user-attachments/assets/531f09ef-ae28-4bcc-aae4-aaa564162acd) | Launching and managing attacks                 | ✅ |
 | [🛡️ Admin Controls](https://github.com/user-attachments/assets/e2b9535f-5ede-401c-bb2d-da97b601a118) | User management, audit logs, system controls   | ✅ |
 
+All Video Demonstrations are also linked at the bottom of this Readme.md
+
 ## 🛠️ Configuration
 
 Edit `config.json` to customize settings:
@@ -180,3 +182,21 @@ MIT License - See LICENSE for details.
 ## ⚠️ Disclaimer
 
 This project is for educational and research purposes only. The authors are not responsible for any misuse of this software.
+
+## Easy Videos
+
+## Starter
+
+https://github.com/user-attachments/assets/00b6ddb0-0c9e-47aa-9e91-08e689a1d272
+
+## cli
+https://github.com/user-attachments/assets/b7349373-e985-4d10-ba7b-87edb3844247
+
+
+## Attack
+https://github.com/user-attachments/assets/531f09ef-ae28-4bcc-aae4-aaa564162acd
+
+
+## Admin
+https://github.com/user-attachments/assets/e2b9535f-5ede-401c-bb2d-da97b601a118
+
