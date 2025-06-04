@@ -55,9 +55,9 @@ chmod +x build.sh
 
 
 ## 🎥 Video Demonstrations
-```
-### All Video Demonstrations are also embedded at the bottom of this Readme.md
-```
+**```
+ All Video Demonstrations are also embedded at the bottom of this Readme.md
+```**
 | Feature Demo                                                   | Description                                     | Preview |
 |----------------------------------------------------------------|-------------------------------------------------|---------|
 | [🚀 Starter Setup](https://github.com/user-attachments/assets/00b6ddb0-0c9e-47aa-9e91-08e689a1d272)  | Initial setup and certificate generation       | ✅ |
