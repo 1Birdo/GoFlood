@@ -55,7 +55,7 @@ chmod +x build.sh
 
 
 ### 🎥 Video Demonstrations
-## All Video Demonstrations are also embedded at the bottom of this Readme.md
+# All Video Demonstrations are also embedded at the bottom of this Readme.md
 
 | Feature Demo                                                   | Description                                     | Preview |
 |----------------------------------------------------------------|-------------------------------------------------|---------|
