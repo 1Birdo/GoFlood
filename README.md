@@ -8,7 +8,7 @@
 ![Bot Support](https://img.shields.io/badge/Bots-Cross--platform-orange)
 
 A sophisticated Command and Control (C2) server with enterprise-grade features for managing distributed botnets securely and efficiently.
-
+## Mostly Linux Based / WSL Supported
 
 > ⚠️ **Note**: In the wake of coordinated efforts such as Operation EndGame, PowerOFF, and Cronos, this project serves only as an educational and analytical reference for understanding botnet infrastructure. Real-world deployment of such tools carries significant legal risk.
 
@@ -26,7 +26,7 @@ A sophisticated Command and Control (C2) server with enterprise-grade features f
 |--------------------------|-------------|-----------------------------------------------------------------------------------|
 | `generate_certs.sh`  Certificates Gen  File  | ✅ Complete  | - 4096-bit key generation<br>- SAN support for IP/DNS<br>- Proper file permissions |
 | `generate_32byte_key.sh` Cert Pinning Gen File| ✅ Complete  | - Hex/Base64 output<br>- Cryptographically secure RNG<br>- Clean output formatting |
-| `build.sh`   File Might not need Soon      | ❌ Needs Work | - Missing ARM64 support<br>- No Windows cross-compile<br>- Needs output directory |
+| `build.sh`   File Might not need Soon      | ❌ Needs Work | - Missing ARM64 support<br>- No Windows cross-compile / Support<br>- Needs output directory |
 
 ## 🛠️ Technical Architecture
 ```
