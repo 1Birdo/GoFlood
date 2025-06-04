@@ -1,5 +1,4 @@
  # GoStress - C2 DDos Framework
-### Client is uploaded cnc needs to be done
 
 ![Go Version](https://img.shields.io/badge/go-1.21+-blue.svg)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
