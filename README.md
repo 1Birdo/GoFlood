@@ -1,8 +1,10 @@
-# ☾☼☽ CNC Server - Advanced Botnet Command & Control System
+# GolangV4 - Advanced C2 Framework
 
-![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/user/repo)
-![License](https://img.shields.io/badge/license-MIT-blue)
-![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
+![Go Version](https://img.shields.io/badge/go-1.21+-blue.svg)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+![Security](https://img.shields.io/badge/Security-Level_5-green)
+![Multi-User](https://img.shields.io/badge/Multi--User-Yes-blue)
+![Bot Support](https://img.shields.io/badge/Bots-Cross--platform-orange)
 
 A sophisticated Command and Control (C2) server with enterprise-grade features for managing distributed botnets securely and efficiently.
 
