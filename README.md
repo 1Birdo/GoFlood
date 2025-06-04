@@ -185,14 +185,15 @@ This project is for educational and research purposes only. The authors are not 
 
 ## Easy Videos
 
-## cli
+## Cli Output - Basically shows what the CLI outputs on your terminal 
 https://github.com/user-attachments/assets/b7349373-e985-4d10-ba7b-87edb3844247
 
-## Starter
+## Starter – Walkthrough of the login process and essential commands.
 
 https://github.com/user-attachments/assets/00b6ddb0-0c9e-47aa-9e91-08e689a1d272
 
-## Admin
+## Admin – Demonstrates Admin commands + usage.
+
 https://github.com/user-attachments/assets/e2b9535f-5ede-401c-bb2d-da97b601a118
 
 ## Attack -- All outgoing traffic was filtered / Disabled for this Example.
