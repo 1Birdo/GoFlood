@@ -1,4 +1,4 @@
-# GolangV4 - C2 Framework
+# GolangV4 - C2 Dos Framework
 
 ![Go Version](https://img.shields.io/badge/go-1.21+-blue.svg)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
