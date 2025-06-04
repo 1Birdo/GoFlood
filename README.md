@@ -1,4 +1,5 @@
  # GoStress - C2 DDos Framework
+### Client is uploaded cnc needs to be done
 
 ![Go Version](https://img.shields.io/badge/go-1.21+-blue.svg)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
@@ -11,6 +12,21 @@ A sophisticated Command and Control (C2) server with enterprise-grade features f
 
 > ⚠️ **Note**: In the wake of coordinated efforts such as Operation EndGame, PowerOFF, and Cronos, this project serves only as an educational and analytical reference for understanding botnet infrastructure. Real-world deployment of such tools carries significant legal risk.
 
+## 📁 File Status Overview
+
+### Core Components
+| File          | Status       | Improvements Made                                                                 |
+|---------------|-------------|-----------------------------------------------------------------------------------|
+| `main.go`  cnc   | ❌ Needs Work  | - Enhanced TLS 1.3 configuration<br>- Added TOTP authentication<br>- Improved attack queue system |
+| `bot.go`   bot   | ⚠️ Partial   | - Added anti-debugging checks<br>- Improved persistence mechanism<br>- Enhanced stats reporting |
+| `README.md`   | ⚠️ Partial  | - Restructured documentation<br>- Added demo video placeholders<br>- Needs final polish |
+
+### Support Scripts
+| File                     | Status       | Key Features                                                                      |
+|--------------------------|-------------|-----------------------------------------------------------------------------------|
+| `generate_certs.sh`  Certificates    | ✅ Complete  | - 4096-bit key generation<br>- SAN support for IP/DNS<br>- Proper file permissions |
+| `generate_32byte_key.sh` Cert Pinning | ✅ Complete  | - Hex/Base64 output<br>- Cryptographically secure RNG<br>- Clean output formatting |
+| `build.sh`   Might not need          | ❌ Needs Work | - Missing ARM64 support<br>- No Windows cross-compile<br>- Needs output directory |
 
 ## 🛠️ Technical Architecture
 ```
