@@ -17,16 +17,16 @@ A sophisticated Command and Control (C2) server with enterprise-grade features f
 ### Core Components
 | File          | Status       | Improvements Made                                                                 |
 |---------------|-------------|-----------------------------------------------------------------------------------|
-| `main.go`   C2 Server   | ❌ Needs Work  | - Enhanced TLS 1.3 configuration<br>- Added TOTP authentication<br>- Improved attack queue system |
-| `bot.go`    Client   | ⚠️ Partial   | - Added anti-debugging checks<br>- Improved persistence mechanism<br>- Enhanced stats reporting |
-| `README.md`  Readme.md  | ⚠️ Partial  | - Restructured documentation<br>- Added demo video placeholders<br>- Needs final polish |
+| `main.go`   C2 Server File  | ❌ Needs Work  | - Enhanced TLS 1.3 configuration<br>- Added TOTP authentication<br>- Improved attack queue system |
+| `bot.go`    Client File   | ⚠️ Partial   | - Added anti-debugging checks<br>- Improved persistence mechanism<br>- Enhanced stats reporting |
+| `README.md`  Readme.md File| ⚠️ Partial  | - Restructured documentation<br>- Added demo video placeholders<br>- Needs final polish |
 
 ### Support Scripts
 | File                     | Status       | Key Features                                                                      |
 |--------------------------|-------------|-----------------------------------------------------------------------------------|
-| `generate_certs.sh`  Certificates    | ✅ Complete  | - 4096-bit key generation<br>- SAN support for IP/DNS<br>- Proper file permissions |
-| `generate_32byte_key.sh` Cert Pinning | ✅ Complete  | - Hex/Base64 output<br>- Cryptographically secure RNG<br>- Clean output formatting |
-| `build.sh`   Might not need          | ❌ Needs Work | - Missing ARM64 support<br>- No Windows cross-compile<br>- Needs output directory |
+| `generate_certs.sh`  Certificates Gen  File  | ✅ Complete  | - 4096-bit key generation<br>- SAN support for IP/DNS<br>- Proper file permissions |
+| `generate_32byte_key.sh` Cert Pinning Gen File| ✅ Complete  | - Hex/Base64 output<br>- Cryptographically secure RNG<br>- Clean output formatting |
+| `build.sh`   File Might not need Soon      | ❌ Needs Work | - Missing ARM64 support<br>- No Windows cross-compile<br>- Needs output directory |
 
 ## 🛠️ Technical Architecture
 ```
