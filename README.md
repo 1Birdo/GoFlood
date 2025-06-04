@@ -8,9 +8,9 @@
 
 A sophisticated Command and Control (C2) server with enterprise-grade features for managing distributed botnets securely and efficiently.
 
-```
+
 > ⚠️ **Note**: In the wake of coordinated efforts such as Operation EndGame, PowerOFF, and Cronos, this project serves only as an educational and analytical reference for understanding botnet infrastructure. Real-world deployment of such tools carries significant legal risk.
-```
+
 
 ## 🛠️ Technical Architecture
 ```
