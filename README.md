@@ -17,9 +17,9 @@ A sophisticated Command and Control (C2) server with enterprise-grade features f
 ### Core Components
 | File          | Status       | Improvements Made                                                                 |
 |---------------|-------------|-----------------------------------------------------------------------------------|
-| `main.go`  cnc   | ❌ Needs Work  | - Enhanced TLS 1.3 configuration<br>- Added TOTP authentication<br>- Improved attack queue system |
-| `bot.go`   bot   | ⚠️ Partial   | - Added anti-debugging checks<br>- Improved persistence mechanism<br>- Enhanced stats reporting |
-| `README.md`   | ⚠️ Partial  | - Restructured documentation<br>- Added demo video placeholders<br>- Needs final polish |
+| `main.go`  ### C2 Server   | ❌ Needs Work  | - Enhanced TLS 1.3 configuration<br>- Added TOTP authentication<br>- Improved attack queue system |
+| `bot.go`   ### Client   | ⚠️ Partial   | - Added anti-debugging checks<br>- Improved persistence mechanism<br>- Enhanced stats reporting |
+| `README.md` ### Readme.md  | ⚠️ Partial  | - Restructured documentation<br>- Added demo video placeholders<br>- Needs final polish |
 
 ### Support Scripts
 | File                     | Status       | Key Features                                                                      |
