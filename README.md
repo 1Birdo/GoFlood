@@ -55,6 +55,7 @@ chmod +x build.sh
 
 
 ### 🎥 Video Demonstrations
+## All Video Demonstrations are also embedded at the bottom of this Readme.md
 
 | Feature Demo                                                   | Description                                     | Preview |
 |----------------------------------------------------------------|-------------------------------------------------|---------|
@@ -63,7 +64,6 @@ chmod +x build.sh
 | [🧨 Attack Management](https://github.com/user-attachments/assets/531f09ef-ae28-4bcc-aae4-aaa564162acd) | Launching and managing attacks                 | ✅ |
 | [🛡️ Admin Controls](https://github.com/user-attachments/assets/e2b9535f-5ede-401c-bb2d-da97b601a118) | User management, audit logs, system controls   | ✅ |
 
-All Video Demonstrations are also linked at the bottom of this Readme.md
 
 ## 🛠️ Configuration
 
