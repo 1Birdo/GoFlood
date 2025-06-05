@@ -1,0 +1,17 @@
+{
+  "listen_addr": "0.0.0.0:7003",
+  "c2_addr": "172.17.126.64:7002",
+  "peer_proxies": [
+    "proxy1.example.com:7003",
+    "proxy2.example.com:7003",
+    "proxy3.example.com:7003"
+  ],
+  "dashboard_port": "8080",
+  "admin_username": "ADMIN",
+  "admin_password": "ADMIN",
+  "cert_file": "./certs/server.crt",
+  "key_file": "./certs/server.key",
+  "ca_cert_file": "./certs/ca.crt",
+  "stats_interval": 5,
+  "peer_sync_interval": 30
+}
