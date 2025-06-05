@@ -56,7 +56,7 @@ A sophisticated Command and Control (C2) server with enterprise-grade features f
 │  Admin Dashboard │    │  Peer Nodes     │    │   Target Host   │
 │                 │    │                 │    │                 │
 │  - Real-time    │    │  - Relay        │    │                 │
-│    Monitoring   │    │  - Failover     │────►│  - Under Attack │
+│    Monitoring   │    │  - Failover     │    │  - Under Attack │
 │  - Config Mgmt  │    │  - Health Check │    │                 │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
