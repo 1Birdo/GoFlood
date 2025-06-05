@@ -47,7 +47,7 @@ A sophisticated Command and Control (C2) server with enterprise-grade features f
 │   C2 Server     │    │   Proxy Network │    │   Bot Clients   │    │   Target Host   │
 │                 │    │                 │    │                 │    │                 │
 │  - User Auth    │◄───┤  - Load Balance │◄───┤  - Auto-Connect │    │                 │
-│  - Attack Queue │    │  - Traffic Obf  │    │  - Attack Exec  │────►│  - Under Attack │
+│  - Attack Queue │    │  - Traffic Obf  │    │  - Attack Exec  │───►│  - Under Attack │
 │  - Logging      │───►│  - Peer Sync    │───►│  - Stats Report │    │                 │
 └───────┬─────────┘    └───────┬─────────┘    └─────────────────┘    └─────────────────┘
         │                      │
