@@ -220,6 +220,9 @@ This project is for educational and research purposes only. The authors are not 
 
 ## Easy Videos
 
+## *NEW* Proxy  - Showing off the Proxy POC *still in dev 🚧*
+https://github.com/user-attachments/assets/fbe96e3a-ed11-4ea2-b8f1-cb567129cba6
+
 ## Cli Output - Basically shows what the CLI outputs on your terminal 
 https://github.com/user-attachments/assets/b7349373-e985-4d10-ba7b-87edb3844247
 
