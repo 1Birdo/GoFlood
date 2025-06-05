@@ -54,11 +54,12 @@ A sophisticated Command and Control (C2) server with enterprise-grade features f
         ▼                      ▼
 ┌─────────────────┐    ┌─────────────────┐
 │ Admin Dashboard │    │   Peer Nodes    │
-│                 │    │                 │
-│  - Real-time    │    │  - Relay        │
-│    Monitoring   │◄───┤  - Failover     │
-│  - Config Mgmt  │    │  - Health Check │
-└─────────────────┘    └─────────────────┘
+│  - Attack Queue │    │ - Traffic stats │
+│  - Real-time    │    │ - Relay         │
+│  - Monitoring   │◄───┤ - Failover      │
+│  - Config Edits │    │ - Health Check  │
+│  - User Auth    │    └─────────────────┘   
+└─────────────────┘ 
 ```
 
 ## ✨ Key Features
