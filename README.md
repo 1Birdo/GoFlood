@@ -39,7 +39,7 @@ A sophisticated Command and Control (C2) server with enterprise-grade features f
 |--------------------------|-------------|-----------------------------------------------------------------------------------|
 | `generate_certs.sh`  Certificates Gen  File  | ✅ Complete  | - 4096-bit key generation<br>- SAN support for IP/DNS<br>- Proper file permissions |
 | `generate_32byte_key.sh` Cert Pinning Gen File| ✅ Complete  | - Hex/Base64 output<br>- Cryptographically secure RNG<br>- Clean output formatting |
-| `build.sh`   File Might not need Soon      | ❌ Needs Work | - Missing ARM64 support<br>- No Windows cross-compile / Support<br>- Needs output directory |
+| `build.sh`   File Might not need Soon      | 🟠 Needs Work | - Missing ARM64 support<br>- No Windows cross-compile / Support<br>- Needs output directory |
 
 ## 🛠️ Technical Architecture
 ```
