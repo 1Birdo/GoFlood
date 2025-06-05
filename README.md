@@ -2,6 +2,8 @@
  
 > This will combind both my projects Gostress-V2 + BotnetGo together hopefully making one big C2 Framework with a REST API on web dashboard + terminal supporting openssl TLS 1.3 Enfored + Trusted. As well as a P2P Proxy that Supports hidden Bidirectional comminication and Load-Balancing for the C2.
 
+> A Tor implementation of this project Will NOT be implemented as of now.
+
 ![Go Version](https://img.shields.io/badge/go-1.21+-blue.svg)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 ![Security](https://img.shields.io/badge/Security-Level_5-green)
@@ -21,6 +23,7 @@ A sophisticated Command and Control (C2) server with enterprise-grade features f
 | `main.go`   C2 Server File  | ❌ Needs Work  | - Enhanced TLS 1.3 configuration<br>- Added TOTP authentication<br>- Improved attack queue system |
 | `bot.go`    Client File   | ⚠️ Partial   | - Added anti-debugging checks<br>- Improved persistence mechanism<br>- Enhanced stats reporting |
 | `README.md`  Readme.md File| ⚠️ Partial  | - Restructured documentation<br>- Added demo video placeholders<br>- Needs final polish |
+| `proxy.go`  Proxy File| 🟠 Just Improvements | - Bidirectional TLS 1.3<br>- Traffic monitoring dashboard<br>- P2P load balancing |
 
 ### Support Scripts
 | File                     | Status       | Key Features                                                                      |
