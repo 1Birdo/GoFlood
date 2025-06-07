@@ -1,6 +1,5 @@
  # GoFlood - C2 DDos Framework
- > * To Help me i will only be uploading Client / Proxy POC Files ATM, untill im full satisfied that the C2 is upto standards. 
- 
+
 >  * This will combind both my projects Gostress-V2 + BotnetGo together hopefully making one big C2 Framework with a REST API on web dashboard + terminal supporting openssl TLS 1.3 Enfored + Trusted. As well as a P2P Proxy that Supports hidden Bidirectional comminication and Load-Balancing for the C2.
 
 >  * A Tor implementation of this project Will NOT be implemented as of now.
