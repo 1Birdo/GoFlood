@@ -10,7 +10,7 @@
 ###  Mostly Linux Based / WSL Supported
 📶 This framework merges the functionality of **Gostress-V2** and **BotnetGo**, offering a complete **C2 solution** featuring:
 - A **REST API** for a web dashboard, as well as a basic web-ui for the proxies as well.
-- A **Terminal interface**,
+- A **Terminal interface**.
 - **OpenSSL TLS 1.3** enforcement for secure communications.
 - **Trusted connections** for enhanced security.
 
