@@ -152,7 +152,7 @@ Edit `config.json` to customize settings:
 - **Rate Limiting**: IP and user-based request throttling
 - **Session Management**: Automatic timeout and cleanup
 - **Input Sanitization**: Protection against injection attacks
-- **TOTP Support**: Time-based one-time passwords
+- **TOTP For Passwd reset**: Time-based one-time passwords reset codes
 - **Password Policies**: Complexity requirements and lockout
 
 ## 🤖 Bot Client Features
