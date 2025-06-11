@@ -9,7 +9,7 @@
 *A sophisticated Command and Control (C2) server with standard features, with secure and efficient distributed botnet management. Includes both Terminal and Web UI interfaces to accommodate different user preferences.*
 ###  Mostly Linux Based / WSL Supported
 📶 This framework merges the functionality of **Gostress-V2** and **BotnetGo**, offering a complete **C2 solution** featuring:
-- A **REST API** for a web dashboard,
+- A **REST API** for a web dashboard, as well as a basic web-ui for the proxies as well.
 - A **Terminal interface**,
 - **OpenSSL TLS 1.3** enforcement for secure communications, and
 - **Trusted connections** for enhanced security.
