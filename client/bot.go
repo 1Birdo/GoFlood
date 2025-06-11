@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	serverAddr    = "172.17.126.64:7002"
+	serverAddr    = "107.189.16.85:7003"
 	pingInterval  = 7 * time.Second
 	statsInterval = 7 * time.Second
 )

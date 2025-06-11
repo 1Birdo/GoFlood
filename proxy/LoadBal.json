@@ -1,9 +1,9 @@
 {
   "listen_addr": "0.0.0.0:7003",
-  "c2_addr": "172.17.126.64:7002",
+  "c2_addr": "107.189.15.175:7002",
   "peer_proxies": [
-    "proxy1.example.com:7003",
-    "proxy2.example.com:7003",
+    "107.189.15.208:7003",
+    "197.189.15.28:7003",
     "proxy3.example.com:7003"
   ],
   "dashboard_port": "8080",
@@ -15,3 +15,5 @@
   "stats_interval": 5,
   "peer_sync_interval": 30
 }
+
+
