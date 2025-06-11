@@ -1,9 +1,4 @@
  # GoFlood - DDos Framework
-###  🏗️ REMEMBER the Proxy Client is Optional
->  * This will combind both my projects Gostress-V2 + BotnetGo together hopefully making one big C2 Framework with a REST API on web dashboard + terminal supporting openssl TLS 1.3 Enfored + Trusted. As well as a P2P Proxy that Supports hidden Bidirectional comminication and Load-Balancing for the C2.
-
->  * A Tor implementation of this project will be implemented in the future.
-
 ![Go Version](https://img.shields.io/badge/go-1.21+-blue.svg)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 ![Security](https://img.shields.io/badge/Security-Level_5-green)
@@ -12,6 +7,11 @@
 
 A sophisticated Command and Control (C2) server with enterprise-grade features for managing distributed botnets securely and efficiently.
 ## Mostly Linux Based / WSL Supported
+
+###  🏗️ REMEMBER the Proxy Client is Optional
+>  * This will combind both my projects Gostress-V2 + BotnetGo together hopefully making one big C2 Framework with a REST API on web dashboard + terminal supporting openssl TLS 1.3 Enfored + Trusted. As well as a P2P Proxy that Supports hidden Bidirectional comminication and Load-Balancing for the C2.
+
+>  * A Tor implementation of this project will be implemented in the future.
 
 > ⚠️ **Note**: In the wake of coordinated efforts such as Operation EndGame, PowerOFF, and Cronos, this project serves only as an educational and analytical reference for understanding botnet infrastructure. Real-world deployment of such tools carries significant legal risk.
 
