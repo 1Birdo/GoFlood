@@ -1,5 +1,5 @@
  # GoFlood - DDos Framework
-
+###  🏗️ REMEMBER the Proxy Client is Optional
 >  * This will combind both my projects Gostress-V2 + BotnetGo together hopefully making one big C2 Framework with a REST API on web dashboard + terminal supporting openssl TLS 1.3 Enfored + Trusted. As well as a P2P Proxy that Supports hidden Bidirectional comminication and Load-Balancing for the C2.
 
 >  * A Tor implementation of this project will be implemented in the future.
@@ -41,6 +41,7 @@ A sophisticated Command and Control (C2) server with enterprise-grade features f
 | `build.sh`   File Might not need Soon      | 🟠 Needs Work | - Missing ARM64 support<br>- No Windows cross-compile / Support<br>- Needs output directory |
 
 ## 🛠️ Technical Architecture
+###  🏗️ REMEMBER the Proxy Client is Optional
 ```
                           
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐    
