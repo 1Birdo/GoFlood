@@ -11,7 +11,7 @@
 📶 This framework merges the functionality of **Gostress-V2** and **BotnetGo**, offering a complete **C2 solution** featuring:
 - A **REST API** for a web dashboard, as well as a basic web-ui for the proxies as well.
 - A **Terminal interface**,
-- **OpenSSL TLS 1.3** enforcement for secure communications, and
+- **OpenSSL TLS 1.3** enforcement for secure communications.
 - **Trusted connections** for enhanced security.
 
  *⚠️ **Note**: In the wake of coordinated efforts such as Operation EndGame, PowerOFF, and Cronos, this project serves only as an educational and analytical reference for understanding botnet infrastructure. Real-world deployment of such tools carries significant legal risk*.
