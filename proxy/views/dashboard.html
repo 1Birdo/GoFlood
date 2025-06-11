@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proxy Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
+    <style>
+        :root {
+            --primary: #5865F2;
+            --surface: #0a0a0a;
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+        
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--surface);
+            color: white;
+            overflow-x: hidden;
+        }
+        
+        .code-font {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .glass {
+            background: var(--glass);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+        }
+        
+        .gradient-text {
+            background: linear-gradient(90deg, #5865F2, #EB459E);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .card {
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            opacity: 0;
+            transform: translateY(20px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card.loaded {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .login-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+        
+        .login-container {
+            background: #1a1a1a;
+            padding: 2rem;
+            border-radius: 1rem;
+            width: 100%;
+            max-width: 400px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transform: scale(0.9);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+        
+        .login-container.active {
+            transform: scale(1);
+            opacity: 1;
+        }
+        
+        .pixel-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.1;
+        }
+        
+        .status-online {
+            background: radial-gradient(circle, #10b981, #059669);
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+        }
+        
+        .status-warning {
+            background: radial-gradient(circle, #f59e0b, #d97706);
+            box-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+        }
+        
+        .status-error {
+            background: radial-gradient(circle, #ef4444, #dc2626);
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+        }
+        
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #5865F2, #EB459E);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #4752C4, #C73A7E);
+        }
+        
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+            position: relative;
+        }
+        
+        .loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            margin: -10px 0 0 -10px;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .chart-container {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease;
+        }
+        
+        .chart-container.loaded {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        header {
+            opacity: 0;
+            transform: translateY(-30px);
+        }
+        
+        header.loaded {
+            opacity: 1;
+            transform: translateY(0);
+            transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        
+        [data-tooltip]:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            pointer-events: none;
+            z-index: 100;
+            margin-bottom: 5px;
+        }
+        
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+        }
+        
+        .glow {
+            filter: drop-shadow(0 0 8px currentColor);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <canvas id="pixelCanvas" class="pixel-canvas"></canvas>
+    
+    <div id="loginModal" class="login-modal">
+        <div class="login-container">
+            <div class="text-center mb-8">
+                <h2 class="text-2xl font-bold gradient-text mb-2">Proxy Dashboard</h2>
+                <p class="text-gray-400">Enter your credentials to continue</p>
+            </div>
+            <form id="loginForm" class="space-y-4">
+                <div>
+                    <label for="username" class="block text-sm font-medium text-gray-400 mb-1">Username</label>
+                    <input type="text" id="username" name="username" required 
+                           class="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                </div>
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-400 mb-1">Password</label>
+                    <input type="password" id="password" name="password" required 
+                           class="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                </div>
+                <button type="submit" 
+                        class="w-full py-2 px-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg font-medium hover:opacity-90 transition-opacity">
+                    Sign In
+                </button>
+            </form>
+            <div id="loginError" class="text-red-500 text-sm mt-4 hidden"></div>
+        </div>
+    </div>
+    
+    <div id="dashboardContent" class="hidden">
+        <div class="container mx-auto px-4 py-8 relative">
+            <header class="mb-12 text-center relative">
+                <h1 class="text-4xl md:text-5xl font-bold mb-4 gradient-text">Proxy Network Dashboard</h1>
+                <p class="text-gray-400 max-w-2xl mx-auto">Real-time traffic monitoring and load balancing</p>
+                <div class="mt-6 flex justify-center gap-6 text-sm text-gray-500">
+                    <span class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                        <span id="listenAddr">Loading...</span>
+                    </span>
+                    <span class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                        <span id="c2Addr">Loading...</span>
+                    </span>
+                </div>
+            </header>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8" id="statsGrid">
+                <div class="card glass rounded-2xl p-6 hover:border-purple-500/30">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-gray-400 mb-2">Total Inbound</h3>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-purple-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <p id="bytesIn" class="text-3xl font-bold text-white">0 B</p>
+                    <p class="text-xs text-gray-500 mt-2">Since last restart</p>
+                </div>
+                <div class="card glass rounded-2xl p-6 hover:border-pink-500/30">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-gray-400 mb-2">Total Outbound</h3>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-pink-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V3zm13 0v12H4V3h12zm-8 4a1 1 0 10-2 0v4a1 1 0 102 0V7zm3 0a1 1 0 011 1v3a1 1 0 11-2 0V8a1 1 0 011-1zm4 0a1 1 0 10-2 0v6a1 1 0 102 0V7z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <p id="bytesOut" class="text-3xl font-bold text-white">0 B</p>
+                    <p class="text-xs text-gray-500 mt-2">Since last restart</p>
+                </div>
+                <div class="card glass rounded-2xl p-6 hover:border-blue-500/30">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-gray-400 mb-2">Active Connections</h3>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M2 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V5zm3.293 1.293a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 01-1.414-1.414L7.586 10 5.293 7.707a1 1 0 010-1.414zM11 12a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <p id="activeConns" class="text-3xl font-bold text-white">0</p>
+                    <p class="text-xs text-gray-500 mt-2">Current active sessions</p>
+                </div>
+                <div class="card glass rounded-2xl p-6 hover:border-green-500/30">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-gray-400 mb-2">Peers Connected</h3>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v1h8v-1zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-1a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v1h-3zM4.75 12.094A5.973 5.973 0 004 15v1H1v-1a3 3 0 013.75-2.906z" />
+                        </svg>
+                    </div>
+                    <p id="peersConnected" class="text-3xl font-bold text-white">0</p>
+                    <p class="text-xs text-gray-500 mt-2">Network peers available</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8" id="chartsGrid">
+                <div class="card glass rounded-2xl p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-gray-400">Traffic Flow</h3>
+                        <div class="flex items-center text-xs text-gray-500">
+                            <span class="w-2 h-2 rounded-full bg-blue-500 mr-1"></span>
+                            <span class="mr-3">Inbound</span>
+                            <span class="w-2 h-2 rounded-full bg-pink-500 mr-1"></span>
+                            <span>Outbound</span>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="trafficChart" height="300"></canvas>
+                    </div>
+                </div>
+                <div class="card glass rounded-2xl p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-gray-400">Connection Stats</h3>
+                        <div class="flex items-center text-xs text-gray-500">
+                            <span class="w-2 h-2 rounded-full bg-blue-500 mr-1"></span>
+                            <span class="mr-3">Connections</span>
+                            <span class="w-2 h-2 rounded-full bg-pink-500 mr-1"></span>
+                            <span>Peers</span>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="connChart" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8" id="bottomGrid">
+                <div class="card glass rounded-2xl p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-gray-400">Peer Network</h3>
+                        <button id="refreshPeers" class="text-xs text-gray-400 hover:text-white transition-colors flex items-center gap-1" data-tooltip="Refresh peer connections">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            Refresh
+                        </button>
+                    </div>
+                    <div id="peerNetwork" class="flex flex-wrap gap-4 min-h-[100px] items-center justify-center">
+                        <div class="text-gray-500 text-sm">Loading peer network...</div>
+                    </div>
+                </div>
+                <div class="card glass rounded-2xl p-6">
+                    <h3 class="text-gray-400 mb-4">Configuration</h3>
+                    <div class="space-y-3 text-sm">
+                        <div class="flex justify-between items-center py-2 border-b border-gray-800">
+                            <span class="text-gray-400">Stats Interval:</span>
+                            <span id="statsInterval" class="code-font bg-gray-900 px-2 py-1 rounded">Loading...</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-gray-800">
+                            <span class="text-gray-400">Peer Sync Interval:</span>
+                            <span id="peerSyncInterval" class="code-font bg-gray-900 px-2 py-1 rounded">Loading...</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-gray-800">
+                            <span class="text-gray-400">Dashboard Port:</span>
+                            <span id="dashboardPort" class="code-font bg-gray-900 px-2 py-1 rounded">Loading...</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-gray-800">
+                            <span class="text-gray-400">Configured Peers:</span>
+                            <span id="peerCount" class="code-font bg-gray-900 px-2 py-1 rounded">Loading...</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2">
+                            <span class="text-gray-400">C2 Address:</span>
+                            <span id="c2AddrConfig" class="code-font bg-gray-900 px-2 py-1 rounded text-ellipsis overflow-hidden max-w-[150px]">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card glass rounded-2xl p-6" id="systemCard">
+                <h3 class="text-gray-400 mb-4">System Status</h3>
+                <div id="systemStatus" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="text-center p-4 rounded-xl bg-gray-900/50 hover:bg-gray-900/70 transition-colors">
+                        <div class="w-4 h-4 rounded-full bg-green-500 mx-auto mb-2 glow"></div>
+                        <div class="text-sm text-gray-400">Proxy Server</div>
+                        <div class="text-xs text-green-400">Online</div>
+                    </div>
+                    <div class="text-center p-4 rounded-xl bg-gray-900/50 hover:bg-gray-900/70 transition-colors">
+                        <div id="c2Status" class="w-4 h-4 rounded-full bg-yellow-500 mx-auto mb-2 glow"></div>
+                        <div class="text-sm text-gray-400">C2 Connection</div>
+                        <div id="c2StatusText" class="text-xs text-yellow-400">Checking...</div>
+                    </div>
+                    <div class="text-center p-4 rounded-xl bg-gray-900/50 hover:bg-gray-900/70 transition-colors">
+                        <div id="peerStatus" class="w-4 h-4 rounded-full bg-red-500 mx-auto mb-2 glow"></div>
+                        <div class="text-sm text-gray-400">Peer Network</div>
+                        <div id="peerStatusText" class="text-xs text-red-400">Disconnected</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    let trafficChart, connChart;
+    let lastBytesIn = 0;
+    let lastBytesOut = 0;
+    let lastUpdateTime = Date.now();
+    let ws;
+    let wsConnectAttempts = 0;
+    const maxWSAttempts = 5;
+    let isInitialized = false;
+    let config = {};
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeBackgroundAnimation();
+        setupLogin();
+    });
+
+    function initializeBackgroundAnimation() {
+        const canvas = document.getElementById('pixelCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        
+        const pixelSize = 20;
+        const cols = Math.floor(canvas.width / pixelSize);
+        const rows = Math.floor(canvas.height / pixelSize);
+        
+        const grid = [];
+        for (let y = 0; y < rows; y++) {
+            grid[y] = [];
+            for (let x = 0; x < cols; x++) {
+                grid[y][x] = {
+                    x: x * pixelSize,
+                    y: y * pixelSize,
+                    color: Math.random() > 0.9 ? getRandomColor() : null
+                };
+            }
+        }
+        
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            for (let y = 0; y < rows; y++) {
+                for (let x = 0; x < cols; x++) {
+                    const pixel = grid[y][x];
+                    
+                    if (Math.random() > 0.99) {
+                        pixel.color = Math.random() > 0.7 ? getRandomColor() : null;
+                    }
+                    
+                    if (pixel.color) {
+                        ctx.fillStyle = pixel.color;
+                        ctx.fillRect(pixel.x, pixel.y, pixelSize - 1, pixelSize - 1);
+                    }
+                }
+            }
+            
+            requestAnimationFrame(animate);
+        }
+        
+        function getRandomColor() {
+            const colors = [
+                'rgba(88, 101, 242, 0.5)',
+                'rgba(235, 69, 158, 0.5)',
+                'rgba(16, 185, 129, 0.5)',
+                'rgba(245, 158, 11, 0.5)',
+                'rgba(239, 68, 68, 0.5)'
+            ];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+        
+        animate();
+    }
+
+    function setupLogin() {
+        const loginModal = document.getElementById('loginModal');
+        const loginForm = document.getElementById('loginForm');
+        const dashboardContent = document.getElementById('dashboardContent');
+        const loginError = document.getElementById('loginError');
+        
+        setTimeout(() => {
+            document.querySelector('.login-container').classList.add('active');
+        }, 100);
+        
+        loginForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            loginError.classList.add('hidden');
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            fetch('/api/auth', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => { throw err; });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    document.querySelector('.login-container').classList.remove('active');
+                    setTimeout(() => {
+                        loginModal.style.display = 'none';
+                        dashboardContent.classList.remove('hidden');
+                        config = data.config || {};
+                        initializeDashboard();
+                    }, 300);
+                } else {
+                    throw new Error(data.error || 'Login failed');
+                }
+            })
+            .catch(error => {
+                loginError.textContent = error.message || 'Login failed. Please check your credentials.';
+                loginError.classList.remove('hidden');
+            });
+        });
+    }
+
+    function initializeDashboard() {
+        document.getElementById('listenAddr').textContent = config.ListenAddr || 'Not configured';
+        document.getElementById('c2Addr').textContent = config.C2Addr || 'Not configured';
+        document.getElementById('statsInterval').textContent = (config.StatsInterval || 0) + 's';
+        document.getElementById('peerSyncInterval').textContent = (config.PeerSyncInterval || 0) + 's';
+        document.getElementById('dashboardPort').textContent = config.DashboardPort || 'Not configured';
+        document.getElementById('peerCount').textContent = (config.PeerProxies ? config.PeerProxies.length : 0);
+        document.getElementById('c2AddrConfig').textContent = config.C2Addr || 'Not configured';
+        
+        initializeApp();
+    }
+
+    async function initializeApp() {
+        try {
+            await animateHeader();
+            await initializeCharts();
+            await animateStatsCards();
+            await animateCharts();
+            await animateBottomSections();
+            await startDataConnections();
+            isInitialized = true;
+        } catch (error) {
+            console.error('Initialization error:', error);
+            fallbackInit();
+        }
+    }
+
+    function animateHeader() {
+        return new Promise((resolve) => {
+            const header = document.querySelector('header');
+            header.classList.add('loaded');
+            setTimeout(resolve, 500);
+        });
+    }
+
+    function animateStatsCards() {
+        return new Promise((resolve) => {
+            const cards = document.querySelectorAll('#statsGrid .card');
+            let delay = 0;
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.classList.add('loaded');
+                    if (index === cards.length - 1) setTimeout(resolve, 300);
+                }, delay);
+                delay += 100;
+            });
+        });
+    }
+
+    function animateCharts() {
+        return new Promise((resolve) => {
+            const cards = document.querySelectorAll('#chartsGrid .card');
+            const chartContainers = document.querySelectorAll('.chart-container');
+            let delay = 0;
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.classList.add('loaded');
+                    setTimeout(() => chartContainers[index].classList.add('loaded'), 200);
+                    if (index === cards.length - 1) setTimeout(resolve, 500);
+                }, delay);
+                delay += 150;
+            });
+        });
+    }
+
+    function animateBottomSections() {
+        return new Promise((resolve) => {
+            const cards = document.querySelectorAll('#bottomGrid .card, #systemCard');
+            let delay = 0;
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.classList.add('loaded');
+                    if (index === cards.length - 1) setTimeout(resolve, 300);
+                }, delay);
+                delay += 100;
+            });
+        });
+    }
+
+    function initializeCharts() {
+        return new Promise((resolve) => {
+            const trafficCtx = document.getElementById('trafficChart').getContext('2d');
+            const connCtx = document.getElementById('connChart').getContext('2d');
+            
+            trafficChart = new Chart(trafficCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'Inbound (B/s)',
+                            data: [],
+                            borderColor: '#5865F2',
+                            backgroundColor: 'rgba(88, 101, 242, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.4,
+                            fill: true,
+                            pointRadius: 0
+                        },
+                        {
+                            label: 'Outbound (B/s)',
+                            data: [],
+                            borderColor: '#EB459E',
+                            backgroundColor: 'rgba(235, 69, 158, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.4,
+                            fill: true,
+                            pointRadius: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            connChart = new Chart(connCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Active Connections', 'Peers Connected'],
+                    datasets: [{
+                        data: [0, 0],
+                        backgroundColor: ['#5865F2', '#EB459E'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+            
+            resolve();
+        });
+    }
+
+    function startDataConnections() {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                connectWebSocket();
+                resolve();
+            }, 500);
+        });
+    }
+
+    function fallbackInit() {
+        document.querySelector('header').classList.add('loaded');
+        document.querySelectorAll('.card').forEach(card => card.classList.add('loaded'));
+        document.querySelectorAll('.chart-container').forEach(container => container.classList.add('loaded'));
+        initializeCharts().then(() => {
+            connectWebSocket();
+            isInitialized = true;
+        });
+    }
+
+    function connectWebSocket() {
+        const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+        
+        try {
+            ws = new WebSocket(protocol + window.location.host + '/stats');
+            
+            ws.onopen = function() {
+                wsConnectAttempts = 0;
+            };
+            
+            ws.onmessage = function(event) {
+                if (!isInitialized) return;
+                
+                const stats = JSON.parse(event.data);
+                const now = Date.now();
+                const elapsed = (now - lastUpdateTime) / 1000;
+                lastUpdateTime = now;
+                
+                const inRate = elapsed > 0 ? (stats.total_bytes_in - lastBytesIn) / elapsed : 0;
+                const outRate = elapsed > 0 ? (stats.total_bytes_out - lastBytesOut) / elapsed : 0;
+                
+                lastBytesIn = stats.total_bytes_in;
+                lastBytesOut = stats.total_bytes_out;
+                
+                updateStats(stats, inRate, outRate);
+            };
+            
+            ws.onclose = function() {
+                if (wsConnectAttempts < maxWSAttempts) {
+                    wsConnectAttempts++;
+                    setTimeout(connectWebSocket, 5000);
+                } else {
+                    startHTTPPolling();
+                }
+            };
+            
+            ws.onerror = function(error) {
+                console.error('WebSocket error:', error);
+            };
+        } catch (error) {
+            console.error('Failed to create WebSocket:', error);
+            startHTTPPolling();
+        }
+    }
+    
+    function startHTTPPolling() {
+        setInterval(function() {
+            if (!isInitialized) return;
+            
+            fetch('/api/stats')
+                .then(response => response.json())
+                .then(stats => {
+                    const now = Date.now();
+                    const elapsed = (now - lastUpdateTime) / 1000;
+                    lastUpdateTime = now;
+                    
+                    const inRate = elapsed > 0 ? (stats.total_bytes_in - lastBytesIn) / elapsed : 0;
+                    const outRate = elapsed > 0 ? (stats.total_bytes_out - lastBytesOut) / elapsed : 0;
+                    
+                    lastBytesIn = stats.total_bytes_in;
+                    lastBytesOut = stats.total_bytes_out;
+                    
+                    updateStats(stats, inRate, outRate);
+                })
+                .catch(err => console.error('Error fetching stats:', err));
+        }, 5000);
+    }
+    
+    function updateStats(stats, inRate, outRate) {
+        updateElement('bytesIn', formatBytes(stats.total_bytes_in));
+        updateElement('bytesOut', formatBytes(stats.total_bytes_out));
+        updateElement('activeConns', stats.active_connections);
+        updateElement('peersConnected', stats.peers_connected);
+        
+        if (trafficChart && connChart) {
+            updateChart(trafficChart, inRate, outRate);
+            updateConnChart(connChart, stats.active_connections, stats.peers_connected);
+        }
+        
+        updatePeerNetwork(stats.peers_connected);
+        updateSystemStatus(stats);
+    }
+
+    function updateElement(id, value) {
+        const element = document.getElementById(id);
+        if (element && element.textContent !== value.toString()) {
+            if (id === 'activeConns' || id === 'peersConnected') {
+                element.classList.add('pulse');
+                setTimeout(() => element.classList.remove('pulse'), 1000);
+            }
+            
+            if (!isNaN(parseFloat(element.textContent))) {
+                animateNumberChange(element, parseFloat(element.textContent), parseFloat(value));
+            } else {
+                element.textContent = value;
+            }
+        }
+    }
+    
+    function animateNumberChange(element, from, to) {
+        const duration = 500;
+        const startTime = performance.now();
+        
+        function updateNumber(currentTime) {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const currentValue = from + (to - from) * progress;
+            
+            if (element.id === 'bytesIn' || element.id === 'bytesOut') {
+                element.textContent = formatBytes(currentValue);
+            } else {
+                element.textContent = Math.round(currentValue);
+            }
+            
+            if (progress < 1) requestAnimationFrame(updateNumber);
+        }
+        
+        requestAnimationFrame(updateNumber);
+    }
+    
+    function updateSystemStatus(stats) {
+        const c2Status = document.getElementById('c2Status');
+        const c2StatusText = document.getElementById('c2StatusText');
+        if (stats.active_connections > 0 || stats.total_bytes_in > 0 || stats.total_bytes_out > 0) {
+            c2Status.className = 'w-4 h-4 rounded-full bg-green-500 mx-auto mb-2 glow';
+            c2StatusText.textContent = 'Connected';
+            c2StatusText.className = 'text-xs text-green-400';
+        } else {
+            c2Status.className = 'w-4 h-4 rounded-full bg-red-500 mx-auto mb-2 glow';
+            c2StatusText.textContent = 'Disconnected';
+            c2StatusText.className = 'text-xs text-red-400';
+        }
+        
+        const peerStatus = document.getElementById('peerStatus');
+        const peerStatusText = document.getElementById('peerStatusText');
+        if (stats.peers_connected > 0) {
+            peerStatus.className = 'w-4 h-4 rounded-full bg-green-500 mx-auto mb-2 glow';
+            peerStatusText.textContent = stats.peers_connected + ' Connected';
+            peerStatusText.className = 'text-xs text-green-400';
+        } else {
+            peerStatus.className = 'w-4 h-4 rounded-full bg-red-500 mx-auto mb-2 glow';
+            peerStatusText.textContent = 'No Peers';
+            peerStatusText.className = 'text-xs text-red-400';
+        }
+    }
+    
+    function formatBytes(bytes) {
+        if (bytes === 0) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+    
+    function updateChart(chart, inRate, outRate) {
+        const now = new Date();
+        const timeLabel = now.toTimeString().substr(0, 8);
+        
+        if (chart.data.labels.length > 15) {
+            chart.data.labels.shift();
+            chart.data.datasets[0].data.shift();
+            chart.data.datasets[1].data.shift();
+        }
+        
+        chart.data.labels.push(timeLabel);
+        chart.data.datasets[0].data.push(Math.max(0, inRate));
+        chart.data.datasets[1].data.push(Math.max(0, outRate));
+        chart.update('none');
+    }
+    
+    function updateConnChart(chart, activeConns, peersConnected) {
+        chart.data.datasets[0].data = [activeConns, peersConnected];
+        chart.update('none');
+    }
+    
+    function updatePeerNetwork(peerCount) {
+        const container = document.getElementById('peerNetwork');
+        if (container.children.length === peerCount && peerCount > 0) return;
+        
+        container.innerHTML = '';
+        
+        if (peerCount === 0) {
+            container.innerHTML = '<div class="text-gray-500 text-sm">No peers connected</div>';
+            return;
+        }
+        
+        const centerX = container.offsetWidth / 2;
+        const centerY = container.offsetHeight / 2;
+        const radius = Math.min(centerX, centerY) * 0.8;
+        
+        for (let i = 0; i < peerCount; i++) {
+            const angle = (i / peerCount) * Math.PI * 2;
+            const x = centerX + Math.cos(angle) * radius;
+            const y = centerY + Math.sin(angle) * radius;
+            
+            const peerNode = document.createElement('div');
+            peerNode.className = 'peer-node glass rounded-full w-12 h-12 flex items-center justify-center text-lg font-bold absolute';
+            peerNode.style.left = `${x}px`;
+            peerNode.style.top = `${y}px`;
+            peerNode.textContent = i + 1;
+            peerNode.dataset.tooltip = `Peer ${i + 1}`;
+            container.appendChild(peerNode);
+            
+            setTimeout(() => {
+                peerNode.style.transition = 'all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55)';
+                peerNode.style.opacity = '1';
+                peerNode.style.transform = 'scale(1) translate(-50%, -50%)';
+            }, i * 100);
+        }
+    }
+    
+    document.addEventListener('visibilitychange', function() {
+        if (!document.hidden && (!ws || ws.readyState === WebSocket.CLOSED)) {
+            setTimeout(connectWebSocket, 1000);
+        }
+    });
+</script>
+</body>
+</html>
