@@ -8,11 +8,9 @@
 
 *A sophisticated Command and Control (C2) server with standard features, with secure and efficient distributed botnet management. Includes both Terminal and Web UI interfaces to accommodate different user preferences.*
 ###  Mostly Linux Based / WSL Supported
-`
- ### *📶 This will combind both my projects Gostress-V2 + BotnetGo together hopefully making one big C2 Framework with a REST API on web dashboard + terminal supporting openssl TLS 1.3 Enfored + Trusted. As well as a P2P Proxy that Supports hidden Bidirectional comminication and Load-Balancing for the C2. A Tor implementation of this project will be implemented in the future*.
+`### *📶 This will combind both my projects Gostress-V2 + BotnetGo together hopefully making one big C2 Framework with a REST API on web dashboard + terminal supporting openssl TLS 1.3 Enfored + Trusted. As well as a P2P Proxy that Supports hidden Bidirectional comminication and Load-Balancing for the C2. A Tor implementation of this project will be implemented in the future*.`
 
-### *⚠️ **Note**: In the wake of coordinated efforts such as Operation EndGame, PowerOFF, and Cronos, this project serves only as an educational and analytical reference for understanding botnet infrastructure. Real-world deployment of such tools carries significant legal risk*.
-`
+`### *⚠️ **Note**: In the wake of coordinated efforts such as Operation EndGame, PowerOFF, and Cronos, this project serves only as an educational and analytical reference for understanding botnet infrastructure. Real-world deployment of such tools carries significant legal risk*.`
 ## 📁 File Status Overview
 ###  🏗️  Proxy Client is Optional
 ### OverView Of Entire Project 
