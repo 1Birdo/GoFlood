@@ -5,7 +5,7 @@
 ![Multi-User](https://img.shields.io/badge/Multi--User-Yes-blue)
 ![Bot Support](https://img.shields.io/badge/Bots-Cross--platform-orange)
 
-A sophisticated Command and Control (C2) server with standard features, with secure and efficient distributed botnet management. Includes both Terminal and Web UI interfaces to accommodate different user preferences. 
+*A sophisticated Command and Control (C2) server with standard features, with secure and efficient distributed botnet management. Includes both Terminal and Web UI interfaces to accommodate different user preferences.*
 ## Mostly Linux Based / WSL Supported
 
 ###  🏗️ REMEMBER the Proxy Client is Optional
