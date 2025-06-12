@@ -214,6 +214,6 @@ https://github.com/user-attachments/assets/00b6ddb0-0c9e-47aa-9e91-08e689a1d272
 ## Admin – Admin commands + usage.
 https://github.com/user-attachments/assets/e2b9535f-5ede-401c-bb2d-da97b601a118
 
-## Attack -- All outgoing traffic was filtered / Disabled for this Example.
+## Attack Example -- All outgoing traffic was filtered / Disabled for this Example.
 https://github.com/user-attachments/assets/531f09ef-ae28-4bcc-aae4-aaa564162acd
 
