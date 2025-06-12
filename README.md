@@ -17,7 +17,7 @@
  *⚠️ **Note**: In the wake of coordinated efforts such as Operation EndGame, PowerOFF, and Cronos, this project serves only as an educational and analytical reference for understanding botnet infrastructure. Real-world deployment of such tools carries significant legal risk*.
 ## 📁 File Status Overview
 ###  🏗️  Proxy Client is Optional
-### OverView Of Entire Project 
+### Project Status
 | Component       | Status        | Current Progress | Improvements to be Added / Implemented |
 |-----------------|--------------|------------------|-----------------------|
 | **C2 Server**   | Functional   | 80% Complete 🟠  | - Implement Gosstress-V2 Web Dashboard<br>- Develop REST API endpoints<br>- Enhance command queuing system |
@@ -25,7 +25,7 @@
 | **Proxy Network** | Testing Phase | 95% Complete ⚠️ | - Comprehensive testing to make sure it secure<br>- Dashboard security hardening<br>-<br>- synchronization verification |
 
 
-### Core Components
+### Core Files
 | File          | Status       | Improvements Made                                                                 |
 |---------------|-------------|-----------------------------------------------------------------------------------|
 | `main.go`   C2 Server File  | ❌ Needs Work  | - Enhanced TLS 1.3 configuration<br>-<br>- Improved attack queue system |
@@ -147,7 +147,7 @@ Edit `config.json` to customize settings:
 
 ## 🔐 Security Features
 
-- **Certificate Pinning**: Hardcoded CA verification
+- **Certificate Pinning**: CA verification
 - **Rate Limiting**: IP and user-based request throttling
 - **Session Management**: Automatic timeout and cleanup
 - **Input Sanitization**: Protection against injection attacks
@@ -155,22 +155,10 @@ Edit `config.json` to customize settings:
 - **Password Policies**: Complexity requirements and lockout
 
 ## 🤖 Bot Client Features
-
-```go
-// From bot.go
-type BotStats struct {
-  StartTime    time.Time
-  AttackCount  int
-  SuccessCount int
-  LastCommand  time.Time
-}
-```
-
 - Multi-architecture support (x86, ARM, MIPS)
 - Anti-debugging techniques
-- Process hiding
 - Automated persistence
-- Resource-efficient operation
+- Resource efficient
 - Encrypted communications
 
 ## ⚙️ Attack Methods
@@ -188,17 +176,6 @@ type BotStats struct {
 
 ## 👨‍💻 Admin Commands
 
-```go
-// From main.go
-type User struct {
-  Username       string    `json:"username"`
-  PasswordHash   string    `json:"passwordHash"`
-  Expire         time.Time `json:"expire"`
-  Level          string    `json:"level"`
-  // ... other fields
-}
-```
-
 | Command     | Description         | Required Level |
 |-------------|---------------------|----------------|
 | adduser     | Create new user     | Admin+         |
@@ -209,19 +186,6 @@ type User struct {
 | reinstall   | Reinstall bots      | Admin+         |
 
 ## 📊 Statistics Tracking
-
-```go
-// From main.go
-type AggregatedStats struct {
-  AvgLatency    time.Duration
-  AvgThroughput float64
-  TotalRAM      float64
-  TotalCores    int
-  HealthyBots   int
-  UnhealthyBots int
-}
-```
-
 - Real-time bot performance metrics
 - Attack success rates
 - Resource utilization
@@ -238,18 +202,16 @@ This project is for educational and research purposes only. The authors are not 
 
 ## Easy Videos
 
-## *NEW (05/06/25)* Proxy  - Showing off the Proxy POC *still in dev 🚧*
+## *NEW (05/06/25)* Proxy  - Showing off Proxy POC
 https://github.com/user-attachments/assets/fbe96e3a-ed11-4ea2-b8f1-cb567129cba6
 
-## Cli Output - Basically shows what the CLI outputs on your terminal 
+## Cli Output - CLI outputs on your terminal 
 https://github.com/user-attachments/assets/b7349373-e985-4d10-ba7b-87edb3844247
 
-## Starter – Walkthrough of the login process and essential commands.
-
+## Starter – Walkthrough of the login process + essential commands.
 https://github.com/user-attachments/assets/00b6ddb0-0c9e-47aa-9e91-08e689a1d272
 
-## Admin – Demonstrates Admin commands + usage.
-
+## Admin – Admin commands + usage.
 https://github.com/user-attachments/assets/e2b9535f-5ede-401c-bb2d-da97b601a118
 
 ## Attack -- All outgoing traffic was filtered / Disabled for this Example.
