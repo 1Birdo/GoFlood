@@ -14,6 +14,7 @@
   - WebSocket dashboard (TCP/8443) 
   - Mutual TLS authentication for all connections
 
+
  - - **C2 Channel Description (Bot Connection Protocol)**:
    - Protocol: TCP with TLS 1.3 encryption (TCP/7002).
    - Bots and the C2 server authenticate each other using client and server certificates (X.509).
