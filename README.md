@@ -9,6 +9,7 @@
 ![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20WSL-blueviolet)
 ![Architecture](https://img.shields.io/badge/Architecture-Distributed-orange)
 
+All Files mainly uploaded just need fixes and to be stable and to make it just work on first run.
 
 *A sophisticated Command and Control (C2) server with standard features, with secure and efficient distributed botnet management. Includes both Terminal and Web UI interfaces to accommodate different user preferences.*
 ###  Mostly Linux Based / WSL Supported
