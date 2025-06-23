@@ -57,7 +57,7 @@
 │  - Stress Attacks │───►│ - Traffic Obf   │◄───┤  - Attack Exec  │───►│  - Stress Attack │
 │  - audit Logging  │◄───│ - TLS 1.3       │───►│  - Stats Report │    └──────────────────┘
 └───────┬───────────┘    │ - Web Dashboard │    └─────────────────┘    
-        │                 └───────┬────────┘
+        │                └────────┬────────┘
         ▼                      ▼
 ┌──────────────────────┐    ┌────────────────────┐
 │   [Admin Dashboard]  │    │  [Proxy Dashboard] │
