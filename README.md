@@ -62,8 +62,8 @@
 ┌──────────────────────┐    ┌────────────────────┐
 │   [Admin Dashboard]  │    │  [Proxy Dashboard] │
 │  - Authentication    │    │  - Traffic stats   │
-│  - Real-time stats   │───►│  - Health Check    │
-│  - Monitoring        │◄───┤  - Authentication  │
+│  - Real-time stats   │    │  - Health Check    │
+│  - Monitoring        │    │  - Authentication  │
 │  - Config Edits      │    └────────────────────┘ 
 │  - Attack Queue      │
 │  - Attack Scheduling │    
