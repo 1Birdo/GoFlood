@@ -9,13 +9,12 @@
 *A sophisticated Command and Control (C2) server with standard features, with secure and efficient distributed botnet management. Includes both Terminal and Web UI interfaces to accommodate different user preferences.*
 ###  Mostly Linux Based / WSL Supported
 📶 This framework merges the functionality of **Gostress-V2 / Gostress-Enhanced** and **BotnetGo**, offering a complete **C2 solution** featuring:
-- - **Encrypted C2 Channels**:
+-  **Encrypted C2 Channels**:
   - TLS 1.3 secured terminal interface (TCP/1337)
   - WebSocket dashboard (TCP/8443) 
   - Mutual TLS authentication for all connections
 
-
- - - **C2 Channel Description (Bot Connection Protocol)**:
+ - **C2 Channel Description (Bot Connection Protocol)**:
    - Protocol: TCP with TLS 1.3 encryption (TCP/7002).
    - Bots and the C2 server authenticate each other using client and server certificates (X.509).
    - The server validates bot certificates against a pinned CA certificate to prevent impersonation.
@@ -28,9 +27,9 @@
 ### Project Status
 | Component       | Status        | Current Progress | Improvements to be Added / Implemented |
 |-----------------|--------------|------------------|-----------------------|
-| **C2 Server**   | Functional   | 80% Complete 🟠  | - Implement Gosstress-V2 Web Dashboard<br>- Develop REST API endpoints<br>- Enhance command queuing system |
-| **Stress Client**      | In Development | 84% Complete 🟠 | - Expand L7 attack methods<br>- Improve connection stability<br>- More persistence mechanisms (potentially a future  integration) |
-| **Proxy Client** | Testing Phase | 98% Nearly Completed 🟢 | - Just needs testing to make sure it secure<br>- Synchronization Verification |
+| **C2 Server**     | Testing Phase   | 840% Complete 🟠  | - Implement Gosstress-V2 Web Dashboard<br>- Develop REST API endpoints<br>- Enhance command queuing system |
+| **Stress Client** | Needs Development | 80% Complete 🟠 | - Expand L7/L4 attack methods<br>- Improve stability and fix features|
+| **Proxy Client**  | Testing Phase | 98% Nearly Completed 🟢 | - Just needs testing to make sure it secure<br>- Synchronization Verification |
 
 
 ### Core Files
