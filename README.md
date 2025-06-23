@@ -35,10 +35,10 @@
 ### Core Files
 | File          | Status       | Improvements Made                                                                 |
 |---------------|-------------|-----------------------------------------------------------------------------------|
-| `main.go`   C2 Server File  | ❌ Needs Work  | - Enhanced TLS 1.3 configuration<br>-<br>- Improved attack queue system |
-| `bot.go`    Client File   | ⚠️ Partial   | - Added anti-debugging checks<br>- Improved persistence mechanism<br>- Enhanced stats reporting |
-| `proxy.go`  Proxy File| 🟢 Minor Improvements | - JWT Authentication<br>- Traffic monitoring improvements<br>- |
-| `README.md`  Readme.md File| ⚠️ Partial  | - Restructured documentation<br>- Added demo video placeholders<br>- Needs final polish |
+| **main.go**   C2 Server File  | 🟡 Medium Improvements  | - Enhanced TLS 1.3 configuration<br>-<br>- Improved attack queue system |
+| **bot.go**   Client File   | 🔴 Partial Changes  | - Added anti-debugging checks<br>- Improved persistence mechanism<br>- Enhanced stats reporting |
+| **proxy.go**  Proxy File| 🟢 Minor Improvements | - JWT Authentication<br>- Traffic monitoring improvements<br>- |
+| **README.md**  Readme.md File| 🟡 Major Changes  | - Restructured documentation<br>- Added demo video placeholders<br>- Needs final polish |
 
 ### Support Scripts 
 | File                     | Status       | Key Features                                                                      |
