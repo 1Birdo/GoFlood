@@ -102,6 +102,27 @@ chmod +x build.sh
 ./cnc
 ```
 
+## 🔐 Security Features
+
+- **Certificate Pinning**: CA verification
+- **Rate Limiting**: IP and user-based request throttling
+- **Session Management**: Automatic timeout and cleanup
+- **Input Sanitization**: Protection against injection attacks
+- **TOTP For Passwd reset**: Time-based one-time passwords reset codes
+- **Password Policies**: Complexity requirements and lockout
+- **Encryption**: TLS 1.3 with mutual authentication
+- **Authentication**: Bcrypt password hashing
+- **Real-time Monitoring**: Live bot statistics and attack analytics
+- **Attack Management**: Queue system with priority scheduling
+- **Multi-Architecture Support**: Cross-platform bot clients
+- **Comprehensive Auditing**: Detailed activity logging
+
+## 🤖 Bot Client Features
+
+- Multi-architecture support (x86, ARM, MIPS)
+- Anti-debugging techniques
+- Automated persistence
+- Resource efficient
 ## 🛠️ Configuration
 Edit `config.json` to customize settings:
 
@@ -134,27 +155,6 @@ Edit `config.json` to customize settings:
   "command_signing_key": "your_very_secure"
 }
 ```
-
-## 🔐 Security Features
-    - **Certificate Pinning**: CA verification
-    - **Rate Limiting**: IP and user-based request throttling
-    - **Session Management**: Automatic timeout and cleanup
-    - **Input Sanitization**: Protection against injection attacks
-    - **TOTP For Passwd reset**: Time-based one-time passwords reset codes
-    - **Password Policies**: Complexity requirements and lockout
-    
-    - **Encryption**: TLS 1.3 with mutual authentication
-    - **Authentication**: Bcrypt password hashing
-    - **Real-time Monitoring**: Live bot statistics and attack analytics
-    - **Attack Management**: Queue system with priority scheduling
-    - **Multi-Architecture Support**: Cross-platform bot clients
-    - **Comprehensive Auditing**: Detailed activity logging
-
-## 🤖 Bot Client Features
-    - Multi-architecture support (x86, ARM, MIPS)
-    - Anti-debugging techniques
-    - Automated persistence
-    - Resource efficient
 
 ## ⚙️ Attack Methods
 
