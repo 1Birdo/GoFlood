@@ -33,7 +33,7 @@
 
 
 ### Core Files
-| File          | Status       | Improvements Made                                                                 |
+| File          | File desc   | Status       | Improvements Made                                                                 |
 |---------------|-------------|-----------------------------------------------------------------------------------|
 | **main.go**   | C2 Server File  | 🟡 Medium Improvements  | - Enhanced TLS 1.3 configuration<br>- Improved attack queue system |
 | **bot.go**    | Client File   | 🔴 Partial Changes  | - Improved persistence mechanism<br>- Enhanced stats reporting |
