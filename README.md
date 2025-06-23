@@ -181,12 +181,6 @@ Edit `config.json` to customize settings:
 | logs        | View audit logs     | Admin+         |
 | reinstall   | Reinstall bots      | Admin+         |
 
-## 📜 License
-MIT License - See LICENSE for details.
-
-## ⚠️ Disclaimer
-This project is for educational and research purposes only. The authors are not responsible for any misuse of this software.
-
 ## Easy Videos (21/06/25) - All the videos are old and need updating
 ## *Finishing (05/06/25)* Proxy  - Showing off Proxy POC
 https://github.com/user-attachments/assets/fbe96e3a-ed11-4ea2-b8f1-cb567129cba6
@@ -203,3 +197,8 @@ https://github.com/user-attachments/assets/e2b9535f-5ede-401c-bb2d-da97b601a118
 ## Attack Example -- All outgoing traffic was filtered / Disabled for this Example.
 https://github.com/user-attachments/assets/531f09ef-ae28-4bcc-aae4-aaa564162acd
 
+## 📜 License
+MIT License - See LICENSE for details.
+
+## ⚠️ Disclaimer
+This project is for educational and research purposes only. The authors are not responsible for any misuse of this software.
