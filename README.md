@@ -1,4 +1,48 @@
- # GoFlood - DDos Framework
+ # GoFlood - DDoS Framework
+
+![Go Version](https://img.shields.io/badge/go-1.21+-blue.svg)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+![Security](https://img.shields.io/badge/Security-Level_5-green)
+![Multi-User](https://img.shields.io/badge/Multi--User-Yes-blue)
+![Bot Support](https://img.shields.io/badge/Bots-Cross--platform-orange)
+
+*A sophisticated Command and Control (C2) server with secure TLS proxy layer, featuring:*
+- **Bidirectional TLS 1.3 Proxy** (via `proxy.go`)
+- **Web Dashboard** with real-time connection metrics
+- **JWT Authentication** for admin interface
+- **Rate-limited API endpoints**
+
+## 🆕 Updated Proxy Implementation
+
+### Core Proxy Features (from proxy.go)
+| Feature                  | Implementation Detail                     | Config Parameter         |
+|--------------------------|-------------------------------------------|--------------------------|
+| TLS 1.3 Termination      | Full MITM-capable tunnel                  | `cert_file`, `key_file`  |
+| Connection Limiting      | Semaphore-based throttling                | `max_connections`        |
+| Traffic Accounting       | Byte counters for all flows               | `stats_interval`         |
+| Health Monitoring        | Backend hostname verification             | `backend_addr`           |
+| Admin Dashboard          | Password-protected with JWT               | `admin_username/password`|
+
+### Example proxy_config.json
+```json
+{
+  "listen_addr": "0.0.0.0:443",
+  "backend_addr": "10.0.0.2:1337",
+  "dashboard_port": "8443",
+  "admin_username": "generated_username",
+  "admin_password": "complex_password_here",
+  "max_connections": 250,
+  "stats_interval": 10
+}
+
+
+
+
+
+
+
+
+# GoFlood - DDos Framework
 
 ![Go Version](https://img.shields.io/badge/go-1.21+-blue.svg)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
@@ -42,23 +86,24 @@
 
 ## 🛠️ Technical Architecture
 ```
-                       ┌─────────────────┐
-┌─────────────────┐    │   Proxy  Client │    ┌─────────────────┐    
-│   C2 Server     │    │   ( Optional )  │    │   Bot Clients   │    ┌─────────────────┐
-│  - User Auth    │    │  - Load Balance │    │  - Auto-Connect │    │   Target Host   │
-│  - Attack Queue │───►│  - Traffic Obf  │◄───┤  - Attack Exec  │───►│  - Under Attack │
-│  - Logging      │◄───│  - TLS 1.3      │───►│  - Stats Report │    └─────────────────┘
-└───────┬─────────┘    └───────┬─────────┘    └─────────────────┘    
-        │                      │
+
+                       
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐    ┌──────────────────┐
+│   [C2 Server]   │    │  [Proxy Client] │    │   [Bot Clients] │    │    [ Target]     │
+│  - User Auth    │    │ - ( Optional )  │    │  - Auto-Connect │    │  - Target Host   │
+│  - Attack Queue │───►│ - Traffic Obf   │◄───┤  - Attack Exec  │───►│  - Stress Attack │
+│  - Logging      │◄───│ - TLS 1.3       │───►│  - Stats Report │    └──────────────────┘
+└───────┬─────────┘    │ - Web Dashboard │    └─────────────────┘    
+        │              └───────┬─────────┘
         ▼                      ▼
-┌─────────────────┐    ┌─────────────────┐
-│ Admin Dashboard │    │ Proxy Dashboard │
-│  - Attack Queue │    │ - Traffic stats │
-│  - Real-time    │───►│ - Relay         │
-│  - Monitoring   │◄───┤ - Health Check  │
-│  - Config Edits │    └─────────────────┘ 
-│  - User Auth    │      
-└─────────────────┘ 
+┌────────────────────┐    ┌────────────────────┐
+│ [Admin Dashboard]  │    │  [Proxy Dashboard] │
+│  - Attack Queue    │    │  - Traffic stats   │
+│  - Real-time       │───►│  - Relay           │
+│  - Monitoring      │◄───┤  - Health Check    │
+│  - Config Edits    │    └────────────────────┘ 
+│  - User Auth       │      
+└────────────────────┘ 
 ```
 
 ## ✨ Key Features
@@ -115,13 +160,13 @@ Edit `config.json` to customize settings:
 {
   "users_file": "users.json",
   "audit_log_file": "audit.log",
-  "bot_server_ip": "0.0.0.0",
+  "bot_server_ip": "172.17.126.64",
   "user_server_ip": "0.0.0.0",
-  "bot_server_port": "1337",
-  "user_server_port": "1338",
+  "bot_server_port": "7002",
+  "user_server_port": "5555",
   "cert_file": "certs/server.crt",
   "key_file": "certs/server.key",
-  "session_timeout": 3600000000000,
+  "session_timeout": 3600,
   "max_conns": 1000,
   "max_read_size": 4096,
   "max_log_size": 10485760,
@@ -134,14 +179,10 @@ Edit `config.json` to customize settings:
   "max_connections_per_ip": 5,
   "ddos_protection": true,
   "max_conn_rate": 10,
-  "syn_flood_threshold": 100,
-  "reset_token_validity": 3600000000000,
+  "syn_flood_threshold": 50,
+  "reset_token_validity": 3600,
   "pinned_cert_file": "certs/pinned.crt",
-  "command_signing_key": "your-secure-signing-key-here",
-  "geo_distributed": false,
-  "node_id": "node1",
-  "node_secret": "your-node-secret-here",
-  "peer_nodes": ["node2.example.com:1337", "node3.example.com:1337"]
+  "command_signing_key": "your_very_secure"
 }
 ```
 
@@ -202,7 +243,7 @@ This project is for educational and research purposes only. The authors are not 
 
 ## Easy Videos
 
-## *NEW (05/06/25)* Proxy  - Showing off Proxy POC
+## *Finishing (05/06/25)* Proxy  - Showing off Proxy POC
 https://github.com/user-attachments/assets/fbe96e3a-ed11-4ea2-b8f1-cb567129cba6
 
 ## Cli Output - CLI outputs on your terminal 
