@@ -136,6 +136,7 @@ Edit `config.json` to customize settings:
 ```
 
 ## 🔐 Security Features
+
 - **Certificate Pinning**: CA verification
 - **Rate Limiting**: IP and user-based request throttling
 - **Session Management**: Automatic timeout and cleanup
@@ -151,6 +152,7 @@ Edit `config.json` to customize settings:
 - **Comprehensive Auditing**: Detailed activity logging
 
 ## 🤖 Bot Client Features
+
 - Multi-architecture support (x86, ARM, MIPS)
 - Anti-debugging techniques
 - Automated persistence
