@@ -26,26 +26,26 @@
 ###  🏗️  Proxy Client is Optional
 ### Project Status
 | Component       | Status        | Current Progress | Improvements to be Added / Implemented |
-|-----------------|--------------|------------------|-----------------------|
-| **C2 Server**     | Testing Phase   | 840% Complete 🟠  | - Implement Gosstress-V2 Web Dashboard<br>- Develop REST API endpoints<br>- Enhance command queuing system |
-| **Stress Client** | Needs Development | 80% Complete 🟠 | - Expand L7/L4 attack methods<br>- Improve stability and fix features|
-| **Proxy Client**  | Testing Phase | 98% Nearly Completed 🟢 | - Just needs testing to make sure it secure<br>- Synchronization Verification |
+|-----------------|--------------|------------------|-------------------------------------------------------------------------------------------------------------------|
+| **C2 Server**     | Testing Phase   | 840% Complete 🟠      | - Implement Gosstress-V2 Web Dashboard<br>- Develop REST API endpoints<br>- Enhance command queuing system|
+| **Stress Client** | Needs Development | 80% Complete 🟠     | - Expand L7/L4 attack methods<br>- Improve stability and fix features                                     |
+| **Proxy Client**  | Testing Phase | 98% Nearly Completed 🟢 | - Just needs testing to make sure it secure<br>- Synchronization Verification                             |
 
 
 ### Core Files
-| File          | File desc   | Status       | Improvements Made                                                                 |
-|---------------|-------------|--------------|--------------------------------------------------------------------|
-| **main.go**   | C2 Server File  | 🟡 Medium Improvements  | - Enhanced TLS 1.3 configuration<br>- Improved attack queue system |
-| **bot.go**    | Client File   | 🔴 Partial Changes  | - Improved persistence mechanism<br>- Enhanced stats reporting |
-| **proxy.go**  | Proxy File| 🟢 Minor Improvements | - JWT Authentication<br>- Traffic monitoring improvements|
-| **README.md** |  Readme.md File| 🟡 Major Changes  | - Restructured documentation<br>- Added demo video <br>- small final polish |
+| File          | File desc   | Status       | Improvements Made                                                                    |
+|---------------|-------------|--------------|--------------------------------------------------------------------------------------|
+| **main.go**   | C2 Server File  | 🟡 Medium Improvements  | - Enhanced TLS 1.3 configuration<br>- Improved attack queue system    |
+| **bot.go**    | Client File   | 🔴 Partial Changes  | - Improved persistence mechanism<br>- Enhanced stats reporting              |
+| **proxy.go**  | Proxy File| 🟢 Minor Improvements   | - JWT Authentication<br>- Traffic monitoring improvements                   |
+| **README.md** |  Readme.md File| 🟡 Major Changes   | - Restructured documentation<br>- Added demo video <br>- small final polish |
 
 ### Support Scripts 
-| File                     | Status       | Key Features                                                                      |
-|--------------------------|-------------|-----------------------------------------------------------------------------------|
-| `generate_certs.sh`  Certificates Gen  File  | ✅ Complete  | - 4096-bit key generation<br>- SAN support for IP/DNS<br>- Proper file permissions |
-| `generate_32byte_key.sh` Cert Pinning Gen File| ✅ Complete  | - Hex/Base64 output<br>- Cryptographically secure RNG<br>- Clean output formatting |
-| `build.sh`   File Might not need Soon      | 🟠 Needs Work | - Missing ARM64 support<br>- No Windows cross-compile / Support<br>- Needs output directory |
+| File                       | Status        | Key Features                                                                                |
+|----------------------------|---------------|---------------------------------------------------------------------------------------------|
+| **generate_certs.sh**      | ✅ Complete   | - 4096-bit key generation<br>- SAN support for IP/DNS<br>- Proper file permissions          |
+| **generate_32byte_key.sh** | ✅ Complete   | - Hex/Base64 output<br>- Cryptographically secure RNG<br>- Clean output formatting          |
+| **build.sh**               | 🟠 Needs Work | - Missing ARM64 support<br>- No Windows cross-compile / Support<br>- Needs output directory |
 
 ## 🛠️ Technical Architecture
 ```
