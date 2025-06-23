@@ -31,9 +31,9 @@
 ### Project Status
 | Component       | Status        | Current Progress | Improvements to be Added / Implemented                                                                             |
 |-----------------|--------------|------------------|---------------------------------------------------------------------------------------------------------------------|
-| **C2 Server**     | Testing Phase   | 840% Complete 🟠      | - Implement Gosstress-V2 Web Dashboard<br>- Develop REST API endpoints<br>- Enhance command queuing system|
-| **Stress Client** | Needs Development | 80% Complete 🟠     | - Expand L7/L4 attack methods<br>- Improve stability and fix features                                     |
-| **Proxy Client**  | Testing Phase | 98% Nearly Completed 🟢 | - Just needs testing to make sure it secure<br>- Synchronization Verification                             |
+| **C2 Server**    | Testing Phase   | 840% Complete  🟠     | - Implement Gosstress-V2 Web Dashboard<br>- Develop REST API endpoints<br>- Enhance command queuing system|
+| **Stress Client**| Needs Development | 80% Complete 🟠     | - Expand L7/L4 attack methods<br>- Improve stability and fix features                                     |
+| **Proxy Client** | Testing Phase | 98% Finishing Up 🟢 | - Just needs testing to make sure it secure<br>- Synchronization Verification                             |
 
 
 ### Core Files
