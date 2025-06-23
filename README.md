@@ -15,7 +15,7 @@
   - Mutual TLS authentication for all connections
 
  - - **C2 Channel Description (Bot Connection Protocol)**:
-   - Protocol: TCP with TLS 1.3 encryption.
+   - Protocol: TCP with TLS 1.3 encryption (TCP/7002).
    - Bots and the C2 server authenticate each other using client and server certificates (X.509).
    - The server validates bot certificates against a pinned CA certificate to prevent impersonation.
    - Bots verify the server's certificate to avoid MITM attacks.
