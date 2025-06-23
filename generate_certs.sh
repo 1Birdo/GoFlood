@@ -1,135 +1,86 @@
 #!/bin/bash
+set -e
 
-# Configuration
-IP_ADDRESS="172.17.126.64"
+# ===== CONFIGURATION =====
+# IP Addresses (Replace with yours)
+C2_IP="104.194.144.77"
+PROXY_IP="104.194.140.54"
+CLIENT_IP="45.61.152.21"
+
+# Certificate Settings
+DAYS_VALID=3650           # 10 years
+KEY_SIZE=4096             # RSA key size
+PASSWORD="changeit"       # Password for PKCS12 files
+
+# Common Names (CN)
+CA_CN="CNC Root CA"
 SERVER_CN="CNC Server"
+PROXY_CN="CNC Proxy"
 CLIENT_CN="CNC Client"
-DAYS_VALID=3650
-KEY_SIZE=4096
-PASSWORD="changeit"  # Password for PKCS12 files, change as needed
 
-# Create certs directory
-mkdir -p certs
-cd certs || exit
+# ===== CERTIFICATE GENERATION =====
+CERTS_DIR="certs"
+mkdir -p $CERTS_DIR
+cd $CERTS_DIR
 
-# Generate CA private key
-echo "Generating CA private key..."
+# 1. Generate Certificate Authority (CA)
+echo -e "\n\033[1;36m[+] Generating CA Certificate\033[0m"
+mkdir -p ca && cd ca
 openssl genrsa -out ca.key $KEY_SIZE
+openssl req -new -x509 -days $DAYS_VALID -key ca.key -out ca.crt -subj "/CN=$CA_CN"
+cp ca.crt ../
+cd ..
 
-# Generate CA certificate
-echo "Generating CA certificate..."
-openssl req -new -x509 -days $DAYS_VALID -key ca.key -out ca.crt -subj "/CN=CNC Server CA"
-
-# Create CA chain file (same as ca.crt in this case)
-cp ca.crt ca-chain.crt
-
-# Generate server private key
-echo "Generating server private key..."
+# 2. Generate C2 Server Certificates
+echo -e "\n\033[1;36m[+] Generating C2 Server Certificate\033[0m"
+mkdir -p server && cd server
 openssl genrsa -out server.key $KEY_SIZE
+openssl req -new -key server.key -out server.csr -subj "/CN=$SERVER_CN" -addext "subjectAltName=IP:$C2_IP,DNS:cnc.example.com"
+openssl x509 -req -days $DAYS_VALID -in server.csr -CA ../ca/ca.crt -CAkey ../ca/ca.key -CAcreateserial -out server.crt -extfile <(printf "subjectAltName=IP:$C2_IP,DNS:cnc.example.com")
 
-# Generate server config file for SAN
-echo "Creating server SAN config..."
-cat > server.cnf <<EOL
-[req]
-req_extensions = v3_req
-distinguished_name = req_distinguished_name
+# Create pinned.crt (copy of server.crt)
+cp server.crt pinned.crt
 
-[req_distinguished_name]
-commonName = $SERVER_CN
+# Create combined PEM and PKCS12
+cat server.crt server.key > server.pem
+openssl pkcs12 -export -out server.p12 -inkey server.key -in server.crt -certfile ../ca/ca.crt -passout pass:$PASSWORD
+cd ..
 
-[v3_req]
-basicConstraints = CA:FALSE
-keyUsage = nonRepudiation, digitalSignature, keyEncipherment
-subjectAltName = @alt_names
 
-[alt_names]
-IP.1 = $IP_ADDRESS
-EOL
 
-# Generate server CSR
-echo "Generating server CSR..."
-openssl req -new -key server.key -out server.csr -config server.cnf
+# 3. Generate Proxy Certificates
+echo -e "\n\033[1;36m[+] Generating Proxy Certificate\033[0m"
+mkdir -p proxy && cd proxy
+openssl genrsa -out proxy.key $KEY_SIZE
+openssl req -new -key proxy.key -out proxy.csr -subj "/CN=$PROXY_CN" -addext "subjectAltName=IP:$PROXY_IP,DNS:proxy.example.com"
+openssl x509 -req -days $DAYS_VALID -in proxy.csr -CA ../ca/ca.crt -CAkey ../ca/ca.key -CAcreateserial -out proxy.crt -extfile <(printf "subjectAltName=IP:$PROXY_IP,DNS:proxy.example.com")
+cat proxy.crt proxy.key > proxy.pem
+openssl pkcs12 -export -out proxy.p12 -inkey proxy.key -in proxy.crt -certfile ../ca/ca.crt -passout pass:$PASSWORD
+cd ..
 
-# Sign server certificate with CA
-echo "Signing server certificate..."
-openssl x509 -req -days $DAYS_VALID -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial \
-  -out server.crt -extensions v3_req -extfile server.cnf
-
-# Create pinned.crt (fingerprint of server certificate)
-echo "Creating pinned.crt..."
-openssl x509 -in server.crt -out pinned.crt
-
-# Create properly formatted server.pem
-echo "Creating server.pem..."
-cat server.crt > server.pem
-echo "" >> server.pem
-cat server.key >> server.pem
-
-# Create server PKCS12 file
-echo "Creating server.p12..."
-openssl pkcs12 -export -out server.p12 -inkey server.key -in server.crt -certfile ca.crt -passout pass:$PASSWORD
-
-# Generate client private key
-echo "Generating client private key..."
+# 4. Generate Client Certificates
+echo -e "\n\033[1;36m[+] Generating Client Certificate\033[0m"
+mkdir -p client && cd client
 openssl genrsa -out client.key $KEY_SIZE
+openssl req -new -key client.key -out client.csr -subj "/CN=$CLIENT_CN" -addext "subjectAltName=IP:$CLIENT_IP"
+openssl x509 -req -days $DAYS_VALID -in client.csr -CA ../ca/ca.crt -CAkey ../ca/ca.key -CAcreateserial -out client.crt -extfile <(printf "subjectAltName=IP:$CLIENT_IP")
+cat client.crt client.key > client.pem
+openssl pkcs12 -export -out client.p12 -inkey client.key -in client.crt -certfile ../ca/ca.crt -passout pass:$PASSWORD
+cd ..
 
-# Generate client config file for SAN
-echo "Creating client SAN config..."
-cat > client.cnf <<EOL
-[req]
-req_extensions = v3_req
-distinguished_name = req_distinguished_name
+# ===== FINAL SETUP =====
+# Set strict permissions
+chmod 600 */*.key */*.pem */*.crt
 
-[req_distinguished_name]
-commonName = $CLIENT_CN
+# Generate truststore (for Java-based apps)
+echo -e "\n\033[1;36m[+] Generating Truststore\033[0m"
+keytool -import -trustcacerts -noprompt -alias ca -file ca/ca.crt -keystore truststore.p12 -storetype PKCS12 -storepass $PASSWORD
 
-[v3_req]
-basicConstraints = CA:FALSE
-keyUsage = nonRepudiation, digitalSignature, keyEncipherment
-subjectAltName = @alt_names
+# Cleanup temporary files
+rm -f */*.csr */*.srl
 
-[alt_names]
-IP.1 = $IP_ADDRESS
-EOL
+echo -e "\n\033[1;32m✅ Certificates generated successfully!\033[0m"
+echo -e "📁 Directory Structure:"
+tree .
 
-# Generate client CSR
-echo "Generating client CSR..."
-openssl req -new -key client.key -out client.csr -config client.cnf
-
-# Sign client certificate with CA
-echo "Signing client certificate..."
-openssl x509 -req -days $DAYS_VALID -in client.csr -CA ca.crt -CAkey ca.key -CAcreateserial \
-  -out client.crt -extensions v3_req -extfile client.cnf
-
-# Create properly formatted client.pem
-echo "Creating client.pem..."
-cat client.crt > client.pem
-echo "" >> client.pem
-cat client.key >> client.pem
-
-# Create client PKCS12 file
-echo "Creating client.p12..."
-openssl pkcs12 -export -out client.p12 -inkey client.key -in client.crt -certfile ca.crt -passout pass:$PASSWORD
-
-# Create combined truststore (CA certificate)
-echo "Creating truststore.p12..."
-keytool -import -trustcacerts -noprompt -alias ca -file ca.crt -keystore truststore.p12 -storetype PKCS12 -storepass $PASSWORD
-
-# Create full chain files
-echo "Creating full chain files..."
-cat server.crt ca.crt > server-full-chain.crt
-cat client.crt ca.crt > client-full-chain.crt
-
-# Set proper permissions
-chmod 600 *.key *.pem *.p12 *.crt
-
-# Clean up
-rm -f *.csr *.cnf *.srl
-
-echo ""
-echo "============================================"
-echo "Certificate generation complete!"
-echo "Files generated in certs/ directory:"
-echo "--------------------------------------------"
-ls -l
-echo "============================================"
+echo -e "\n\033[1;33m🔐 Password for PKCS12 files: $PASSWORD\033[0m"
