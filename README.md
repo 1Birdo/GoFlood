@@ -21,8 +21,8 @@
 | Component       | Status        | Current Progress | Improvements to be Added / Implemented |
 |-----------------|--------------|------------------|-----------------------|
 | **C2 Server**   | Functional   | 80% Complete 🟠  | - Implement Gosstress-V2 Web Dashboard<br>- Develop REST API endpoints<br>- Enhance command queuing system |
-| **Client**      | In Development | 84% Complete 🟠 | - Expand L7 attack methods<br>- Improve connection stability<br>- More persistence mechanisms (potentially a future  integration) |
-| **Proxy Network** | Testing Phase | 95% Complete ⚠️ | - Comprehensive testing to make sure it secure<br>- Dashboard security hardening<br>-<br>- synchronization verification |
+| **Stress Client**      | In Development | 84% Complete 🟠 | - Expand L7 attack methods<br>- Improve connection stability<br>- More persistence mechanisms (potentially a future  integration) |
+| **Proxy Client** | Testing Phase | 98 % Complete 🟢 | - Just needs testing to make sure it secure<br>- Synchronization Verification |
 
 
 ### Core Files
@@ -30,7 +30,7 @@
 |---------------|-------------|-----------------------------------------------------------------------------------|
 | `main.go`   C2 Server File  | ❌ Needs Work  | - Enhanced TLS 1.3 configuration<br>-<br>- Improved attack queue system |
 | `bot.go`    Client File   | ⚠️ Partial   | - Added anti-debugging checks<br>- Improved persistence mechanism<br>- Enhanced stats reporting |
-| `proxy.go`  Proxy File| 🟠 Just Improvements | - Bidirectional TLS 1.3<br>- Traffic monitoring dashboard<br>- |
+| `proxy.go`  Proxy File| 🟢 Minor Improvements | - JWT Authentication<br>- Traffic monitoring improvements<br>- |
 | `README.md`  Readme.md File| ⚠️ Partial  | - Restructured documentation<br>- Added demo video placeholders<br>- Needs final polish |
 
 ### Support Scripts 
@@ -44,22 +44,23 @@
 ```
 
                        
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐    ┌──────────────────┐
-│   [C2 Server]   │    │  [Proxy Client] │    │   [Bot Clients] │    │    [ Target]     │
-│  - User Auth    │    │ - ( Optional )  │    │  - Auto-Connect │    │  - Target Host   │
-│  - Attack Queue │───►│ - Traffic Obf   │◄───┤  - Attack Exec  │───►│  - Stress Attack │
-│  - Logging      │◄───│ - TLS 1.3       │───►│  - Stats Report │    └──────────────────┘
-└───────┬─────────┘    │ - Web Dashboard │    └─────────────────┘    
-        │              └───────┬─────────┘
+┌───────────────────┐    ┌─────────────────┐    ┌─────────────────┐    ┌──────────────────┐
+│   [C2 Server]     │    │  [Proxy Client] │    │   [Bot Clients] │    │    [ Target]     │
+│  - User Auth      │    │ - ( Optional )  │    │  - Auto-Connect │    │  - Target Host   │
+│  - Stress Attacks │───►│ - Traffic Obf   │◄───┤  - Attack Exec  │───►│  - Stress Attack │
+│  - audit Logging  │◄───│ - TLS 1.3       │───►│  - Stats Report │    └──────────────────┘
+└───────┬───────────┘    │ - Web Dashboard │    └─────────────────┘    
+        │                 └───────┬────────┘
         ▼                      ▼
-┌────────────────────┐    ┌────────────────────┐
-│ [Admin Dashboard]  │    │  [Proxy Dashboard] │
-│  - Attack Queue    │    │  - Traffic stats   │
-│  - Real-time       │───►│  - Relay           │
-│  - Monitoring      │◄───┤  - Health Check    │
-│  - Config Edits    │    └────────────────────┘ 
-│  - User Auth       │      
-└────────────────────┘ 
+┌──────────────────────┐    ┌────────────────────┐
+│   [Admin Dashboard]  │    │  [Proxy Dashboard] │
+│  - Authentication    │    │  - Traffic stats   │
+│  - Real-time stats   │───►│  - Health Check    │
+│  - Monitoring        │◄───┤  - Authentication  │
+│  - Config Edits      │    └────────────────────┘ 
+│  - Attack Queue      │
+│  - Attack Scheduling │    
+└──────────────────────┘ 
 ```
 
 ## ✨ Key Features
