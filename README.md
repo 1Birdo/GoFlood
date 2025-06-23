@@ -10,9 +10,9 @@
 ###  Mostly Linux Based / WSL Supported
 📶 This framework merges the functionality of **Gostress-V2 / Gostress-Enhanced** and **BotnetGo**, offering a complete **C2 solution** featuring:
 -  **Encrypted C2 Channels**:
-  - TLS 1.3 secured terminal interface (TCP/1337)
-  - WebSocket dashboard (TCP/8443) 
-  - Mutual TLS authentication for all connections
+    - TLS 1.3 secured terminal interface (TCP/1337)
+    - WebSocket dashboard (TCP/8443) 
+    - Mutual TLS authentication for all connections
 
  - **C2 Channel Description (Bot Connection Protocol)**:
    - Protocol: TCP with TLS 1.3 encryption (TCP/7002).
