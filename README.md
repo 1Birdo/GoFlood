@@ -3,8 +3,12 @@
 ![Go Version](https://img.shields.io/badge/go-1.21+-blue.svg)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 ![Security](https://img.shields.io/badge/Security-Level_5-green)
+![Security](https://img.shields.io/badge/Security-MTLS_Encrypted-brightgreen)
 ![Multi-User](https://img.shields.io/badge/Multi--User-Yes-blue)
 ![Bot Support](https://img.shields.io/badge/Bots-Cross--platform-orange)
+![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20WSL-blueviolet)
+![Architecture](https://img.shields.io/badge/Architecture-Distributed-orange)
+
 
 *A sophisticated Command and Control (C2) server with standard features, with secure and efficient distributed botnet management. Includes both Terminal and Web UI interfaces to accommodate different user preferences.*
 ###  Mostly Linux Based / WSL Supported
