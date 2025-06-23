@@ -1,0 +1,13 @@
+[
+  {
+    "username": "root",
+    "passwordHash": "$2a$10$BwEy.oI8pS72WffiuFvbAuk/V549q2vw.BwWAxs15A8vymQ9TOE2W",
+    "expire": "2035-06-23T20:25:44.690687408+01:00",
+    "level": "Owner",
+    "lastLogin": "0001-01-01T00:00:00Z",
+    "failedAttempts": 0,
+    "lockedUntil": "0001-01-01T00:00:00Z",
+    "createdAt": "2025-06-23T20:25:44.690704889+01:00",
+    "lastActivity": "0001-01-01T00:00:00Z"
+  }
+]
