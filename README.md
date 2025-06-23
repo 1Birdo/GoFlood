@@ -187,7 +187,7 @@ MIT License - See LICENSE for details.
 ## ⚠️ Disclaimer
 This project is for educational and research purposes only. The authors are not responsible for any misuse of this software.
 
-## Easy Videos
+## Easy Videos (21/06/25) - All the videos are old and need updating
 ## *Finishing (05/06/25)* Proxy  - Showing off Proxy POC
 https://github.com/user-attachments/assets/fbe96e3a-ed11-4ea2-b8f1-cb567129cba6
 
