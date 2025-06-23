@@ -9,10 +9,17 @@
 *A sophisticated Command and Control (C2) server with standard features, with secure and efficient distributed botnet management. Includes both Terminal and Web UI interfaces to accommodate different user preferences.*
 ###  Mostly Linux Based / WSL Supported
 📶 This framework merges the functionality of **Gostress-V2 / Gostress-Enhanced** and **BotnetGo**, offering a complete **C2 solution** featuring:
-- A **REST API** for a web dashboard, as well as a basic web-ui for the proxies as well.
-- A **Terminal interface**.
-- **OpenSSL TLS 1.3** enforcement for secure communications.
-- **Trusted connections** for enhanced security.
+- - **Encrypted C2 Channels**:
+  - TLS 1.3 secured terminal interface (TCP/1337)
+  - WebSocket dashboard (TCP/8443) 
+  - Mutual TLS authentication for all connections
+
+ - - **C2 Channel Description (Bot Connection Protocol)**:
+   - Protocol: TCP with TLS 1.3 encryption.
+   - Bots and the C2 server authenticate each other using client and server certificates (X.509).
+   - The server validates bot certificates against a pinned CA certificate to prevent impersonation.
+   - Bots verify the server's certificate to avoid MITM attacks.
+    
 
  *⚠️ **Note**: In the wake of coordinated efforts such as Operation EndGame, PowerOFF, and Cronos, this project serves only as an educational and analytical reference for understanding botnet infrastructure. Real-world deployment of such tools carries significant legal risk*.
 ## 📁 File Status Overview
