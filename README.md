@@ -22,7 +22,7 @@
 |-----------------|--------------|------------------|-----------------------|
 | **C2 Server**   | Functional   | 80% Complete 🟠  | - Implement Gosstress-V2 Web Dashboard<br>- Develop REST API endpoints<br>- Enhance command queuing system |
 | **Stress Client**      | In Development | 84% Complete 🟠 | - Expand L7 attack methods<br>- Improve connection stability<br>- More persistence mechanisms (potentially a future  integration) |
-| **Proxy Client** | Testing Phase | 98 % Complete 🟢 | - Just needs testing to make sure it secure<br>- Synchronization Verification |
+| **Proxy Client** | Testing Phase | 98% Nearly Completed 🟢 | - Just needs testing to make sure it secure<br>- Synchronization Verification |
 
 
 ### Core Files
