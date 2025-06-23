@@ -73,17 +73,6 @@
 │  - Attack Scheduling │    
 └──────────────────────┘ 
 ```
-
-## ✨ Key Features
-
-- **Military-Grade Encryption**: TLS 1.3 with mutual authentication
-- **Advanced Authentication**: Bcrypt password hashing
-- **Real-time Monitoring**: Live bot statistics and attack analytics
-- **Attack Management**: Queue system with priority scheduling
-- **Multi-Architecture Support**: Cross-platform bot clients
-- **Comprehensive Auditing**: Detailed activity logging
-- **Resource Management**: Rate limiting and quotas
-
 ## 📦 Quick Start
 
 ### Prerequisites
@@ -155,7 +144,6 @@ Edit `config.json` to customize settings:
 ```
 
 ## 🔐 Security Features
-
 - **Certificate Pinning**: CA verification
 - **Rate Limiting**: IP and user-based request throttling
 - **Session Management**: Automatic timeout and cleanup
@@ -163,12 +151,18 @@ Edit `config.json` to customize settings:
 - **TOTP For Passwd reset**: Time-based one-time passwords reset codes
 - **Password Policies**: Complexity requirements and lockout
 
+- **Encryption**: TLS 1.3 with mutual authentication
+- **Authentication**: Bcrypt password hashing
+- **Real-time Monitoring**: Live bot statistics and attack analytics
+- **Attack Management**: Queue system with priority scheduling
+- **Multi-Architecture Support**: Cross-platform bot clients
+- **Comprehensive Auditing**: Detailed activity logging
+
 ## 🤖 Bot Client Features
 - Multi-architecture support (x86, ARM, MIPS)
 - Anti-debugging techniques
 - Automated persistence
 - Resource efficient
-- Encrypted communications
 
 ## ⚙️ Attack Methods
 
@@ -194,23 +188,13 @@ Edit `config.json` to customize settings:
 | logs        | View audit logs     | Admin+         |
 | reinstall   | Reinstall bots      | Admin+         |
 
-## 📊 Statistics Tracking
-- Real-time bot performance metrics
-- Attack success rates
-- Resource utilization
-- Network latency monitoring
-- Health status tracking
-
 ## 📜 License
-
 MIT License - See LICENSE for details.
 
 ## ⚠️ Disclaimer
-
 This project is for educational and research purposes only. The authors are not responsible for any misuse of this software.
 
 ## Easy Videos
-
 ## *Finishing (05/06/25)* Proxy  - Showing off Proxy POC
 https://github.com/user-attachments/assets/fbe96e3a-ed11-4ea2-b8f1-cb567129cba6
 
