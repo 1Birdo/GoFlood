@@ -34,7 +34,7 @@ All Files mainly uploaded just need fixes and to be stable and to make it just w
 |-----------------|---------------|------------------|--------------------------------------------------------------------------------------------------------------|
 | **C2 Server**    | Testing Phase     |  🟠 84%   | - Implement Gosstress-V2 Web Dashboard<br>- Develop REST API endpoints<br>- improve queuing system|
 | **Stress Client**| Needs Development |  🟠 86%   | - Expand L7/L4 attack methods  |
-| **Proxy Client** | Testing Phase     |  🟢 100% [Finished]  | - Nothing At the moment maybe just visual dashboard updates / web dashboard improvements  |
+| **Proxy Client** | Testing Phase     |  🟢 100% [Completed] | - Nothing At the moment maybe just visual dashboard updates / web dashboard improvements  |
 
 
 ### Core Files
@@ -48,10 +48,10 @@ All Files mainly uploaded just need fixes and to be stable and to make it just w
 ### Support Scripts 
 | File                       | Status        | Key Features                                                                                |
 |----------------------------|---------------|---------------------------------------------------------------------------------------------|
-| **generate_certs.sh**      | ✅ Complete   | - 4096-bit key generation<br>- Proper file permissions                                      |
-| **generate_32byte_key.sh** | ✅ Complete   | - Hex/Base64 output<br>- Cryptographically secure RNG<br>- Clean output formatting          |
-| **build.sh**               | ✅ Complete   | - Supports most-All arch types <br>- Windows - Linux - MacOS cross-compile / Support        |
-| **obf_build.sh**           | ✅ Complete   | - Same cross-platform support as build.sh <br>- Includes obfuscation + Compression options  |
+| **generate_certs.sh**      | ✅ [Completed]   | - 4096-bit key generation<br>- Proper file permissions                                      |
+| **generate_32byte_key.sh** | ✅ [Completed]   | - Hex/Base64 output<br>- Cryptographically secure RNG<br>- Clean output formatting          |
+| **build.sh**               | ✅ [Completed]   | - Supports most-All arch types <br>- Windows - Linux - MacOS cross-compile / Support        |
+| **obf_build.sh**           | ✅ [Completed]   | - Same cross-platform support as build.sh <br>- Includes obfuscation + Compression options  |
 
 ## 🛠️ Technical Architecture
 
