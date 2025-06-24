@@ -30,8 +30,8 @@ All Files mainly uploaded just need fixes and to be stable and to make it just w
 ## 📁 File Status Overview
 ###  🏗️  Proxy Client is Optional
 ### Project Status
-| Component       | Status        | Current Progress | Improvements to be Added / Implemented                                                                             |
-|-----------------|------------------|---------------------|--------------------------------------------------------------------------------------------------------------|
+| Component       | Status        | Current Progress | Improvements to be Added / Implemented                                                                       |
+|-----------------|---------------|------------------|--------------------------------------------------------------------------------------------------------------|
 | **C2 Server**    | Testing Phase     | 🟠 84% Complete  | - Implement Gosstress-V2 Web Dashboard<br>- Develop REST API endpoints<br>- improve queuing system|
 | **Stress Client**| Needs Development | 🟠 86% Complete  | - Expand L7/L4 attack methods  |
 | **Proxy Client** | Testing Phase     | 🟢 100% Finished | - Nothing At the moment maybe just visual dashboard updates / web dashboard improvements  |
