@@ -1,6 +1,6 @@
 {
-  "listen_addr": "104.194.140.54:7003",
-  "backend_addr": "104.194.144.77:1337",
+  "listen_addr": "Public_IP:7003",
+  "backend_addr": "C2/Server_IP:1337",
   "dashboard_port": "8443",
   "admin_username": "admin",
   "admin_password": "adminss",
