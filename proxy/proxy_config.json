@@ -1,0 +1,15 @@
+{
+  "listen_addr": "104.194.140.54:7003",
+  "backend_addr": "104.194.144.77:1337",
+  "dashboard_port": "8443",
+  "admin_username": "admin",
+  "admin_password": "adminss",
+  "cert_file": "certs/server.pem",
+  "key_file": "certs/server.key",
+  "ca_cert_file": "certs/ca.crt",
+  "stats_interval": 5,
+  "max_connections": 1000,
+  "max_buffer_size": 1048576,
+  "jwt_secret": "your-jwt-secret-here",
+  "enable_debug_logs": true
+}

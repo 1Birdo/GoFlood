@@ -102,7 +102,7 @@ func main() {
 	}
 	if config.JWTSecret == "" {
 		config.JWTSecret = generateRandomSecret()
-		logger.Warn().Msg("Using auto-generated JWT secret - recommend setting a fixed value in config")
+		logger.Warn().Msg("Using auto-generated JWT secret")
 	}
 
 	proxy := &ProxyServer{
@@ -119,7 +119,7 @@ func main() {
 			MinVersion:         tls.VersionTLS13,
 			InsecureSkipVerify: true,
 		},
-		loginLimiter: rate.NewLimiter(rate.Every(5*time.Second), 1), // 1 request per 5 seconds
+		loginLimiter: rate.NewLimiter(rate.Every(5*time.Second), 1),
 		logger:       logger,
 		activeConns:  make(chan struct{}, config.MaxConnections),
 	}
@@ -461,7 +461,6 @@ func (p *ProxyServer) handleStats(w http.ResponseWriter, r *http.Request) {
 	}
 	defer conn.Close()
 
-	// Send initial auth verification
 	if err := conn.WriteJSON(map[string]interface{}{
 		"type":    "auth",
 		"success": true,
@@ -473,7 +472,6 @@ func (p *ProxyServer) handleStats(w http.ResponseWriter, r *http.Request) {
 	ticker := time.NewTicker(time.Duration(p.config.StatsInterval) * time.Second)
 	defer ticker.Stop()
 
-	// Improved version using range over ticker channel
 	for range ticker.C {
 		p.statsLock.Lock()
 		stats := *p.stats

