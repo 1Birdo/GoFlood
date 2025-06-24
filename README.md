@@ -48,9 +48,10 @@ All Files mainly uploaded just need fixes and to be stable and to make it just w
 ### Support Scripts 
 | File                       | Status        | Key Features                                                                                |
 |----------------------------|---------------|---------------------------------------------------------------------------------------------|
-| **generate_certs.sh**      | ✅ Complete   | - 4096-bit key generation<br>- SAN support for IP/DNS<br>- Proper file permissions          |
+| **generate_certs.sh**      | ✅ Complete   | - 4096-bit key generation<br>- Proper file permissions                                      |
 | **generate_32byte_key.sh** | ✅ Complete   | - Hex/Base64 output<br>- Cryptographically secure RNG<br>- Clean output formatting          |
-| **build.sh**               | 🟠 Needs Work | - Missing ARM64 support<br>- No Windows cross-compile / Support<br>- Needs output directory |
+| **build.sh**               | ✅ Complete   | - Supports most-All arch types <br>- Windows - Linux - MacOS cross-compile / Support        |
+| **obf_build.sh**           | ✅ Complete   | - Same cross-platform support as build.sh <br>- Includes obfuscation + Compression options  |
 
 ## 🛠️ Technical Architecture
 
