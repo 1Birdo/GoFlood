@@ -41,7 +41,7 @@ All Files mainly uploaded just need fixes and to be stable and to make it just w
 | File          | File desc   | Status       | Improvements Made                                                                    |
 |---------------|-------------|--------------|--------------------------------------------------------------------------------------|
 | **main.go**   | C2 Server File  | 🟡 Major Improvements  | - Fully Stable Connection + minimal timeouts<br>- Improved QoL + cleaned up           |
-| **bot.go**    | Client File   | 🔴 Partial Changes  | - Improved support for IPV6 + IPV4<br>- Improved QoL + Cleaned up <br>- Improved Stat gathering |
+| **client.go**    | Client File   | 🔴 Partial Changes  | - Improved support for IPV6 + IPV4<br>- Improved QoL + Cleaned up <br>- Improved Stat gathering |
 | **proxy.go**  | Proxy File| 🟢 Minor Improvements   | - JWT Authentication + CSRF Procection<br>- Traffic monitoring improvements                   |
 | **README.md** |  Readme.md File| 🟡 Major Changes   | - Restructured documentation<br>- Added demo video <br>- needs final polish |
 
