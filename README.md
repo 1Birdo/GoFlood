@@ -113,8 +113,6 @@ go get github.com/json-iterator/go
 go get github.com/golang-jwt/jwt/v5
 go get github.com/gorilla/websocket
 go get github.com/rs/zerolog
-
-
 ```
 
 ## 🔐 Security Features
