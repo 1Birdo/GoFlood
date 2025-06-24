@@ -53,7 +53,7 @@ All Files mainly uploaded just need fixes and to be stable and to make it just w
 | **build.sh**               | 🟠 Needs Work | - Missing ARM64 support<br>- No Windows cross-compile / Support<br>- Needs output directory |
 
 ## 🛠️ Technical Architecture
-```
+```mermaid
 
                        
 ┌───────────────────┐    ┌─────────────────┐    ┌─────────────────┐    ┌──────────────────┐
@@ -87,7 +87,7 @@ All Files mainly uploaded just need fixes and to be stable and to make it just w
 | [🛡️ Admin Controls](https://github.com/user-attachments/assets/e2b9535f-5ede-401c-bb2d-da97b601a118) | User management, audit logs, system controls   | ✅ |
 
 ### Server / C2
-```bash
+```
 # Generate certificates
 chmod +x generate_certs.sh setup_C2.sh 
 ./generate_certs.sh
@@ -101,7 +101,7 @@ go build -o cnc main.go
 ```
 
 ### Install needed packages / Tools
-```
+```bash
 # UPX (compression) - Openssl (Certs) - 
 sudo apt install upx-ucl
 
