@@ -32,18 +32,18 @@ All Files mainly uploaded just need fixes and to be stable and to make it just w
 ### Project Status
 | Component       | Status        | Current Progress | Improvements to be Added / Implemented                                                                             |
 |-----------------|--------------|------------------|---------------------------------------------------------------------------------------------------------------------|
-| **C2 Server**    | Testing Phase   | 84% Complete  🟠     | - Implement Gosstress-V2 Web Dashboard<br>- Develop REST API endpoints<br>- Enhance command queuing system|
-| **Stress Client**| Needs Development | 80% Complete 🔴     | - Expand L7/L4 attack methods<br>- Improve stability and fix features                                     |
-| **Proxy Client** | Testing Phase | 98% Finishing Up 🟢 | - Just needs testing to make sure it secure<br>- Synchronization Verification                             |
+| **C2 Server**    | Testing Phase   | 84% Complete  🟠     | - Implement Gosstress-V2 Web Dashboard<br>- Develop REST API endpoints<br>- Enhance command queuing system |
+| **Stress Client**| Needs Development | 86% Complete 🟠     | - Expand L7/L4 attack methods<br>-                                                                        |
+| **Proxy Client** | Testing Phase | 100% Finished 🟢 | - Nothing At the moment maybe just visual dashboard updates / web dashboard improvements                         |
 
 
 ### Core Files
 | File          | File desc   | Status       | Improvements Made                                                                    |
 |---------------|-------------|--------------|--------------------------------------------------------------------------------------|
-| **main.go**   | C2 Server File  | 🟡 Medium Improvements  | - Enhanced TLS 1.3 configuration<br>- Improved attack queue system    |
-| **bot.go**    | Client File   | 🔴 Partial Changes  | - Improved persistence mechanism<br>- Enhanced stats reporting              |
-| **proxy.go**  | Proxy File| 🟢 Minor Improvements   | - JWT Authentication<br>- Traffic monitoring improvements                   |
-| **README.md** |  Readme.md File| 🟡 Major Changes   | - Restructured documentation<br>- Added demo video <br>- small final polish |
+| **main.go**   | C2 Server File  | 🟡 Major Improvements  | - Fully Stable Connection + minimal timeouts<br>- Improved QoL + cleaned up           |
+| **bot.go**    | Client File   | 🔴 Partial Changes  | - Improved support for IPV6 + IPV4<br>- Improved QoL + Cleaned up <br>- Improved Stat gathering |
+| **proxy.go**  | Proxy File| 🟢 Minor Improvements   | - JWT Authentication + CSRF Procection<br>- Traffic monitoring improvements                   |
+| **README.md** |  Readme.md File| 🟡 Major Changes   | - Restructured documentation<br>- Added demo video <br>- needs final polish |
 
 ### Support Scripts 
 | File                       | Status        | Key Features                                                                                |
