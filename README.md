@@ -53,26 +53,52 @@ All Files mainly uploaded just need fixes and to be stable and to make it just w
 | **build.sh**               | 🟠 Needs Work | - Missing ARM64 support<br>- No Windows cross-compile / Support<br>- Needs output directory |
 
 ## 🛠️ Technical Architecture
-```
+```flowchart TD
+    subgraph C2_Server["C2 Server"]
+        A1[User Auth]
+        A2[Stress Attacks]
+        A3[Audit Logging]
+    end
 
-                       
-┌───────────────────┐    ┌─────────────────┐    ┌─────────────────┐    ┌──────────────────┐
-│   [C2 Server]     │    │  [Proxy Client] │    │   [Bot Clients] │    │    [ Target]     │
-│  - User Auth      │    │ - ( Optional )  │    │  - Auto-Connect │    │  - Target Host   │
-│  - Stress Attacks │───►│ - Traffic Obf   │◄───┤  - Attack Exec  │───►│  - Stress Attack │
-│  - audit Logging  │◄───│ - TLS 1.3       │───►│  - Stats Report │    └──────────────────┘
-└───────┬───────────┘    │ - Web Dashboard │    └─────────────────┘    
-        │                └────────┬────────┘
-        ▼                      ▼
-┌──────────────────────┐    ┌────────────────────┐
-│   [Admin Dashboard]  │    │  [Proxy Dashboard] │
-│  - Authentication    │    │  - Traffic stats   │
-│  - Real-time stats   │    │  - Health Check    │
-│  - Monitoring        │    │  - Authentication  │
-│  - Config Edits      │    └────────────────────┘ 
-│  - Attack Queue      │
-│  - Attack Scheduling │    
-└──────────────────────┘ 
+    subgraph Proxy_Client["Proxy Client (Optional)"]
+        B1[Traffic Obfuscation]
+        B2[TLS 1.3]
+        B3[Web Dashboard]
+    end
+
+    subgraph Bot_Clients["Bot Clients"]
+        C1[Auto-Connect]
+        C2[Attack Execution]
+        C3[Stats Reporting]
+    end
+
+    subgraph Target["Target"]
+        D1[Target Host]
+        D2[Stress Attack]
+    end
+
+    subgraph Admin_Dashboard["Admin Dashboard"]
+        E1[Authentication]
+        E2[Real-time Stats]
+        E3[Monitoring]
+        E4[Config Edits]
+        E5[Attack Queue]
+        E6[Attack Scheduling]
+    end
+
+    subgraph Proxy_Dashboard["Proxy Dashboard"]
+        F1[Traffic Stats]
+        F2[Health Check]
+        F3[Authentication]
+    end
+
+    C2_Server -->|Commands| Proxy_Client
+    Proxy_Client -->|Control| Bot_Clients
+    Bot_Clients -->|Attack| Target
+    Bot_Clients -->|Stats| Proxy_Client
+    Proxy_Client -->|Logs| C2_Server
+    C2_Server --> Admin_Dashboard
+    Proxy_Client --> Proxy_Dashboard
 ```
 
 ## 🎥 Video Demonstrations
