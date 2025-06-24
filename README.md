@@ -53,30 +53,27 @@ All Files mainly uploaded just need fixes and to be stable and to make it just w
 | **build.sh**               | 🟠 Needs Work | - Missing ARM64 support<br>- No Windows cross-compile / Support<br>- Needs output directory |
 
 ## 🛠️ Technical Architecture
-```flowchart TD
+
+flowchart TD
     subgraph C2_Server["C2 Server"]
         A1[User Auth]
         A2[Stress Attacks]
         A3[Audit Logging]
     end
-
     subgraph Proxy_Client["Proxy Client (Optional)"]
         B1[Traffic Obfuscation]
         B2[TLS 1.3]
         B3[Web Dashboard]
     end
-
     subgraph Bot_Clients["Bot Clients"]
         C1[Auto-Connect]
         C2[Attack Execution]
         C3[Stats Reporting]
     end
-
     subgraph Target["Target"]
         D1[Target Host]
         D2[Stress Attack]
     end
-
     subgraph Admin_Dashboard["Admin Dashboard"]
         E1[Authentication]
         E2[Real-time Stats]
@@ -85,13 +82,11 @@ All Files mainly uploaded just need fixes and to be stable and to make it just w
         E5[Attack Queue]
         E6[Attack Scheduling]
     end
-
     subgraph Proxy_Dashboard["Proxy Dashboard"]
         F1[Traffic Stats]
         F2[Health Check]
         F3[Authentication]
     end
-
     C2_Server -->|Commands| Proxy_Client
     Proxy_Client -->|Control| Bot_Clients
     Bot_Clients -->|Attack| Target
@@ -99,7 +94,7 @@ All Files mainly uploaded just need fixes and to be stable and to make it just w
     Proxy_Client -->|Logs| C2_Server
     C2_Server --> Admin_Dashboard
     Proxy_Client --> Proxy_Dashboard
-```
+
 
 ## 🎥 Video Demonstrations
 
