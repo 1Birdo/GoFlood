@@ -55,16 +55,7 @@ All Files mainly uploaded just need fixes and to be stable and to make it just w
 ## 🛠️ Technical Architecture
 
 ```mermaid
-%%{init: {"flowchart": {"useMaxWidth": false, "htmlLabels": true}} }%%
-flowchart TD
-    subgraph C2_Server["C2 Server"]
-        A1[User Auth]
-        A2[Stress Attacks]
-    end
-    ...
-```
-
-```mermaid
+%%{init: {"flowchart": {"useMaxWidth": false}}%%
 flowchart TD
     subgraph C2_Server["C2 Server"]
         A1[User Auth]
