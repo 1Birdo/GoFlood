@@ -53,7 +53,7 @@ All Files mainly uploaded just need fixes and to be stable and to make it just w
 | **build.sh**               | 🟠 Needs Work | - Missing ARM64 support<br>- No Windows cross-compile / Support<br>- Needs output directory |
 
 ## 🛠️ Technical Architecture
-```mermaid
+```
 
                        
 ┌───────────────────┐    ┌─────────────────┐    ┌─────────────────┐    ┌──────────────────┐
