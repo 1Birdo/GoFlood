@@ -185,14 +185,14 @@ Edit `config.json` to customize settings:
 
 ## 👨‍💻 Admin Commands
 
-| Command     | Description         | Required Level |
-|-------------|---------------------|----------------|
-| adduser     | Create new user     | Admin+         |
-| deluser     | Delete user         | Admin+         |
-| resetpw     | Reset password      | Admin+         |
-| db          | View user database  | Admin+         |
-| logs        | View audit logs     | Admin+         |
-| reinstall   | Reinstall bots      | Admin+         |
+| Command     | Description         | 
+|-------------|---------------------|
+| adduser     | Create new user     | 
+| deluser     | Delete user         | 
+| resetpw     | Reset password      | 
+| db          | View user database  | 
+| logs        | View audit logs     | 
+| reinstall   | Reinstall bots      | 
 
 ## Easy Videos (21/06/25) - All the videos are old and need updating
 ## *Finishing (05/06/25)* Proxy  - Showing off Proxy POC
