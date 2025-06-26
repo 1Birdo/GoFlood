@@ -32,18 +32,18 @@ All Files mainly uploaded just need fixes and to be stable and to make it just w
 ### Project Status
 | Component       | Status        | Progress | Improvements to be Added / Implemented                                                                       |
 |-----------------|---------------|------------------|--------------------------------------------------------------------------------------------------------------|
-| **C2 Server**    | Testing Phase     |  🟠 84%   | - Implement Gosstress-V2 Web Dashboard<br>- Develop REST API endpoints<br>- improve queuing system|
-| **Stress Client**| Needs Development |  🟠 86%   | - Expand L7/L4 attack methods  |
-| **Proxy Client** | Testing Phase     |  🟢 100% [Completed] | - Just visual dashboard updates / web dashboard improvements  |
+| **C2 Server**    | Minor Improvements |  🟠 90%   |<br>- Making sure everything is impleneted, Coded Safely and works properly. |
+| **Stress Client**| Minor Improvements |  🟢 100% Completed%   | - Just needs to Expand L7/L4 attack methods + AMP research  |
+| **Proxy Client** | Completed |  🟢 100% [Completed] | - Just dashboard UI/UX improvements |
 
 
 ### Core Files
 | File          | File desc   | Status       | Improvements Made                                                                    |
 |---------------|-------------|--------------|--------------------------------------------------------------------------------------|
-| **main.go**   | C2 Server File | 🟢 Major Improvements  | - Fully Stable Connection + minimal timeouts<br>- Improved QoL + cleaned up           |
-| **client.go** | Client File    | 🟢 Major Improvements  | - Improved support for IPV6 + IPV4<br>- Improved QoL + Cleaned up <br>- Improved Stat gathering |
-| **proxy.go**  | Proxy File     | 🟡 Medium Improvements | - JWT Authentication + CSRF Procection<br>- Traffic monitoring improvements                   |
-| **README.md** | Readme.md File | 🔴 Minimal Changes     | - Restructured documentation<br>- Need to redo videos <br>- needs final polish |
+| **main.go**   | C2 Server File | 🟢 Major Improvements  | - Stable Connection br>- cleaned up more <br>- Implemented REST api + Dashboard  |
+| **client.go** | Client File    | 🟡 Major Improvements  | - Improved support for IPV6 + IPV4<br>- Cleaned up more<br>-   |
+| **proxy.go**  | Proxy File     | 🟢 No Improvements Needed| - JWT Authentication + CSRF Procection<br>- Traffic monitoring improvements  |
+| **README.md** | Readme.md File | 🟡 Medium Improvements     | - Cleaned up Readme.md<br>- Need to redo videos still <br>- needs polishing  |
 
 ### Support Scripts 
 | File                       | Status        | Key Features                                                                                |
