@@ -4,7 +4,7 @@
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 ![Multi-User](https://img.shields.io/badge/Multi--User-Yes-blue)
 ![Bot Support](https://img.shields.io/badge/Bots-Cross--platform-orange)
-![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20WSL-blueviolet)
+![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20WSL%20%7C%20Windows%20%7C%20MacOS-blueviolet)
 ![Architecture](https://img.shields.io/badge/Architecture-Distributed-orange)
 
 *A Command and Control (C2) Framework with secure and efficient distributed botnet management. Includes both Terminal and Web UI interfaces to accommodate different user preferences.*
