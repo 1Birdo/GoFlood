@@ -37,7 +37,7 @@
 | File          | File desc   | Status       | Improvements Made                                                                    |
 |---------------|-------------|--------------|--------------------------------------------------------------------------------------|
 | **main.go**   | C2 Server File | 🟢 Major Improvements  | - Stable Connection br>- cleaned up more <br>- Implemented REST api + Dashboard  |
-| **client.go** | Client File    | 🟡 Major Improvements  | - Improved support for IPV6 + IPV4<br>- Cleaned up more<br>-   |
+| **client.go** | Client File    | 🟡 Major Improvements  | - Improved support for IPV6 + IPV4<br>- Cleaned up more   |
 | **proxy.go**  | Proxy File     | 🟢 No Improvements Needed| - JWT Authentication + CSRF Procection<br>- Traffic monitoring improvements  |
 | **README.md** | Readme.md File | 🟡 Medium Improvements     | - Cleaned up Readme.md<br>- Need to redo videos still <br>- needs polishing  |
 
@@ -49,7 +49,7 @@
 | **build.sh**               | ✅ [Completed]   | - Supports most-All arch types <br>- Windows - Linux - MacOS cross-compile / Support        |
 | **obf_build.sh**           | ✅ [Completed]   | - Same cross-platform support as build.sh <br>- Includes obfuscation + Compression options  |
 
-## 🛠️ Technical Architecture
+## 🛠️ Technical Topology
 
 ```
                          ┌─────────────────┐
