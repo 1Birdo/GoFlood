@@ -169,10 +169,10 @@ Edit `config.json` to customize settings:
 
 ## 👨‍💻 Admin Commands
 
-|      Attack / stress    |      Description       | 
-|-------------------------|------------------------| 
-| ![Method] 0.0.0.0 80 22 | Command Example        | 
-| ![Method] IP PORT TIME  | Command Format         | 
+|      Attack / stress                                |      Description       | 
+|-----------------------------------------------------|------------------------| 
+| ![Method] 0.0.0.0 80 22 0656d970cef86794c84819..... |   Command Example      | 
+| ![Method] IP PORT TIME hex-32-secret-signing-key    |   Command Format       | 
 
 | Command       | Description            | 
 |---------------|------------------------| 
