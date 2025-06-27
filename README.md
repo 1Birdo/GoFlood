@@ -193,6 +193,9 @@ Edit `config.json` to customize settings:
 | stats         | Get Bot status / stats | 
 | status        | See C2 status / stats  | 
 
+## YT video (Still 50/50)
+Might make a video just for setup as well as to properly show it off.
+
 ## Easy Videos (21/06/25) - All the videos are old and need updating
 ## *Finishing (05/06/25)* Proxy  - Showing off Proxy POC
 https://github.com/user-attachments/assets/fbe96e3a-ed11-4ea2-b8f1-cb567129cba6
