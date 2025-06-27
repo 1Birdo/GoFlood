@@ -8,6 +8,7 @@
 ![Architecture](https://img.shields.io/badge/Architecture-Distributed-orange)
 
 *A Command and Control (C2) Framework with secure and efficient distributed botnet management. Includes both Terminal and Web UI interfaces to accommodate different user preferences.*
+###  🏗️  Proxy Client is Optional
 ### Supports all Architecture ([ Windows / Linux / MacOS ])
 📶 This project merges **Gostress-V2 + Gostress-Enhanced** and **BotnetGo**, offering a complete **C2 Framework solution**:
 -  **Encrypted C2 Channels**:
@@ -24,7 +25,6 @@
 
  *⚠️ **Note**: In the wake of coordinated efforts such as Operation EndGame, PowerOFF, and Cronos, this project serves only as an educational and analytical reference for understanding botnet infrastructure. Real-world deployment of such tools carries significant legal risk*.
 ## 📁 File Status Overview
-###  🏗️  Proxy Client is Optional
 ### 📽️ Project Status
 | Component       | Status        | Progress | Improvements to be Added / Implemented                                                                       |
 |-----------------|---------------|------------------|--------------------------------------------------------------------------------------------------------------|
