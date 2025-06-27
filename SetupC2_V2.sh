@@ -1,5 +1,4 @@
 #!/bin/bash
-set -e
 
 # ===== CONFIGURATION =====
 # Colors
@@ -176,6 +175,8 @@ function distribute_certs() {
 }
 
 function compile_components() {
+    local obfuscate=$1
+    
     echo -e "${BLUE}[+] Compiling components...${NC}"
     
     mkdir -p "$BUILD_DIR"
@@ -185,7 +186,13 @@ function compile_components() {
     cd "$CLIENT_DIR"
     if [ -f "build.sh" ]; then
         chmod +x build.sh
-        ./build.sh
+        if [ "$obfuscate" = true ]; then
+            echo -e "${YELLOW}[*] Using obfuscated build${NC}"
+            ./build.sh --obfuscate
+        else
+            echo -e "${YELLOW}[*] Using standard build${NC}"
+            ./build.sh
+        fi
         mkdir -p "$BUILD_DIR/client"
         cp -r build/* "$BUILD_DIR/client/"
     else
@@ -195,12 +202,22 @@ function compile_components() {
     # Compile Proxy
     echo -e "${YELLOW}[*] Compiling Proxy...${NC}"
     cd "$PROXY_DIR"
-    go build -ldflags="-s -w" -o "$BUILD_DIR/proxy/proxy" proxy.go
+    if [ "$obfuscate" = true ]; then
+        echo -e "${YELLOW}[*] Using obfuscated build${NC}"
+        go build -ldflags="-s -w -X main.randomKey=$(openssl rand -hex 16)" -o "$BUILD_DIR/proxy/proxy" proxy.go
+    else
+        go build -ldflags="-s -w" -o "$BUILD_DIR/proxy/proxy" proxy.go
+    fi
     
     # Compile Server
     echo -e "${YELLOW}[*] Compiling Server...${NC}"
     cd "$SERVER_DIR"
-    go build -ldflags="-s -w" -o "$BUILD_DIR/server/server" main.go
+    if [ "$obfuscate" = true ]; then
+        echo -e "${YELLOW}[*] Using obfuscated build${NC}"
+        go build -ldflags="-s -w -X main.randomKey=$(openssl rand -hex 16)" -o "$BUILD_DIR/server/server" main.go
+    else
+        go build -ldflags="-s -w" -o "$BUILD_DIR/server/server" main.go
+    fi
     
     echo -e "${GREEN}[+] Components compiled successfully!${NC}"
 }
@@ -291,14 +308,64 @@ function print_summary() {
     echo
 }
 
-# ===== MAIN SCRIPT =====
-print_header
-check_dependencies
-generate_certs
-generate_letsencrypt_certs
-distribute_certs
-generate_configs
-compile_components
-print_summary
+function full_setup() {
+    print_header
+    check_dependencies
+    generate_certs
+    generate_letsencrypt_certs
+    distribute_certs
+    generate_configs
+    compile_components false
+    print_summary
+    echo -e "${GREEN}[+] Full setup completed successfully!${NC}"
+}
 
-echo -e "${GREEN}[+] Setup completed successfully!${NC}"
+function certs_only() {
+    print_header
+    echo -e "${YELLOW}[*] Running certificate generation only${NC}"
+    generate_certs
+    generate_letsencrypt_certs
+    distribute_certs
+    echo -e "${GREEN}[+] Certificate regeneration completed successfully!${NC}"
+}
+
+function compile_only() {
+    print_header
+    echo -e "${YELLOW}Select compilation method:${NC}"
+    echo "1) Standard compilation"
+    echo "2) Obfuscated compilation"
+    read -p "Enter your choice [1-2]: " compile_choice
+    
+    case $compile_choice in
+        1) compile_components false ;;
+        2) compile_components true ;;
+        *) echo -e "${RED}[-] Invalid choice${NC}"; exit 1 ;;
+    esac
+    
+    echo -e "${GREEN}[+] Recompilation completed successfully!${NC}"
+}
+
+function show_menu() {
+    print_header
+    echo -e "${YELLOW}Select an option:${NC}"
+    echo "1) Full setup (certs + config + compile)"
+    echo "2) Regenerate certificates only"
+    echo "3) Recompile components only"
+    echo "4) Exit"
+    echo
+    read -p "Enter your choice [1-4]: " choice
+    
+    case $choice in
+        1) full_setup ;;
+        2) certs_only ;;
+        3) compile_only ;;
+        4) echo -e "${GREEN}[+] Exiting...${NC}"; exit 0 ;;
+        *) echo -e "${RED}[-] Invalid option${NC}"; exit 1 ;;
+    esac
+}
+
+# ===== MAIN SCRIPT =====
+while true; do
+    show_menu
+    read -p "Press Enter to continue or Ctrl+C to exit..."
+done
