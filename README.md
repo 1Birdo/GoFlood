@@ -167,7 +167,7 @@ Edit `config.json` to customize settings:
 }
 ```
 
-## 👨‍💻 Admin Commands
+## 👨‍💻 Commands
 
 |      Attack / stress                                |      Description       | 
 |-----------------------------------------------------|------------------------| 
