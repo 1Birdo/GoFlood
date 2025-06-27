@@ -14,7 +14,7 @@ This project is currently under active development. Security updates are provide
 If you discover a security vulnerability in this project, please report it responsibly:
 
 1. **Do not create a public issue** for security vulnerabilities
-2. Email your findings to: security@yourdomain.com
+2. Email your findings to: admin@birdo.uk
 3. Provide detailed information including:
    - Description of the vulnerability
    - Steps to reproduce
