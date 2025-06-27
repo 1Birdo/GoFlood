@@ -25,7 +25,7 @@
  *⚠️ **Note**: In the wake of coordinated efforts such as Operation EndGame, PowerOFF, and Cronos, this project serves only as an educational and analytical reference for understanding botnet infrastructure. Real-world deployment of such tools carries significant legal risk*.
 ## 📁 File Status Overview
 ###  🏗️  Proxy Client is Optional
-### Project Status
+### 📽️ Project Status
 | Component       | Status        | Progress | Improvements to be Added / Implemented                                                                       |
 |-----------------|---------------|------------------|--------------------------------------------------------------------------------------------------------------|
 | **C2 Server**    | Minor Improvements |  🟠 90%   |<br>- Making sure everything is impleneted, Coded Safely and works properly. |
@@ -33,7 +33,7 @@
 | **Proxy Client** | Completed |  🟢 100% [Completed] | - Just dashboard UI/UX improvements |
 
 
-### Core Files
+### 🧭 Core Files
 | File          | File desc   | Status       | Improvements Made                                                                    |
 |---------------|-------------|--------------|--------------------------------------------------------------------------------------|
 | **main.go**   | C2 Server File | 🟢 Major Improvements  | - Stable Connection br>- cleaned up more <br>- Implemented REST api + Dashboard  |
@@ -41,7 +41,7 @@
 | **proxy.go**  | Proxy File     | 🟢 No Improvements Needed| - JWT Authentication + CSRF Procection<br>- Traffic monitoring improvements  |
 | **README.md** | Readme.md File | 🟡 Medium Improvements     | - Cleaned up Readme.md<br>- Need to redo videos still <br>- needs polishing  |
 
-### Support Scripts 
+### 🟦 Support Scripts 
 | File                       | Status        | Key Features                                                                                |
 |----------------------------|---------------|---------------------------------------------------------------------------------------------|
 | **generate_certs.sh**      | ✅ [Completed]   | - 4096-bit key generation<br>- Proper file permissions                                      |
