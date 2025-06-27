@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 # ===== CONFIGURATION =====
 # Colors
@@ -20,17 +21,12 @@ BUILD_DIR="$BASE_DIR/build"
 function print_header() {
     clear
     echo -e "${BLUE}"
-    echo "   ____  _____  _____  _  __"
-    echo "  / __ \|  __ \|_   _|| |/ /"
-    echo " | |  | | |__) | | |  | ' / "
-    echo " | |  | |  _  /  | |  |  <  "
-    echo " | |__| | | \ \ _| |_ | . \ "
-    echo "  \____/|_|  \_\_____||_|\_\\"
-    echo -e "${NC}"
-    echo "===================================="
-    echo -e "${YELLOW} C2 Infrastructure Setup Script ${NC}"
-    echo "===================================="
-    echo
+    echo "     ▄▄ •          ·▄▄▄▄▄                   · ▄▄▄▄  ";
+    echo "    ▐█ ▀ ▪▪         ▐▄▄▄·   ██•  ▪     ▪      ██▪ ██ ";
+    echo "    ██  ▀█▄ ▄█▀▄    ██▪    ██▪    ▄█▀▄  ▄█▀▄ ▐█· ▐█▌";
+    echo "    ▐█▄▪ ▐█▐█▌.▐▌   ██▌.   ▐█▌▐▌ ▐█▌.▐▌▐█▌.▐▌ ██. ██ ";
+    echo "    ·▀▀▀▀▀  ▀█▄▀▪   ▀▀▀   .▀▀▀▀▪  ▀█▄▀▪ ▀█▄▀▪ ▀▀▀▀▀• ";
+    echo "                                            ";
 }
 
 function check_dependencies() {
