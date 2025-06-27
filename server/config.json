@@ -7,7 +7,7 @@
   "bot_server_port": "7002",
   "user_server_port": "7001",
   "web_server_port": "443",
-  "cert_file": "server.crt",
+  "cert_file": "server.crt", //Let's Encrypt certificates or Self Signed Choose either one
   "key_file": "server.key",
   "session_timeout": 1800000000000,
   "max_conns": 1000,
