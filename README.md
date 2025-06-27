@@ -7,11 +7,9 @@
 ![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20WSL-blueviolet)
 ![Architecture](https://img.shields.io/badge/Architecture-Distributed-orange)
 
-All Files mainly uploaded just need fixes and to be stable and to make it just work on first run.
-
-*A sophisticated Command and Control (C2) server with standard features, with secure and efficient distributed botnet management. Includes both Terminal and Web UI interfaces to accommodate different user preferences.*
-###  Mostly Linux Based / WSL Supported (Testing MacOS + Windows)
-📶 This framework merges the functionality of **Gostress-V2 / Gostress-Enhanced** and **BotnetGo**, offering a complete **C2 solution** featuring:
+*A Command and Control (C2) Framework with secure and efficient distributed botnet management. Includes both Terminal and Web UI interfaces to accommodate different user preferences.*
+### Supports all Architecture ([ Windows / Linux / MacOS ])
+📶 This project merges **Gostress-V2 + Gostress-Enhanced** and **BotnetGo**, offering a complete **C2 Framework solution**:
 -  **Encrypted C2 Channels**:
     - TLS 1.3 secured terminal interface (TCP/1337)
     - WebSocket dashboard (TCP/8443) 
