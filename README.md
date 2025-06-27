@@ -24,6 +24,7 @@
     
 
  *⚠️ **Note**: In the wake of coordinated efforts such as Operation EndGame, PowerOFF, and Cronos, this project serves only as an educational and analytical reference for understanding botnet infrastructure. Real-world deployment of such tools carries significant legal risk*.
+ 
 ## 📁 File Status Overview
 ### 📽️ Project Status
 | Component       | Status        | Progress | Improvements to be Added / Implemented                                                                       |
@@ -44,13 +45,11 @@
 ### 🟦 Support Scripts 
 | File                       | Status        | Key Features                                                                                |
 |----------------------------|---------------|---------------------------------------------------------------------------------------------|
-| **generate_certs.sh**      | ✅ [Completed]   | - 4096-bit key generation<br>- Proper file permissions                                      |
-| **generate_32byte_key.sh** | ✅ [Completed]   | - Hex/Base64 output<br>- Cryptographically secure RNG<br>- Clean output formatting          |
+| **SetupC2_V2.sh.sh**       | ✅ [Completed]   | - Just Finished, Merged to make all simple and QoL + Ease of use                            |
 | **build.sh**               | ✅ [Completed]   | - Supports most-All arch types <br>- Windows - Linux - MacOS cross-compile / Support        |
-| **obf_build.sh**           | ✅ [Completed]   | - Same cross-platform support as build.sh <br>- Includes obfuscation + Compression options  |
+| **obf_build.sh**           | ✅ [Completed]   | - Same cross-platform support as build.sh <br>- Includes obfuscation + Compression          |
 
 ## 🛠️ Technical Topology
-
 ```
                          ┌─────────────────┐
 ┌───────────────────┐    │  [Proxy Client] │    ┌─────────────────┐    ┌──────────────────┐
@@ -73,7 +72,6 @@
 ```
 
 ## 🎥 Video Demonstrations
-
 ### All Video Demonstrations are also embedded at the bottom of this Readme.md
 
 | Feature Demo                                                   | Description                                     | Preview |
@@ -82,6 +80,8 @@
 | [💻 CLI Interface](https://github.com/user-attachments/assets/b7349373-e985-4d10-ba7b-87edb3844247)  | Beautiful terminal interface and login flow    | ✅ |
 | [🧨 Attack Management](https://github.com/user-attachments/assets/531f09ef-ae28-4bcc-aae4-aaa564162acd) | Launching and managing attacks                 | ✅ |
 | [🛡️ Admin Controls](https://github.com/user-attachments/assets/e2b9535f-5ede-401c-bb2d-da97b601a118) | User management, audit logs, system controls   | ✅ |
+| [🛡️ Admin Controls](https://github.com/user-attachments/assets/e2b9535f-5ede-401c-bb2d-da97b601a118) | User management, audit logs, system controls   | ❎ |
+| [🛡️ Support Scripts](https://github.com/user-attachments/assets/e2b9535f-5ede-401c-bb2d-da97b601a118) | User management, audit logs, system controls   | ❎ |
 
 ### Server / C2
 ```
@@ -133,6 +133,7 @@ go get github.com/rs/zerolog
 - Anti-debugging techniques
 - Automated persistence
 - Resource efficient
+  
 ## 🛠️ Configuration
 Edit `config.json` to customize settings:
 
@@ -166,29 +167,31 @@ Edit `config.json` to customize settings:
 }
 ```
 
-## ⚙️ Attack Methods
-
-| Command     | Description           | Example                         |
-|------------|-----------------------|----------------------------------|
-| !udpflood   | Standard UDP flood    | !udpflood 1.1.1.1 80 60         |
-| !udpsmart   | Adaptive UDP flood    | !udpsmart 1.1.1.1 80 120        |
-| !tcpflood   | TCP connection flood  | !tcpflood 1.1.1.1 80 300        |
-| !synflood   | SYN packet flood      | !synflood 1.1.1.1 80 60         |
-| !ackflood   | ACK packet flood      | !ackflood 1.1.1.1 80 60         |
-| !greflood   | GRE protocol flood    | !greflood 1.1.1.1 80 60         |
-| !dns        | DNS amplification     | !dns 1.1.1.1 53 120             |
-| !http       | HTTP request flood    | !http 1.1.1.1 80 300            |
-
 ## 👨‍💻 Admin Commands
 
-| Command     | Description         | 
-|-------------|---------------------|
-| adduser     | Create new user     | 
-| deluser     | Delete user         | 
-| resetpw     | Reset password      | 
-| db          | View user database  | 
-| logs        | View audit logs     | 
-| reinstall   | Reinstall bots      | 
+|      Attack / stress    |      Description       | 
+|-------------------------|------------------------| 
+| ![Method] 0.0.0.0 80 22 | Command Example        | 
+| ![Method] IP PORT TIME  | Command Format         | 
+
+| Command       | Description            | 
+|---------------|------------------------| 
+| adduser       | Create new user        | 
+| deluser       | Delete user            | 
+| resetpw       | Reset password         | 
+| db            | View user database     | 
+| logs          | View audit logs        | 
+| !reinstall    | Reinstall bots         | 
+| ongoing       | See ongoing stress     | 
+| queue         | schedule a stess       | 
+| cancel        | cancel Attack          | 
+| reinstall     | Reinstall bots         | 
+| bots          | See bot Count          | 
+| logout / exit | Logout                 | 
+| clear / cls   | clear ternimal         | 
+| help          | Get Help Menu          | 
+| stats         | Get Bot status / stats | 
+| status        | See C2 status / stats  | 
 
 ## Easy Videos (21/06/25) - All the videos are old and need updating
 ## *Finishing (05/06/25)* Proxy  - Showing off Proxy POC
