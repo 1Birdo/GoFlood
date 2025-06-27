@@ -1,3 +1,0 @@
-32-byte Random Key (Hex): a3a01a520858bba8b8e263fdc3085067c0f83c8cc871fea620decfec46ce
-3cf1
-32-byte Random Key (Base64): tKpVuTxjrnf9uoUEY+t4z7PLWtypeO8aQzdOe/qMriI=
