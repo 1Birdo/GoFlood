@@ -9,6 +9,25 @@
 
 *A Command and Control (C2) Framework with secure and efficient distributed botnet management. Includes both Terminal and Web UI interfaces to accommodate different user preferences.*
 ###  🏗️  Proxy Client is Optional
+
+<div align="center">
+  <h2>📷 Preview</h2>
+  <h3>UART Access Example:</h3>
+
+  <p>At 18 seconds, the magic happens as I had to manually reconnect the wires again.</p>
+  
+  <p><a href="https://github.com/user-attachments/assets/cb16c278-8b7d-44cb-b9e5-09e71b830c30">Video Link</a></p>
+
+  <h3>Router Closeups:</h3>
+
+  <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;">
+    <img src="https://github.com/user-attachments/assets/e0d56086-0873-4aca-a1d1-1ef9fd41966b" width="45%" style="max-width: 300px;">
+    <img src="https://github.com/user-attachments/assets/0e98267b-256c-4361-be9e-a0d92806d1fe" width="45%" style="max-width: 300px;">
+    <img src="https://github.com/user-attachments/assets/21aac59d-8116-4d93-8dc3-fb684bb86f0b" width="45%" style="max-width: 300px;">
+    <img src="https://github.com/user-attachments/assets/bb7b793b-454f-48b8-92c0-b2904dcdeab2" width="45%" style="max-width: 300px;">
+  </div>
+</div>
+
 ### Supports all Architecture ([ Windows / Linux / MacOS ])
 📶 This project merges **Gostress-V2 + Gostress-Enhanced** and **BotnetGo**, offering a complete **C2 Framework solution**:
 -  **Encrypted C2 Channels**:
