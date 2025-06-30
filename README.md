@@ -17,10 +17,13 @@
   <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;">
     <img src="https://github.com/user-attachments/assets/50ab64c5-103f-4d73-bc06-b18c85e61283" width="45%" style="max-width: 300px;">
     <img src="https://github.com/user-attachments/assets/0eb04d6b-4623-4e1c-b7b3-2191c05475c0" width="45%" style="max-width: 300px;">
-    <img src="https://github.com/user-attachments/assets/21aac59d-8116-4d93-8dc3-fb684bb86f0b" width="45%" style="max-width: 300px;">
-    <img src="https://github.com/user-attachments/assets/bb7b793b-454f-48b8-92c0-b2904dcdeab2" width="45%" style="max-width: 300px;">
+    <img src="https://blog.lipsumhub.com/wp-content/uploads/2024/12/what-is-a-placeholder-example-lipsumhub-1024x536.jpg
+" width="45%" style="max-width: 300px;">
+    <img src="https://blog.lipsumhub.com/wp-content/uploads/2024/12/what-is-a-placeholder-example-lipsumhub-1024x536.jpg
+" width="45%" style="max-width: 300px;">
   </div>
 </div>
+
 
 ### Supports all Architecture ([ Windows / Linux / MacOS ])
 📶 This project merges **Gostress-V2 + Gostress-Enhanced** and **BotnetGo**, offering a complete **C2 Framework solution**:
