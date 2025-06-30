@@ -12,13 +12,7 @@
 
 <div align="center">
   <h2>📷 Preview</h2>
-  <h3>UART Access Example:</h3>
-
-  <p>At 18 seconds, the magic happens as I had to manually reconnect the wires again.</p>
-  
-  <p><a href="https://github.com/user-attachments/assets/cb16c278-8b7d-44cb-b9e5-09e71b830c30">Video Link</a></p>
-
-  <h3>Router Closeups:</h3>
+  <h3>c2 Closeups:</h3>
 
   <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;">
     <img src="https://github.com/user-attachments/assets/e0d56086-0873-4aca-a1d1-1ef9fd41966b" width="45%" style="max-width: 300px;">
