@@ -13,8 +13,6 @@
 <div align="center">
   <h2>📷 Preview</h2>
   
-  ![what-is-a-placeholder-example-lipsumhub](https://github.com/user-attachments/assets/78731605-1fd0-4ff7-ab24-702aa948ff9d)
-
   <h3>c2 Closeups:</h3>
   
   
