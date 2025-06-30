@@ -13,9 +13,6 @@
 <div align="center">
   <h2>📷 Preview</h2>
   <h3>c2 Closeups:</h3>
-
-  ![image](https://github.com/user-attachments/assets/0eb04d6b-4623-4e1c-b7b3-2191c05475c0)
-
   
   <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;">
     <img src="https://github.com/user-attachments/assets/50ab64c5-103f-4d73-bc06-b18c85e61283" width="45%" style="max-width: 300px;">
