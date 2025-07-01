@@ -11,7 +11,7 @@
 ###  🏗️  Proxy Client is Optional
 
 <div align="center">
-  <h2>📷 Preview</h2>More actions
+  <h2>📷 Preview</h2>
 
   <h3>c2 Closeups:</h3>
 
