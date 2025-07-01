@@ -11,14 +11,19 @@
 ###  🏗️  Proxy Client is Optional
 
 <div align="center">
-  <h2>📷 Preview</h2>
-  
+  <h2>📷 Preview</h2>More actions
+
   <h3>c2 Closeups:</h3>
 
   <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;">
-    <img src="https://github.com/user-attachments/assets/13aca79d-2448-44c2-b17a-a4c43aeae116" width="45%" style="max-width: 300px;">
-    <img src="https://github.com/user-attachments/assets/b4a38a5a-751d-441d-ab6a-f6d5f96fe2cf" width="45%" style="max-width: 300px;">
-    <img src="https://github.com/user-attachments/assets/67d28afa-a1e6-4a06-9d7f-785484c285e2" width="45%" style="max-width: 300px;">
+    <img src="https://github.com/user-attachments/assets/0eb04d6b-4623-4e1c-b7b3-2191c05475c0" width="45%" style="max-width: 300px;">
+    <img src="https://github.com/user-attachments/assets/92e01376-965f-4802-9aba-f9c5e4621ce9" width="45%" style="max-width: 300px;">
+    <img src="https://github.com/user-attachments/assets/f5e29468-fdec-4887-94c1-97b33a5ae498" width="45%" style="max-width: 300px;">
+    <img src="https://github.com/user-attachments/assets/50ab64c5-103f-4d73-bc06-b18c85e61283" width="45%" style="max-width: 300px;">
+    <img src="https://github.com/user-attachments/assets/807fad11-4cb1-4a13-909b-368c2892349b" width="45%" style="max-width: 300px;">
+    <img src="https://github.com/user-attachments/assets/5c02f075-fcb7-469b-b0c9-fc5724203f4e" width="45%" style="max-width: 300px;">
+    <img src="https://github.com/user-attachments/assets/52cdac50-7650-40fa-882e-2a524e562d6e" width="45%" style="max-width: 300px;">
+    <img src="https://github.com/user-attachments/assets/807fad11-4cb1-4a13-909b-368c2892349b" width="45%" style="max-width: 300px;">
   </div>
 </div>
 
