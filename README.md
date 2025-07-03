@@ -9,7 +9,7 @@
 
 *A Command and Control (C2) Framework with secure and efficient distributed botnet management. Includes both Terminal and Web UI interfaces to accommodate different user preferences.*
 
-> ###📶 This project merges **Gostress-V2 + Gostress-Enhanced** and **BotnetGo**, offering a complete **C2 Framework solution**:
+> ### 📶 This project merges **Gostress-V2 + Gostress-Enhanced** and **BotnetGo**, offering a complete **C2 Framework solution**:
 > ### 🏗️ Proxy Client is Optional
 ---
 
