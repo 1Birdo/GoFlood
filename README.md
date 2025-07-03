@@ -102,9 +102,6 @@
 └──────────────┘
 ```
 
-<div align="center">
-
-
 ### 🖥️ Server/C2 Setup
 
 ```bash
@@ -175,7 +172,8 @@ Example: `![Method] 0.0.0.0 80 22 0656d970cef...`
 | `🖥️ Multi-Arch` | `👾 Anti-Debug` | `♻️ Persist` | `💾 Lightweight` |
 |----------------|----------------|-------------|------------------|
 | x86/ARM/MIPS  | Debug Detection| Auto-Run    | Low Resources    |
-  
+
+<div align="center">
 
 | Feature Demo                                                   | Description                                     | Preview |
 |----------------------------------------------------------------|-------------------------------------------------|---------|
