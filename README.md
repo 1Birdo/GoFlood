@@ -47,54 +47,52 @@
 
  *⚠️ **Note**: In the wake of coordinated efforts such as Operation EndGame, PowerOFF, and Cronos, this project serves only as an educational and analytical reference for understanding botnet infrastructure. Real-world deployment of such tools carries significant legal risk*.
  
-## 📁 File Status Overview
-### 📽️ Project Status
-| Component       | Status        | Progress | Improvements to be Added / Implemented                                                                       |
-|---------------------|---------------|------------------|--------------------------------------------------------------------------------------------------------------|
-| **C2 Server**       | Completed  |  🟢 100%   |- N/a |
-| **Stress Client**   | Minor Adjustments |  🟡 97% [Completed]%  | - Just needs to Expand L7/L4 attack methods + AMP research  |
-| **Proxy Client**    | Completed |  🟢 100% [Completed] | - N/a |
-| **Support Scripts** | Completed |  🟢 100% [Completed] |-  N/a |
-
-
-### 🧭 Core Files
-| File          | File desc   | Status       | Improvements Made                                                                    |
-|---------------|-------------|--------------|--------------------------------------------------------------------------------------|
-| **main.go**   | C2 Server File | 🟢 No Changes  | - Stable Connection br>- cleaned up more <br>- Implemented REST api + Dashboard  |
-| **client.go** | Client File    | 🟡 Wrapping Up  | - Improved support for IPV6 + IPV4<br>- Cleaned up more   |
-| **proxy.go**  | Proxy File     | 🟢 No Changes | - Dashboard design<br>- Traffic monitoring improvements   |
-| **README.md** | Readme.md File | 🟡 Wrapping Up   | - Cleaned up Readme.md<br>- Need to redo videos still <br>- needs polishing  |
-
-### 🟦 Support Scripts 
-| File                       | Status        | Key Features                                                                                |
-|----------------------------|---------------|---------------------------------------------------------------------------------------------|
-| **SetupC2_V2.sh.sh**       | ✅ [Completed]   | - Just Finished, Merged to make all simple and QoL + Ease of use                            |
-| **build.sh**               | ✅ [Completed]   | - Supports most-All arch types <br>- Windows - Linux - MacOS cross-compile / Support        |
-| **obf_build.sh**           | ✅ [Completed]   | - Same cross-platform support as build.sh <br>- Includes obfuscation + Compression          |
-
-
-
 
 <div align="center">
+
+## 📁 Project Status
+
+### 🏗️ Core Components
+| Component          | Status               | Improvements Needed                          |
+|--------------------|----------------------|----------------------------------------------|
+| **C2 Server**      | 🟢 100% Complete     | None                                         |
+| **Stress Client**  | 🟡 97% Complete      | Expand L7/L4 methods + AMP research         |
+| **Proxy Client**   | 🟢 100% Complete     | None                                         |
+| **Support Scripts**| 🟢 100% Complete     | None                                         |
+
+### 📜 Key Files
+| File            | Description          | Status               | Recent Improvements                          |
+|-----------------|----------------------|----------------------|----------------------------------------------|
+| **main.go**     | C2 Core              | 🟢 Stable            | REST API + Dashboard                         |
+| **client.go**   | Client Handler       | 🟡 Finalizing        | IPv4/IPv6 support                            |
+| **proxy.go**    | Proxy System         | 🟢 Stable            | Enhanced traffic monitoring                  |
+| **README.md**   | Documentation        | 🟡 Polishing         | Video updates needed                         |
+
+### 🛠️ Support Scripts
+| Script               | Status       | Features                                      |
+|----------------------|--------------|-----------------------------------------------|
+| **SetupC2_V2.sh**    | ✅ Complete   | Simplified deployment                         |
+| **build.sh**         | ✅ Complete   | Cross-platform (Win/Linux/Mac)               |
+| **obf_build.sh**     | ✅ Complete   | Obfuscation + compression                    |
 
 ## 🛠️ Technical Topology
 
 ```text
-                    ┌───────────────────────┐
-                    │      Proxy Layer      │
+                    ┌──────────────────────┐
+                    │      Proxy Layer     │
                     │  ┌─────────────────┐ │
 ┌─────────────┐     │  │  Proxy Client   │ │     ┌─────────────┐
 │  C2 Server  │─────┼─►│ • Traffic Obf   │ │◄────┤  Bot Fleet  │
 │ • Auth      │◄────┼──│ • TLS 1.3       │ ├────►│ • Auto-Exec │───┐
 │ • Attack Q  │     │  │ • Dashboard     │ │     │ • Reporting │   │
 └──────┬──────┘     │  └─────────────────┘ │     └─────────────┘   │
-       │            └──────────┬───────────┘                      ▼
-       ▼                       ▼                          ┌─────────────────┐
+       │            └──────────┬───────────┘                       ▼
+       ▼                       ▼                         ┌─────────────────┐
 ┌──────────────┐      ┌─────────────────┐                │   Target Host   │
 │ Admin Portal │      │ Proxy Dashboard │                │ • Under Attack  │
 │ • Live Stats │      │ • Traffic Stats │                └─────────────────┘
-│ • Config    │      │ • Health Checks │
-│ • Monitoring│      └─────────────────┘
+│ • Config     │      │ • Health Checks │
+│ • Monitoring │      └─────────────────┘
 └──────────────┘
 ```
 
