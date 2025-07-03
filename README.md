@@ -125,7 +125,7 @@ go get github.com/rs/zerolog
 
 ## 🔐 Security Features
 
-| • **Certificate Pinning**: CA verification | • **Rate Limiting**: IP/user throttling | • **Session Management**: Auto timeout |
+|• **Certificate Pinning**: CA verification | • **Rate Limiting**: IP/user throttling | • **Session Management**: Auto timeout |
 |--------------------------------------------|-----------------------------------------|-----------------------------------------|
 | • **Input Sanitization**: Injection protection | • **TOTP Reset**: Time-based codes | • **Password Policies**: Complexity rules |
 | • **Encryption**: TLS 1.3 mutual auth | • **Authentication**: Bcrypt hashing | • **Real-time Monitoring**: Live analytics |
