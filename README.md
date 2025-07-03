@@ -47,19 +47,20 @@
 ## 📁 File Status Overview
 ### 📽️ Project Status
 | Component       | Status        | Progress | Improvements to be Added / Implemented                                                                       |
-|-----------------|---------------|------------------|--------------------------------------------------------------------------------------------------------------|
-| **C2 Server**    | Minor Improvements |  🟠 90%   |<br>- Making sure everything is impleneted, Coded Safely and works properly. |
-| **Stress Client**| Minor Improvements |  🟢 100% Completed%   | - Just needs to Expand L7/L4 attack methods + AMP research  |
-| **Proxy Client** | Completed |  🟢 100% [Completed] | - Just dashboard UI/UX improvements |
+|---------------------|---------------|------------------|--------------------------------------------------------------------------------------------------------------|
+| **C2 Server**       | Completed  |  🟢 100%   |- N/a |
+| **Stress Client**   | Minor Adjustments |  🟡 97% Completed%  | - Just needs to Expand L7/L4 attack methods + AMP research  |
+| **Proxy Client**    | Completed |  🟢 100% [Completed] | - N/a |
+| **Support Scripts** | Completed |  🟢 100% [Completed] |-  N/a |
 
 
 ### 🧭 Core Files
 | File          | File desc   | Status       | Improvements Made                                                                    |
 |---------------|-------------|--------------|--------------------------------------------------------------------------------------|
-| **main.go**   | C2 Server File | 🟢 Major Improvements  | - Stable Connection br>- cleaned up more <br>- Implemented REST api + Dashboard  |
-| **client.go** | Client File    | 🟡 Major Improvements  | - Improved support for IPV6 + IPV4<br>- Cleaned up more   |
-| **proxy.go**  | Proxy File     | 🟢 No Improvements Needed| - JWT Authentication + CSRF Procection<br>- Traffic monitoring improvements  |
-| **README.md** | Readme.md File | 🟡 Medium Improvements     | - Cleaned up Readme.md<br>- Need to redo videos still <br>- needs polishing  |
+| **main.go**   | C2 Server File | 🟢 No Improvements Neede  | - Stable Connection br>- cleaned up more <br>- Implemented REST api + Dashboard  |
+| **client.go** | Client File    | 🟡 No Improvements Added  | - Improved support for IPV6 + IPV4<br>- Cleaned up more   |
+| **proxy.go**  | Proxy File     | 🟢 No Improvements Needed | - Dashboard design<br>- Traffic monitoring improvements   |
+| **README.md** | Readme.md File | 🟡 Just needs finishing   | - Cleaned up Readme.md<br>- Need to redo videos still <br>- needs polishing  |
 
 ### 🟦 Support Scripts 
 | File                       | Status        | Key Features                                                                                |
