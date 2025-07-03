@@ -74,23 +74,20 @@
 
 ## 🛠️ Technical Topology
 
-```text
-                    ┌───────────────────────┐
-                    │      Proxy Layer      │
-                    │  ┌─────────────────┐ │
-┌─────────────┐     │  │  Proxy Client   │ │     ┌─────────────┐
-│  C2 Server  │─────┼─►│ • Traffic Obf   │ │◄────┤  Bot Fleet  │
-│ • Auth      │◄────┼──│ • TLS 1.3       │ ├────►│ • Auto-Exec │───┐
-│ • Attack Q  │     │  │ • Dashboard     │ │     │ • Reporting │   │
-└──────┬──────┘     │  └─────────────────┘ │     └─────────────┘   │
-       │            └──────────┬───────────┘                      ▼
-       ▼                       ▼                          ┌─────────────────┐
-┌──────────────┐      ┌─────────────────┐                │   Target Host   │
-│ Admin Portal │      │ Proxy Dashboard │                │ • Under Attack  │
-│ • Live Stats │      │ • Traffic Stats │                └─────────────────┘
-│ • Config    │      │ • Health Checks │
-│ • Monitoring│      └─────────────────┘
-└──────────────┘
+```mermaid
+flowchart TD
+    C2[C2 Server\n• User Auth\n• Stress Control\n• Audit Logging]
+    Proxy[Proxy Client\n• Traffic Obfuscation\n• TLS 1.3\n• Web Dashboard]
+    Bots[Bot Clients\n• Auto-Connect\n• Attack Execution\n• Stats Reporting]
+    Target[Target Host\n• Stress Target]
+    Admin[Admin Dashboard\n• Real-time Stats\n• Monitoring\n• Config]
+    ProxyDash[Proxy Dashboard\n• Traffic Stats\n• Health Checks]
+
+    C2 <-->|Control| Proxy
+    Proxy <-->|Commands/Data| Bots
+    Bots -->|Attack Traffic| Target
+    C2 -->|Management| Admin
+    Proxy -->|Monitoring| ProxyDash
 ```
 
 
