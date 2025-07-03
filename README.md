@@ -13,6 +13,9 @@
 
 ---
 
+<div align="center">
+
+## 🎬 Feature Previews
 
 | Feature Demo                                                   | Description                                     | Preview |
 |----------------------------------------------------------------|-------------------------------------------------|---------|
@@ -22,54 +25,6 @@
 | [🛡️ Admin Controls](https://github.com/user-attachments/assets/e2b9535f-5ede-401c-bb2d-da97b601a118) | User management, audit logs, system controls  | ✅ |
 | [🛡️ Admin Controls](https://github.com/user-attachments/assets/e2b9535f-5ede-401c-bb2d-da97b601a118) | User management, audit logs, system controls  | ❎ |
 | [🛡️ Support Scripts](https://github.com/user-attachments/assets/e2b9535f-5ede-401c-bb2d-da97b601a118) | User management, audit logs, system controls | ❎ |
-
-
-<div align="center">
-
-## 🎬 Feature Previews
-
-<table>
-  <tr>
-    <td align="center" width="33%">
-      <a href="https://github.com/user-attachments/assets/00b6ddb0-0c9e-47aa-9e91-08e689a1d272">
-        <strong>🚀 Starter Setup</strong><br>
-        <sub>✅ Initial setup and certificate generation</sub>
-      </a>
-    </td>
-    <td align="center" width="33%">
-      <a href="https://github.com/user-attachments/assets/b7349373-e985-4d10-ba7b-87edb3844247">
-        <strong>💻 CLI Interface</strong><br>
-        <sub>✅ Terminal UI and login flow</sub>
-      </a>
-    </td>
-    <td align="center" width="33%">
-      <a href="https://github.com/user-attachments/assets/531f09ef-ae28-4bcc-aae4-aaa564162acd">
-        <strong>🧨 Attack Management</strong><br>
-        <sub>✅ Launch and manage attacks</sub>
-      </a>
-    </td>
-  </tr>
-  <tr>
-    <td align="center" width="33%">
-      <a href="https://github.com/user-attachments/assets/e2b9535f-5ede-401c-bb2d-da97b601a118">
-        <strong>🛡️ Admin Controls</strong><br>
-        <sub>✅ Manage users, logs, systems</sub>
-      </a>
-    </td>
-    <td align="center" width="33%">
-      <a href="https://github.com/user-attachments/assets/e2b9535f-5ede-401c-bb2d-da97b601a118">
-        <strong>🛡️ Admin Controls (Alt)</strong><br>
-        <sub>❎ Duplicate preview</sub>
-      </a>
-    </td>
-    <td align="center" width="33%">
-      <a href="https://github.com/user-attachments/assets/e2b9535f-5ede-401c-bb2d-da97b601a118">
-        <strong>🛠️ Support Scripts</strong><br>
-        <sub>❎ CLI tools & helpers</sub>
-      </a>
-    </td>
-  </tr>
-</table>
 
 </div>
 
