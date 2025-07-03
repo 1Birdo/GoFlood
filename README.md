@@ -125,18 +125,48 @@ go get github.com/rs/zerolog
 
 ## 🔐 Security Features
 
-- **Certificate Pinning**: CA verification
-- **Rate Limiting**: IP and user-based request throttling
-- **Session Management**: Automatic timeout and cleanup
-- **Input Sanitization**: Protection against injection attacks
-- **TOTP For Passwd reset**: Time-based one-time passwords reset codes
-- **Password Policies**: Complexity requirements and lockout
-- **Encryption**: TLS 1.3 with mutual authentication
-- **Authentication**: Bcrypt password hashing
-- **Real-time Monitoring**: Live bot statistics and attack analytics
-- **Attack Management**: Queue system with priority scheduling
-- **Multi-Architecture Support**: Cross-platform bot clients
-- **Comprehensive Auditing**: Detailed activity logging
+<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+
+<div>
+
+- **Certificate Pinning**  
+  CA verification
+- **Rate Limiting**  
+  IP/user request throttling
+- **Session Management**  
+  Auto timeout/cleanup
+- **Input Sanitization**  
+  Injection attack protection
+
+</div>
+
+<div>
+
+- **TOTP For Reset**  
+  Time-based one-time passwords
+- **Password Policies**  
+  Complexity + lockout
+- **Encryption**  
+  TLS 1.3 + mutual auth
+- **Authentication**  
+  Bcrypt hashing
+
+</div>
+
+<div>
+
+- **Real-time Monitoring**  
+  Live bot analytics
+- **Attack Management**  
+  Priority queue system
+- **Multi-Arch Support**  
+  Cross-platform clients
+- **Comprehensive Auditing**  
+  Detailed activity logs
+
+</div>
+
+</div>
 
 ## 🤖 Bot Client Features
 
