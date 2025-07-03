@@ -171,41 +171,29 @@ Edit `config.json` to customize settings:
 }
 ```
 
+<div align="center">
+
+
 ## 👨‍💻 Commands
 
-### 🚀 Attack Commands
-| Command Example                          | Description                | Format                                |
-|------------------------------------------|----------------------------|---------------------------------------|
-| `![Method] 0.0.0.0 80 22 0656d970...`   | Launch attack              | `![Method] IP PORT TIME SECRET_KEY`   |
+### 🚀 Attack
+`![Method] IP PORT TIME KEY`  
+Example: `![Method] 0.0.0.0 80 22 0656d970cef...`
 
-### ⚙️ User Management
-| Command    | Description            |
-|------------|------------------------|
-| `adduser`  | Create new user        |
-| `deluser`  | Delete user            |
-| `resetpw`  | Reset password         |
-| `db`       | View user database     |
-| `logs`     | View audit logs        |
+### 👥 User Management
+| `adduser` | `deluser` | `resetpw` | `db`    | `logs`  |
+|-----------|-----------|-----------|---------|---------|
+| Add user  | Delete    | Reset PW  | Database| Audit   |
 
-### 🖥️ System Control
-| Command       | Description                 |
-|---------------|-----------------------------|
-| `ongoing`     | See ongoing attacks         |
-| `queue`       | Schedule an attack          |
-| `cancel`      | Cancel attack               |
-| `reinstall`   | Reinstall bots              |
-| `bots`        | See bot count               |
+### ⚙️ System
+| `ongoing` | `queue` | `cancel` | `reinstall` | `bots` |
+|-----------|---------|----------|-------------|--------|
+| Attacks   | Schedule| Cancel   | Reinstall   | Count  |
 
 ### 🛠️ Utilities
-| Command         | Description                |
-|-----------------|----------------------------|
-| `logout/exit`   | Logout from session        |
-| `clear/cls`     | Clear terminal             |
-| `help`          | Show help menu             |
-| `stats`         | View bot status/stats      |
-| `status`        | View C2 server status      |
-
-<div align="center">
+| `logout`/`exit` | `clear`/`cls` | `help` | `stats` | `status` |
+|-----------------|---------------|--------|---------|----------|
+| Exit session    | Clear screen  | Help   | Bot stats| C2 status|
 
 ## 🎬 Feature Previews
 
