@@ -222,20 +222,21 @@ Edit `config.json` to customize settings:
 Might make a video just for setup as well as to properly show it off.
 
 ## Easy Videos (21/06/25) - All the videos are old and need updating
-## *Finishing (05/06/25)* Proxy  - Showing off Proxy POC
-https://github.com/user-attachments/assets/fbe96e3a-ed11-4ea2-b8f1-cb567129cba6
 
-## Cli Output - CLI outputs on your terminal 
-https://github.com/user-attachments/assets/b7349373-e985-4d10-ba7b-87edb3844247
+### *Finishing (05/06/25)* Proxy - Showing off Proxy POC
+<video src="https://github.com/user-attachments/assets/raw/fbe96e3a-ed11-4ea2-b8f1-cb567129cba6" controls width="350"></video>
 
-## Starter – Walkthrough of the login process + essential commands.
-https://github.com/user-attachments/assets/00b6ddb0-0c9e-47aa-9e91-08e689a1d272
+### CLI Output - CLI outputs on your terminal
+<video src="https://github.com/user-attachments/assets/raw/b7349373-e985-4d10-ba7b-87edb3844247" controls width="350"></video>
 
-## Admin – Admin commands + usage.
-https://github.com/user-attachments/assets/e2b9535f-5ede-401c-bb2d-da97b601a118
+### Starter – Walkthrough of the login process + essential commands
+<video src="https://github.com/user-attachments/assets/raw/00b6ddb0-0c9e-47aa-9e91-08e689a1d272" controls width="350"></video>
 
-## Attack Example -- All outgoing traffic was filtered / Disabled for this Example.
-https://github.com/user-attachments/assets/531f09ef-ae28-4bcc-aae4-aaa564162acd
+### Admin – Admin commands + usage
+<video src="https://github.com/user-attachments/assets/raw/e2b9535f-5ede-401c-bb2d-da97b601a118" controls width="350"></video>
+
+### Attack Example -- All outgoing traffic was filtered/disabled for this example
+<video src="https://github.com/user-attachments/assets/raw/531f09ef-ae28-4bcc-aae4-aaa564162acd" controls width="350"></video>
 
 ## 📜 License
 MIT License - See LICENSE for details.
