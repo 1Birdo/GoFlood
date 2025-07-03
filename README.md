@@ -209,9 +209,8 @@ Edit `config.json` to customize settings:
 | [🛡️ Admin Controls](https://github.com/user-attachments/assets/e2b9535f-5ede-401c-bb2d-da97b601a118)    | User management, audit logs, system controls | ✅|
 | [🛡️ Support Scripts](https://github.com/user-attachments/assets/e2b9535f-5ede-401c-bb2d-da97b601a118)   | Full C2 setup  | ❎ |
 
-## 🎬 Feature Previews
-## YT video (Still 50/50)
-Might make a video just for setup as well as to properly show it off.
+## YT video (Still debaiting)
+Might make a video just for setup as well as to properly show it off as a whole.
 
 ## Easy Videos (21/06/25) - All videos need updating
 
