@@ -94,33 +94,33 @@
 └──────────────────────┘ 
 ```
 
-### Server / C2
-```
-# Generate certificates
-chmod +x generate_certs.sh setup_C2.sh 
-./generate_certs.sh
-./setup_C2.sh 
+### 🖥️ Server/C2 Setup
 
-# Build server
-go build -o cnc main.go
+```bash
+# 1. Generate Certificates & Setup
+chmod +x generate_certs.sh setup_C2.sh
+./generate_certs.sh && ./setup_C2.sh
 
-# Start server
+# 2. Build Server
+go build -ldflags="-s -w" -o cnc main.go
+
+# 3. Run C2
 ./cnc
 ```
 
 ### Install needed packages / Tools
 ```bash
-# UPX (compression) - Openssl (Certs) - 
-sudo apt install upx-ucl
+# Essential Tools
+sudo apt install -y upx-ucl openssl
 
-# Binary packer (optional)
-go install github.com/upx/upx@lates
+# Go Packages
+go get github.com/json-iterator/go \
+       github.com/golang-jwt/jwt/v5 \
+       github.com/gorilla/websocket \
+       github.com/rs/zerolog
 
-# JSON Parser - JWT Token - WS support - Logging library 
-go get github.com/json-iterator/go
-go get github.com/golang-jwt/jwt/v5
-go get github.com/gorilla/websocket
-go get github.com/rs/zerolog
+# Optional Binary Packer
+go install github.com/upx/upx@latest
 ```
 
 
