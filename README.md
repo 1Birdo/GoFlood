@@ -131,6 +131,7 @@ go get github.com/json-iterator/go \
 go install github.com/upx/upx@latest
 ```
   
+<div align="center">
 ## 🛠️ Configuration
 Remember to to customize settings via `config.json` 
 
@@ -167,7 +168,6 @@ Example: `![Method] 0.0.0.0 80 22 0656d970cef...`
 |-------------|------------|----------------|--------------|-----------|
 | Mutual Auth | PW Hashing | Real-time      | Priority     | Full Logs |
 
-<div align="center">
   
 ## 🤖 Bot Features
 
