@@ -94,6 +94,10 @@
 └──────────────────────┘ 
 ```
 
+
+
+<div align="center">
+
 ### 🖥️ Server/C2 Setup
 
 ```bash
@@ -122,9 +126,6 @@ go get github.com/json-iterator/go \
 # Optional Binary Packer
 go install github.com/upx/upx@latest
 ```
-
-
-<div align="center">
   
 ## 🛠️ Configuration
 Remember to to customize settings via `config.json` 
