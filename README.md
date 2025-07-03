@@ -227,50 +227,61 @@ Edit `config.json` to customize settings:
 
 ## 🎬 Feature Previews
 
+## 🎥 YT & Video Previews (Status: 50/50)
+> Might make a proper setup showcase later.
+
+---
+
+## 📹 Easy Video Demos *(Last updated: 21/06/25)*  
+> These previews are **outdated** — refresh is planned.  
+
 <table>
   <tr>
     <td align="center" width="33%">
-      <a href="https://github.com/user-attachments/assets/00b6ddb0-0c9e-47aa-9e91-08e689a1d272">
-        <strong>🚀 Starter Setup</strong><br>
-        <sub>✅ Initial setup and certificate generation</sub>
+      <a href="https://github.com/user-attachments/assets/fbe96e3a-ed11-4ea2-b8f1-cb567129cba6">
+        <strong>🧪 Proxy POC</strong><br>
+        Finishing touches on proxy system<br>
+        <img src="https://github.com/user-attachments/assets/fbe96e3a-ed11-4ea2-b8f1-cb567129cba6" width="100%" />
       </a>
     </td>
     <td align="center" width="33%">
       <a href="https://github.com/user-attachments/assets/b7349373-e985-4d10-ba7b-87edb3844247">
-        <strong>💻 CLI Interface</strong><br>
-        <sub>✅ Terminal UI and login flow</sub>
+        <strong>💻 CLI Output</strong><br>
+        Terminal interface and command flow<br>
+        <img src="https://github.com/user-attachments/assets/b7349373-e985-4d10-ba7b-87edb3844247" width="100%" />
       </a>
     </td>
     <td align="center" width="33%">
-      <a href="https://github.com/user-attachments/assets/531f09ef-ae28-4bcc-aae4-aaa564162acd">
-        <strong>🧨 Attack Management</strong><br>
-        <sub>✅ Launch and manage attacks</sub>
-      </a>
-    </td>
-  </tr>
-  <tr>
-    <td align="center" width="33%">
-      <a href="https://github.com/user-attachments/assets/e2b9535f-5ede-401c-bb2d-da97b601a118">
-        <strong>🛡️ Admin Controls</strong><br>
-        <sub>✅ Manage users, logs, systems</sub>
-      </a>
-    </td>
-    <td align="center" width="33%">
-      <a href="https://github.com/user-attachments/assets/e2b9535f-5ede-401c-bb2d-da97b601a118">
-        <strong>🛡️ Admin Controls (Alt)</strong><br>
-        <sub>❎ Duplicate preview</sub>
-      </a>
-    </td>
-    <td align="center" width="33%">
-      <a href="https://github.com/user-attachments/assets/e2b9535f-5ede-401c-bb2d-da97b601a118">
-        <strong>🛠️ Support Scripts</strong><br>
-        <sub>❎ CLI tools & helpers</sub>
+      <a href="https://github.com/user-attachments/assets/00b6ddb0-0c9e-47aa-9e91-08e689a1d272">
+        <strong>🚀 Starter</strong><br>
+        Login + essential commands walkthrough<br>
+        <img src="https://github.com/user-attachments/assets/00b6ddb0-0c9e-47aa-9e91-08e689a1d272" width="100%" />
       </a>
     </td>
   </tr>
 </table>
 
-</div>
+---
+
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <a href="https://github.com/user-attachments/assets/e2b9535f-5ede-401c-bb2d-da97b601a118">
+        <strong>🛡️ Admin Tools</strong><br>
+        Admin command usage demo<br>
+        <img src="https://github.com/user-attachments/assets/e2b9535f-5ede-401c-bb2d-da97b601a118" width="100%" />
+      </a>
+    </td>
+    <td align="center" width="50%">
+      <a href="https://github.com/user-attachments/assets/531f09ef-ae28-4bcc-aae4-aaa564162acd">
+        <strong>🎯 Attack Preview</strong><br>
+        Example (all outgoing traffic filtered)<br>
+        <img src="https://github.com/user-attachments/assets/531f09ef-ae28-4bcc-aae4-aaa564162acd" width="100%" />
+      </a>
+    </td>
+  </tr>
+</table>
+
 
 ## 📜 License
 MIT License - See LICENSE for details.
