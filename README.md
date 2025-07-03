@@ -127,44 +127,21 @@ go get github.com/rs/zerolog
 
 <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
 
-<div>
+<div>• <b>Certificate Pinning</b>: CA verification</div>
+<div>• <b>Rate Limiting</b>: IP/user request throttling</div>
+<div>• <b>Session Management</b>: Auto timeout/cleanup</div>
 
-- **Certificate Pinning**  
-  CA verification
-- **Rate Limiting**  
-  IP/user request throttling
-- **Session Management**  
-  Auto timeout/cleanup
-- **Input Sanitization**  
-  Injection attack protection
+<div>• <b>Input Sanitization</b>: Injection attack protection</div>
+<div>• <b>TOTP For Passwd reset</b>: Time-based codes</div>
+<div>• <b>Password Policies</b>: Complexity requirements</div>
 
-</div>
+<div>• <b>Encryption</b>: TLS 1.3 mutual auth</div>
+<div>• <b>Authentication</b>: Bcrypt hashing</div>
+<div>• <b>Real-time Monitoring</b>: Live bot analytics</div>
 
-<div>
-
-- **TOTP For Reset**  
-  Time-based one-time passwords
-- **Password Policies**  
-  Complexity + lockout
-- **Encryption**  
-  TLS 1.3 + mutual auth
-- **Authentication**  
-  Bcrypt hashing
-
-</div>
-
-<div>
-
-- **Real-time Monitoring**  
-  Live bot analytics
-- **Attack Management**  
-  Priority queue system
-- **Multi-Arch Support**  
-  Cross-platform clients
-- **Comprehensive Auditing**  
-  Detailed activity logs
-
-</div>
+<div>• <b>Attack Management</b>: Priority queue system</div>
+<div>• <b>Multi-Arch Support</b>: Cross-platform clients</div>
+<div>• <b>Comprehensive Auditing</b>: Detailed activity logs</div>
 
 </div>
 
