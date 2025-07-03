@@ -173,29 +173,37 @@ Edit `config.json` to customize settings:
 
 ## 👨‍💻 Commands
 
-|      Attack / stress                                |      Description       | 
-|-----------------------------------------------------|------------------------| 
-| ![Method] 0.0.0.0 80 22 0656d970cef86794c84819..... |   Command Example      | 
-| ![Method] IP PORT TIME hex-32-secret-signing-key    |   Command Format       | 
+### 🚀 Attack Commands
+| Command Example                          | Description                | Format                                |
+|------------------------------------------|----------------------------|---------------------------------------|
+| `![Method] 0.0.0.0 80 22 0656d970...`   | Launch attack              | `![Method] IP PORT TIME SECRET_KEY`   |
 
-| Command       | Description            | 
-|---------------|------------------------| 
-| adduser       | Create new user        | 
-| deluser       | Delete user            | 
-| resetpw       | Reset password         | 
-| db            | View user database     | 
-| logs          | View audit logs        | 
-| !reinstall    | Reinstall bots         | 
-| ongoing       | See ongoing stress     | 
-| queue         | schedule a stess       | 
-| cancel        | cancel Attack          | 
-| reinstall     | Reinstall bots         | 
-| bots          | See bot Count          | 
-| logout / exit | Logout                 | 
-| clear / cls   | clear ternimal         | 
-| help          | Get Help Menu          | 
-| stats         | Get Bot status / stats | 
-| status        | See C2 status / stats  | 
+### ⚙️ User Management
+| Command    | Description            |
+|------------|------------------------|
+| `adduser`  | Create new user        |
+| `deluser`  | Delete user            |
+| `resetpw`  | Reset password         |
+| `db`       | View user database     |
+| `logs`     | View audit logs        |
+
+### 🖥️ System Control
+| Command       | Description                 |
+|---------------|-----------------------------|
+| `ongoing`     | See ongoing attacks         |
+| `queue`       | Schedule an attack          |
+| `cancel`      | Cancel attack               |
+| `reinstall`   | Reinstall bots              |
+| `bots`        | See bot count               |
+
+### 🛠️ Utilities
+| Command         | Description                |
+|-----------------|----------------------------|
+| `logout/exit`   | Logout from session        |
+| `clear/cls`     | Clear terminal             |
+| `help`          | Show help menu             |
+| `stats`         | View bot status/stats      |
+| `status`        | View C2 server status      |
 
 <div align="center">
 
