@@ -167,13 +167,14 @@ Example: `![Method] 0.0.0.0 80 22 0656d970cef...`
 |-------------|------------|----------------|--------------|-----------|
 | Mutual Auth | PW Hashing | Real-time      | Priority     | Full Logs |
 
+<div align="center">
+  
 ## 🤖 Bot Features
 
 | `🖥️ Multi-Arch` | `👾 Anti-Debug` | `♻️ Persist` | `💾 Lightweight` |
 |----------------|----------------|-------------|------------------|
 | x86/ARM/MIPS  | Debug Detection| Auto-Run    | Low Resources    |
 
-<div align="center">
 
 | Feature Demo                                                   | Description                                     | Preview |
 |----------------------------------------------------------------|-------------------------------------------------|---------|
