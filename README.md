@@ -123,56 +123,11 @@ go get github.com/gorilla/websocket
 go get github.com/rs/zerolog
 ```
 
-## 🔐 Security Features
-
-|• **Certificate Pinning**: CA verification | • **Rate Limiting**: IP/user throttling | • **Session Management**: Auto timeout |
-|--------------------------------------------|-----------------------------------------|-----------------------------------------|
-| • **Input Sanitization**: Injection protection | • **TOTP Reset**: Time-based codes | • **Password Policies**: Complexity rules |
-| • **Encryption**: TLS 1.3 mutual auth | • **Authentication**: Bcrypt hashing | • **Real-time Monitoring**: Live analytics |
-| • **Attack Management**: Priority queue | • **Multi-Arch Support**: Cross-platform | • **Auditing**: Detailed logs |
-
-## 🤖 Bot Client Features
-
-- Multi-architecture support (x86, ARM, MIPS)
-- Anti-debugging techniques
-- Automated persistence
-- Resource efficient
-  
-## 🛠️ Configuration
-Edit `config.json` to customize settings:
-
-```json
-{
-  "users_file": "users.json",
-  "audit_log_file": "audit.log",
-  "bot_server_ip": "172.17.126.64",
-  "user_server_ip": "0.0.0.0",
-  "bot_server_port": "7002",
-  "user_server_port": "5555",
-  "cert_file": "certs/server.crt",
-  "key_file": "certs/server.key",
-  "session_timeout": 3600,
-  "max_conns": 1000,
-  "max_read_size": 4096,
-  "max_log_size": 10485760,
-  "max_queued_attacks": 50,
-  "max_daily_attacks": 100,
-  "max_attack_duration": 3600,
-  "max_sessions_per_user": 3,
-  "min_password_length": 8,
-  "password_complexity": true,
-  "max_connections_per_ip": 5,
-  "ddos_protection": true,
-  "max_conn_rate": 10,
-  "syn_flood_threshold": 50,
-  "reset_token_validity": 3600,
-  "pinned_cert_file": "certs/pinned.crt",
-  "command_signing_key": "your_very_secure"
-}
-```
 
 <div align="center">
-
+  
+## 🛠️ Configuration
+Remember to to customize settings via `config.json` 
 
 ## 👨‍💻 Commands
 
@@ -196,6 +151,23 @@ Example: `![Method] 0.0.0.0 80 22 0656d970cef...`
 | Exit session    | Clear screen  | Help   | Bot stats| C2 status|
 
 ## 🎬 Feature Previews
+
+## 🔐 Security
+
+| `📌 Pinning` | `⏱️ Rate Limit` | `🕒 Sessions` | `🛡️ Sanitize` | `🔑 TOTP` |
+|-------------|----------------|--------------|---------------|----------|
+| CA Verify  | IP/User Throttle| Auto Timeout | Injection Proof| 2FA Codes|
+
+| `🔒 TLS 1.3` | `🔐 Bcrypt` | `📊 Live Stats` | `⚔️ Attack Q` | `📜 Audit` |
+|-------------|------------|----------------|--------------|-----------|
+| Mutual Auth | PW Hashing | Real-time      | Priority     | Full Logs |
+
+## 🤖 Bot Features
+
+| `🖥️ Multi-Arch` | `👾 Anti-Debug` | `♻️ Persist` | `💾 Lightweight` |
+|----------------|----------------|-------------|------------------|
+| x86/ARM/MIPS  | Debug Detection| Auto-Run    | Low Resources    |
+  
 
 | Feature Demo                                                   | Description                                     | Preview |
 |----------------------------------------------------------------|-------------------------------------------------|---------|
