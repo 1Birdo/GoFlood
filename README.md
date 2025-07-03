@@ -1,9 +1,5 @@
 # GoFlood - DDoS Framework
 
-## Video Links
-- [Setup Tutorial](https://youtube.com/watch?v=YOUR_VIDEO_ID)
-- [CLI Demo](https://youtube.com/watch?v=YOUR_VIDEO_ID)
-
 ![Go Version](https://img.shields.io/badge/go-1.21+-blue.svg)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 ![Multi-User](https://img.shields.io/badge/Multi--User-Yes-blue)
