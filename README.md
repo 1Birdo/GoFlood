@@ -14,6 +14,17 @@
 ---
 
 ## 📷 Preview
+## 🎥 Video Demonstrations
+### All Video Demonstrations are also embedded at the bottom of this Readme.md
+
+| Feature Demo                                                   | Description                                     | Preview |
+|----------------------------------------------------------------|-------------------------------------------------|---------|
+| [🚀 Starter Setup](https://github.com/user-attachments/assets/00b6ddb0-0c9e-47aa-9e91-08e689a1d272)  | Initial setup and certificate generation     | ✅ |
+| [💻 CLI Interface](https://github.com/user-attachments/assets/b7349373-e985-4d10-ba7b-87edb3844247)  | Beautiful terminal interface and login flow  | ✅ |
+| [🧨 Attack Management](https://github.com/user-attachments/assets/531f09ef-ae28-4bcc-aae4-aaa564162acd) | Launching and managing attacks            | ✅ |
+| [🛡️ Admin Controls](https://github.com/user-attachments/assets/e2b9535f-5ede-401c-bb2d-da97b601a118) | User management, audit logs, system controls  | ✅ |
+| [🛡️ Admin Controls](https://github.com/user-attachments/assets/e2b9535f-5ede-401c-bb2d-da97b601a118) | User management, audit logs, system controls  | ❎ |
+| [🛡️ Support Scripts](https://github.com/user-attachments/assets/e2b9535f-5ede-401c-bb2d-da97b601a118) | User management, audit logs, system controls | ❎ |
 
 ### C2 Closeups
 
@@ -96,18 +107,6 @@
 │  - Attack Scheduling │    
 └──────────────────────┘ 
 ```
-
-## 🎥 Video Demonstrations
-### All Video Demonstrations are also embedded at the bottom of this Readme.md
-
-| Feature Demo                                                   | Description                                     | Preview |
-|----------------------------------------------------------------|-------------------------------------------------|---------|
-| [🚀 Starter Setup](https://github.com/user-attachments/assets/00b6ddb0-0c9e-47aa-9e91-08e689a1d272)  | Initial setup and certificate generation       | ✅ |
-| [💻 CLI Interface](https://github.com/user-attachments/assets/b7349373-e985-4d10-ba7b-87edb3844247)  | Beautiful terminal interface and login flow    | ✅ |
-| [🧨 Attack Management](https://github.com/user-attachments/assets/531f09ef-ae28-4bcc-aae4-aaa564162acd) | Launching and managing attacks                 | ✅ |
-| [🛡️ Admin Controls](https://github.com/user-attachments/assets/e2b9535f-5ede-401c-bb2d-da97b601a118) | User management, audit logs, system controls   | ✅ |
-| [🛡️ Admin Controls](https://github.com/user-attachments/assets/e2b9535f-5ede-401c-bb2d-da97b601a118) | User management, audit logs, system controls   | ❎ |
-| [🛡️ Support Scripts](https://github.com/user-attachments/assets/e2b9535f-5ede-401c-bb2d-da97b601a118) | User management, audit logs, system controls   | ❎ |
 
 ### Server / C2
 ```
