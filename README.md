@@ -13,6 +13,8 @@
 
 ---
 
+<div align="center">
+
 ## 🎬 Feature Previews
 
 <table>
@@ -57,6 +59,9 @@
     </td>
   </tr>
 </table>
+
+</div>
+
 
 ---
 
