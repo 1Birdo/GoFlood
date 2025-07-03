@@ -132,6 +132,7 @@ go install github.com/upx/upx@latest
 ```
   
 <div align="center">
+  
 ## 🛠️ Configuration
 Remember to to customize settings via `config.json` 
 
