@@ -9,6 +9,7 @@
 
 *A Command and Control (C2) Framework with secure and efficient distributed botnet management. Includes both Terminal and Web UI interfaces to accommodate different user preferences.*
 
+> ###📶 This project merges **Gostress-V2 + Gostress-Enhanced** and **BotnetGo**, offering a complete **C2 Framework solution**:
 > ### 🏗️ Proxy Client is Optional
 ---
 
@@ -29,21 +30,28 @@
   </tr>
 </table>
 
+### 🌐 Multi-Platform Support (Windows/Linux/macOS)
 
+#### 🔒 Encrypted C2 Channels
+| **Component**             | **Protocol**       | **Port** | **Security Features**                     |
+|---------------------------|--------------------|----------|-------------------------------------------|
+| Terminal Interface         | TLS 1.3            | 1337     | AES-256-GCM, P-384 ECDH                   |
+| Web Dashboard             | WebSocket + TLS    | 8443     | Mutual TLS, OCSP Stapling                 |
+| Bot Communication         | mTLS 1.3           | 7002     | X.509 Cert Pinning, CA Verification       |
 
-### Supports all Architecture ([ Windows / Linux / MacOS ])
-📶 This project merges **Gostress-V2 + Gostress-Enhanced** and **BotnetGo**, offering a complete **C2 Framework solution**:
--  **Encrypted C2 Channels**:
-    - TLS 1.3 secured terminal interface (TCP/1337)
-    - WebSocket dashboard (TCP/8443) 
-    - Mutual TLS authentication for all connections
-
- - **C2 Channel Description (Bot Connection Protocol)**:
-   - Protocol: TCP with TLS 1.3 encryption (TCP/7002).
-   - Bots and the C2 server authenticate each other using client and server certificates (X.509).
-   - The server validates bot certificates against a pinned CA certificate to prevent impersonation.
-   - Bots verify the server's certificate to avoid MITM attacks.
-    
+#### 🤖 Bot Connection Protocol
+```text
+1. Connection Initiation:
+   - Bot → Server: TCP/7002 with ClientHello (TLS 1.3)
+   
+2. Mutual Authentication:
+   - Server verifies bot cert against pinned CA
+   - Bot verifies server cert fingerprint
+   
+3. Secure Channel:
+   - Established with forward secrecy
+   - All traffic encrypted with ChaCha20-Poly1305
+ ```   
 
  *⚠️ **Note**: In the wake of coordinated efforts such as Operation EndGame, PowerOFF, and Cronos, this project serves only as an educational and analytical reference for understanding botnet infrastructure. Real-world deployment of such tools carries significant legal risk*.
 
