@@ -1,31 +1,40 @@
-# GoFlood - DDos Framework
+# GoFlood - DDoS Framework
 
 ![Go Version](https://img.shields.io/badge/go-1.21+-blue.svg)
-[![License: GPL v3](https://img.shields.io/badge/License-MIT-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 ![Multi-User](https://img.shields.io/badge/Multi--User-Yes-blue)
 ![Bot Support](https://img.shields.io/badge/Bots-Cross--platform-orange)
-![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20WSL%20%7C%20Windows%20%7C%20MacOS-blueviolet)
+![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20WSL%20%7C%20Windows%20%7C%20macOS-blueviolet)
 ![Architecture](https://img.shields.io/badge/Architecture-Distributed-orange)
 
 *A Command and Control (C2) Framework with secure and efficient distributed botnet management. Includes both Terminal and Web UI interfaces to accommodate different user preferences.*
-###  🏗️  Proxy Client is Optional
 
-<div align="center">
-  <h2>📷 Preview</h2>
+> ### 🏗️ Proxy Client is Optional
 
-  <h3>c2 Closeups:</h3>
+---
 
-  <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;">
-    <img src="https://github.com/user-attachments/assets/0eb04d6b-4623-4e1c-b7b3-2191c05475c0" width="45%" style="max-width: 300px;">
-    <img src="https://github.com/user-attachments/assets/92e01376-965f-4802-9aba-f9c5e4621ce9" width="45%" style="max-width: 300px;">
-    <img src="https://github.com/user-attachments/assets/f5e29468-fdec-4887-94c1-97b33a5ae498" width="45%" style="max-width: 300px;">
-    <img src="https://github.com/user-attachments/assets/50ab64c5-103f-4d73-bc06-b18c85e61283" width="45%" style="max-width: 300px;">
-    <img src="https://github.com/user-attachments/assets/807fad11-4cb1-4a13-909b-368c2892349b" width="45%" style="max-width: 300px;">
-    <img src="https://github.com/user-attachments/assets/5c02f075-fcb7-469b-b0c9-fc5724203f4e" width="45%" style="max-width: 300px;">
-    <img src="https://github.com/user-attachments/assets/52cdac50-7650-40fa-882e-2a524e562d6e" width="45%" style="max-width: 300px;">
-    <img src="https://github.com/user-attachments/assets/807fad11-4cb1-4a13-909b-368c2892349b" width="45%" style="max-width: 300px;">
-  </div>
-</div>
+## 📷 Preview
+
+### C2 Closeups
+
+<table>
+  <tr>
+    <td><img src="https://github.com/user-attachments/assets/0eb04d6b-4623-4e1c-b7b3-2191c05475c0" width="100%"/></td>
+    <td><img src="https://github.com/user-attachments/assets/92e01376-965f-4802-9aba-f9c5e4621ce9" width="100%"/></td>
+  </tr>
+  <tr>
+    <td><img src="https://github.com/user-attachments/assets/f5e29468-fdec-4887-94c1-97b33a5ae498" width="100%"/></td>
+    <td><img src="https://github.com/user-attachments/assets/50ab64c5-103f-4d73-bc06-b18c85e61283" width="100%"/></td>
+  </tr>
+  <tr>
+    <td><img src="https://github.com/user-attachments/assets/807fad11-4cb1-4a13-909b-368c2892349b" width="100%"/></td>
+    <td><img src="https://github.com/user-attachments/assets/5c02f075-fcb7-469b-b0c9-fc5724203f4e" width="100%"/></td>
+  </tr>
+  <tr>
+    <td><img src="https://github.com/user-attachments/assets/52cdac50-7650-40fa-882e-2a524e562d6e" width="100%"/></td>
+    <td><img src="https://github.com/user-attachments/assets/807fad11-4cb1-4a13-909b-368c2892349b" width="100%"/></td>
+  </tr>
+</table>
 
 
 ### Supports all Architecture ([ Windows / Linux / MacOS ])
