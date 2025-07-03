@@ -46,11 +46,9 @@
     
 
  *⚠️ **Note**: In the wake of coordinated efforts such as Operation EndGame, PowerOFF, and Cronos, this project serves only as an educational and analytical reference for understanding botnet infrastructure. Real-world deployment of such tools carries significant legal risk*.
- 
 
-<div align="center">
 
-## 📁 Project Status
+ ## 📁 Project Status
 
 ### 🏗️ Core Components
 | Component          | Status               | Improvements Needed                          |
@@ -95,6 +93,9 @@
 │ • Monitoring │      └─────────────────┘
 └──────────────┘
 ```
+
+<div align="center">
+
 
 ### 🖥️ Server/C2 Setup
 
