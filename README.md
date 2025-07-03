@@ -227,60 +227,24 @@ Edit `config.json` to customize settings:
 
 ## 🎬 Feature Previews
 
-## 🎥 YT & Video Previews (Status: 50/50)
-> Might make a proper setup showcase later.
+## YT video (Still 50/50)
+Might make a video just for setup as well as to properly show it off.
 
----
+## Easy Videos (21/06/25) - All the videos are old and need updating
+## *Finishing (05/06/25)* Proxy  - Showing off Proxy POC
+https://github.com/user-attachments/assets/fbe96e3a-ed11-4ea2-b8f1-cb567129cba6
 
-## 📹 Easy Video Demos *(Last updated: 21/06/25)*  
-> These previews are **outdated** — refresh is planned.  
+## Cli Output - CLI outputs on your terminal 
+https://github.com/user-attachments/assets/b7349373-e985-4d10-ba7b-87edb3844247
 
-<table>
-  <tr>
-    <td align="center" width="33%">
-      <a href="https://github.com/user-attachments/assets/fbe96e3a-ed11-4ea2-b8f1-cb567129cba6">
-        <strong>🧪 Proxy POC</strong><br>
-        Finishing touches on proxy system<br>
-        <img src="https://github.com/user-attachments/assets/fbe96e3a-ed11-4ea2-b8f1-cb567129cba6" width="100%" />
-      </a>
-    </td>
-    <td align="center" width="33%">
-      <a href="https://github.com/user-attachments/assets/b7349373-e985-4d10-ba7b-87edb3844247">
-        <strong>💻 CLI Output</strong><br>
-        Terminal interface and command flow<br>
-        <img src="https://github.com/user-attachments/assets/b7349373-e985-4d10-ba7b-87edb3844247" width="100%" />
-      </a>
-    </td>
-    <td align="center" width="33%">
-      <a href="https://github.com/user-attachments/assets/00b6ddb0-0c9e-47aa-9e91-08e689a1d272">
-        <strong>🚀 Starter</strong><br>
-        Login + essential commands walkthrough<br>
-        <img src="https://github.com/user-attachments/assets/00b6ddb0-0c9e-47aa-9e91-08e689a1d272" width="100%" />
-      </a>
-    </td>
-  </tr>
-</table>
+## Starter – Walkthrough of the login process + essential commands.
+https://github.com/user-attachments/assets/00b6ddb0-0c9e-47aa-9e91-08e689a1d272
 
----
+## Admin – Admin commands + usage.
+https://github.com/user-attachments/assets/e2b9535f-5ede-401c-bb2d-da97b601a118
 
-<table>
-  <tr>
-    <td align="center" width="50%">
-      https://github.com/user-attachments/assets/e2b9535f-5ede-401c-bb2d-da97b601a118"
-        <strong>🛡️ Admin Tools</strong><br>
-        Admin command usage demo<br>
-        <img src="https://github.com/user-attachments/assets/e2b9535f-5ede-401c-bb2d-da97b601a118" width="100%" />
-      </a>
-    </td>
-    <td align="center" width="50%">
-      <a href="https://github.com/user-attachments/assets/531f09ef-ae28-4bcc-aae4-aaa564162acd">
-        <strong>🎯 Attack Preview</strong><br>
-        Example (all outgoing traffic filtered)<br>
-        <img src="https://github.com/user-attachments/assets/531f09ef-ae28-4bcc-aae4-aaa564162acd" width="100%" />
-      </a>
-    </td>
-  </tr>
-</table>
+## Attack Example -- All outgoing traffic was filtered / Disabled for this Example.
+https://github.com/user-attachments/assets/531f09ef-ae28-4bcc-aae4-aaa564162acd
 
 
 ## 📜 License
