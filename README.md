@@ -49,7 +49,7 @@
 | Component       | Status        | Progress | Improvements to be Added / Implemented                                                                       |
 |---------------------|---------------|------------------|--------------------------------------------------------------------------------------------------------------|
 | **C2 Server**       | Completed  |  🟢 100%   |- N/a |
-| **Stress Client**   | Minor Adjustments |  🟡 97% Completed%  | - Just needs to Expand L7/L4 attack methods + AMP research  |
+| **Stress Client**   | Minor Adjustments |  🟡 97% [Completed]%  | - Just needs to Expand L7/L4 attack methods + AMP research  |
 | **Proxy Client**    | Completed |  🟢 100% [Completed] | - N/a |
 | **Support Scripts** | Completed |  🟢 100% [Completed] |-  N/a |
 
@@ -57,10 +57,10 @@
 ### 🧭 Core Files
 | File          | File desc   | Status       | Improvements Made                                                                    |
 |---------------|-------------|--------------|--------------------------------------------------------------------------------------|
-| **main.go**   | C2 Server File | 🟢 No Improvements Neede  | - Stable Connection br>- cleaned up more <br>- Implemented REST api + Dashboard  |
-| **client.go** | Client File    | 🟡 No Improvements Added  | - Improved support for IPV6 + IPV4<br>- Cleaned up more   |
-| **proxy.go**  | Proxy File     | 🟢 No Improvements Needed | - Dashboard design<br>- Traffic monitoring improvements   |
-| **README.md** | Readme.md File | 🟡 Just needs finishing   | - Cleaned up Readme.md<br>- Need to redo videos still <br>- needs polishing  |
+| **main.go**   | C2 Server File | 🟢 No Changes  | - Stable Connection br>- cleaned up more <br>- Implemented REST api + Dashboard  |
+| **client.go** | Client File    | 🟡 Wrapping Up  | - Improved support for IPV6 + IPV4<br>- Cleaned up more   |
+| **proxy.go**  | Proxy File     | 🟢 No Changes | - Dashboard design<br>- Traffic monitoring improvements   |
+| **README.md** | Readme.md File | 🟡 Wrapping Up   | - Cleaned up Readme.md<br>- Need to redo videos still <br>- needs polishing  |
 
 ### 🟦 Support Scripts 
 | File                       | Status        | Key Features                                                                                |
