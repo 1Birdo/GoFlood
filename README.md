@@ -246,7 +246,6 @@ https://github.com/user-attachments/assets/e2b9535f-5ede-401c-bb2d-da97b601a118
 ## Attack Example -- All outgoing traffic was filtered / Disabled for this Example.
 https://github.com/user-attachments/assets/531f09ef-ae28-4bcc-aae4-aaa564162acd
 
-
 ## 📜 License
 MIT License - See LICENSE for details.
 
