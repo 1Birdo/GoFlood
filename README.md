@@ -20,21 +20,18 @@
     <td align="center">
       <a href="https://github.com/user-attachments/assets/00b6ddb0-0c9e-47aa-9e91-08e689a1d272">
         🚀<br><strong>Starter Setup</strong><br>
-        <img src="https://github.com/user-attachments/assets/00b6ddb0-0c9e-47aa-9e91-08e689a1d272" width="220px"/><br>
         ✅ Initial setup and certificate generation
       </a>
     </td>
     <td align="center">
       <a href="https://github.com/user-attachments/assets/b7349373-e985-4d10-ba7b-87edb3844247">
         💻<br><strong>CLI Interface</strong><br>
-        <img src="https://github.com/user-attachments/assets/b7349373-e985-4d10-ba7b-87edb3844247" width="220px"/><br>
         ✅ Terminal UI and login flow
       </a>
     </td>
     <td align="center">
       <a href="https://github.com/user-attachments/assets/531f09ef-ae28-4bcc-aae4-aaa564162acd">
         🧨<br><strong>Attack Management</strong><br>
-        <img src="https://github.com/user-attachments/assets/531f09ef-ae28-4bcc-aae4-aaa564162acd" width="220px"/><br>
         ✅ Launch and manage attacks
       </a>
     </td>
@@ -43,21 +40,18 @@
     <td align="center">
       <a href="https://github.com/user-attachments/assets/e2b9535f-5ede-401c-bb2d-da97b601a118">
         🛡️<br><strong>Admin Controls</strong><br>
-        <img src="https://github.com/user-attachments/assets/e2b9535f-5ede-401c-bb2d-da97b601a118" width="220px"/><br>
         ✅ Manage users, logs, systems
       </a>
     </td>
     <td align="center">
       <a href="https://github.com/user-attachments/assets/e2b9535f-5ede-401c-bb2d-da97b601a118">
         🛡️<br><strong>Admin Controls (Alt)</strong><br>
-        <img src="https://github.com/user-attachments/assets/e2b9535f-5ede-401c-bb2d-da97b601a118" width="220px"/><br>
         ❎ Duplicate preview
       </a>
     </td>
     <td align="center">
       <a href="https://github.com/user-attachments/assets/e2b9535f-5ede-401c-bb2d-da97b601a118">
         🛠️<br><strong>Support Scripts</strong><br>
-        <img src="https://github.com/user-attachments/assets/e2b9535f-5ede-401c-bb2d-da97b601a118" width="220px"/><br>
         ❎ CLI tools & helpers
       </a>
     </td>
