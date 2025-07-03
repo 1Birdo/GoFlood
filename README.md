@@ -266,7 +266,7 @@ Edit `config.json` to customize settings:
 <table>
   <tr>
     <td align="center" width="50%">
-      <a href="https://github.com/user-attachments/assets/e2b9535f-5ede-401c-bb2d-da97b601a118">
+      https://github.com/user-attachments/assets/e2b9535f-5ede-401c-bb2d-da97b601a118"
         <strong>🛡️ Admin Tools</strong><br>
         Admin command usage demo<br>
         <img src="https://github.com/user-attachments/assets/e2b9535f-5ede-401c-bb2d-da97b601a118" width="100%" />
