@@ -223,24 +223,54 @@ Edit `config.json` to customize settings:
 | stats         | Get Bot status / stats | 
 | status        | See C2 status / stats  | 
 
-## YT video (Still 50/50)
-Might make a video just for setup as well as to properly show it off.
+<div align="center">
 
-## Easy Videos (21/06/25) - All the videos are old and need updating
-## *Finishing (05/06/25)* Proxy  - Showing off Proxy POC
-https://github.com/user-attachments/assets/fbe96e3a-ed11-4ea2-b8f1-cb567129cba6
+## 🎬 Feature Previews
 
-## Cli Output - CLI outputs on your terminal 
-https://github.com/user-attachments/assets/b7349373-e985-4d10-ba7b-87edb3844247
+<table>
+  <tr>
+    <td align="center" width="33%">
+      <a href="https://github.com/user-attachments/assets/00b6ddb0-0c9e-47aa-9e91-08e689a1d272">
+        <strong>🚀 Starter Setup</strong><br>
+        <sub>✅ Initial setup and certificate generation</sub>
+      </a>
+    </td>
+    <td align="center" width="33%">
+      <a href="https://github.com/user-attachments/assets/b7349373-e985-4d10-ba7b-87edb3844247">
+        <strong>💻 CLI Interface</strong><br>
+        <sub>✅ Terminal UI and login flow</sub>
+      </a>
+    </td>
+    <td align="center" width="33%">
+      <a href="https://github.com/user-attachments/assets/531f09ef-ae28-4bcc-aae4-aaa564162acd">
+        <strong>🧨 Attack Management</strong><br>
+        <sub>✅ Launch and manage attacks</sub>
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="33%">
+      <a href="https://github.com/user-attachments/assets/e2b9535f-5ede-401c-bb2d-da97b601a118">
+        <strong>🛡️ Admin Controls</strong><br>
+        <sub>✅ Manage users, logs, systems</sub>
+      </a>
+    </td>
+    <td align="center" width="33%">
+      <a href="https://github.com/user-attachments/assets/e2b9535f-5ede-401c-bb2d-da97b601a118">
+        <strong>🛡️ Admin Controls (Alt)</strong><br>
+        <sub>❎ Duplicate preview</sub>
+      </a>
+    </td>
+    <td align="center" width="33%">
+      <a href="https://github.com/user-attachments/assets/e2b9535f-5ede-401c-bb2d-da97b601a118">
+        <strong>🛠️ Support Scripts</strong><br>
+        <sub>❎ CLI tools & helpers</sub>
+      </a>
+    </td>
+  </tr>
+</table>
 
-## Starter – Walkthrough of the login process + essential commands.
-https://github.com/user-attachments/assets/00b6ddb0-0c9e-47aa-9e91-08e689a1d272
-
-## Admin – Admin commands + usage.
-https://github.com/user-attachments/assets/e2b9535f-5ede-401c-bb2d-da97b601a118
-
-## Attack Example -- All outgoing traffic was filtered / Disabled for this Example.
-https://github.com/user-attachments/assets/531f09ef-ae28-4bcc-aae4-aaa564162acd
+</div>
 
 ## 📜 License
 MIT License - See LICENSE for details.
