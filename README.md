@@ -125,25 +125,11 @@ go get github.com/rs/zerolog
 
 ## 🔐 Security Features
 
-<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
-
-<div>• <b>Certificate Pinning</b>: CA verification</div>
-<div>• <b>Rate Limiting</b>: IP/user request throttling</div>
-<div>• <b>Session Management</b>: Auto timeout/cleanup</div>
-
-<div>• <b>Input Sanitization</b>: Injection attack protection</div>
-<div>• <b>TOTP For Passwd reset</b>: Time-based codes</div>
-<div>• <b>Password Policies</b>: Complexity requirements</div>
-
-<div>• <b>Encryption</b>: TLS 1.3 mutual auth</div>
-<div>• <b>Authentication</b>: Bcrypt hashing</div>
-<div>• <b>Real-time Monitoring</b>: Live bot analytics</div>
-
-<div>• <b>Attack Management</b>: Priority queue system</div>
-<div>• <b>Multi-Arch Support</b>: Cross-platform clients</div>
-<div>• <b>Comprehensive Auditing</b>: Detailed activity logs</div>
-
-</div>
+| • **Certificate Pinning**: CA verification | • **Rate Limiting**: IP/user throttling | • **Session Management**: Auto timeout |
+|--------------------------------------------|-----------------------------------------|-----------------------------------------|
+| • **Input Sanitization**: Injection protection | • **TOTP Reset**: Time-based codes | • **Password Policies**: Complexity rules |
+| • **Encryption**: TLS 1.3 mutual auth | • **Authentication**: Bcrypt hashing | • **Real-time Monitoring**: Live analytics |
+| • **Attack Management**: Priority queue | • **Multi-Arch Support**: Cross-platform | • **Auditing**: Detailed logs |
 
 ## 🤖 Bot Client Features
 
