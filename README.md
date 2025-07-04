@@ -180,8 +180,3 @@ Might make a video just for setup as well as to properly show it off as a whole.
 |-|-|-|
 | **Proxy POC**<br>*Finishing (05/06/25)*<br><video src="https://github.com/user-attachments/assets/raw/fbe96e3a-ed11-4ea2-b8f1-cb567129cba6" controls width="100%"></video> | **CLI Output**<br>Terminal outputs<br><video src="https://github.com/user-attachments/assets/raw/b7349373-e985-4d10-ba7b-87edb3844247" controls width="100%"></video> | **Starter Guide**<br>Login + commands<br><video src="https://github.com/user-attachments/assets/raw/00b6ddb0-0c9e-47aa-9e91-08e689a1d272" controls width="100%"></video> |
 | **Admin Commands**<br>Usage examples<br><video src="https://github.com/user-attachments/assets/raw/e2b9535f-5ede-401c-bb2d-da97b601a118" controls width="100%"></video> | **Attack Example**<br>Filtered traffic demo<br><video src="https://github.com/user-attachments/assets/raw/531f09ef-ae28-4bcc-aae4-aaa564162acd" controls width="100%"></video> | |
-## 📜 License
-MIT License - See LICENSE for details.
-
-## ⚠️ Disclaimer
-This project is for educational and research purposes only. The authors are not responsible for any misuse of this software.
