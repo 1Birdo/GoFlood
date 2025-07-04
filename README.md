@@ -140,21 +140,14 @@ Example: `![Method] 0.0.0.0 80 22 0656d970cef...`
 | `logout`/`exit` | `clear`/`cls` | `help` | `stats` | `status` |
 |-----------------|---------------|--------|---------|----------|
 | Exit session    | Clear screen  | Help   | Bot stats| C2 status|
-
-## 🎬 Feature Previews
-
 ## 🔐 Security
-
 | `📌 Pinning` | `⏱️ Rate Limit` | `🕒 Sessions` | `🛡️ Sanitize` | `🔑 TOTP` |
 |-------------|----------------|--------------|---------------|----------|
 | CA Verify  | IP/User Throttle| Auto Timeout | Injection Proof| 2FA Codes|
-
 | `🔒 TLS 1.3` | `🔐 Bcrypt` | `📊 Live Stats` | `⚔️ Attack Q` | `📜 Audit` |
 |-------------|------------|----------------|--------------|-----------|
 | Mutual Auth | PW Hashing | Real-time      | Priority     | Full Logs |
-
 ## 🤖 Bot Features
-
 | `🖥️ Multi-Arch` | `👾 Anti-Debug` | `♻️ Persist` | `💾 Lightweight` |
 |----------------|----------------|-------------|------------------|
 |  x86/ARM/MIPS  | Debug Detection| Auto-Run    | Low Resources    |
