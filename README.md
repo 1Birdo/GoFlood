@@ -66,6 +66,8 @@
 | **build.sh**         | ✅ Complete   | Cross-platform (Win/Linux/Mac)               |
 | **obf_build.sh**     | ✅ Complete   | Obfuscation + compression                    |
 
+
+<div align="center">
 ## 🛠️ Technical Topology
 
 ```text
@@ -86,6 +88,7 @@
 │ • Monitoring │      └─────────────────┘
 └──────────────┘
 ```
+</div>
 
 ### 🖥️ Server/C2 Setup
 
