@@ -132,12 +132,10 @@ Example: `![Method] 0.0.0.0 80 22 0656d970cef...`
 | `adduser` | `deluser` | `resetpw` | `db`    | `logs`  |
 |-----------|-----------|-----------|---------|---------|
 | Add user  | Delete    | Reset PW  | Database| Audit   |
-
 ### ⚙️ System
 | `ongoing` | `queue` | `cancel` | `reinstall` | `bots` |
 |-----------|---------|----------|-------------|--------|
 | Attacks   | Schedule| Cancel   | Reinstall   | Count  |
-
 ### 🛠️ Utilities
 | `logout`/`exit` | `clear`/`cls` | `help` | `stats` | `status` |
 |-----------------|---------------|--------|---------|----------|
@@ -155,21 +153,11 @@ Example: `![Method] 0.0.0.0 80 22 0656d970cef...`
 |-------------|------------|----------------|--------------|-----------|
 | Mutual Auth | PW Hashing | Real-time      | Priority     | Full Logs |
 
-  
 ## 🤖 Bot Features
 
 | `🖥️ Multi-Arch` | `👾 Anti-Debug` | `♻️ Persist` | `💾 Lightweight` |
 |----------------|----------------|-------------|------------------|
 |  x86/ARM/MIPS  | Debug Detection| Auto-Run    | Low Resources    |
-
-
-| Feature Demo                                                   | Description                                     | Preview |
-|----------------------------------------------------------------|-------------------------------------------------|---------|
-| [🚀 Starter Setup](https://github.com/user-attachments/assets/00b6ddb0-0c9e-47aa-9e91-08e689a1d272)  | Initial setup and certificate generation | ✅ |
-| [💻 CLI Interface](https://github.com/user-attachments/assets/b7349373-e985-4d10-ba7b-87edb3844247)  | Terminal interface and login showcase    | ✅ |
-| [🧨 Attack Management](https://github.com/user-attachments/assets/531f09ef-ae28-4bcc-aae4-aaa564162acd) | Launching and managing attacks        | ✅ |
-| [🛡️ Admin Controls](https://github.com/user-attachments/assets/e2b9535f-5ede-401c-bb2d-da97b601a118)    | User management, audit logs, system controls | ✅|
-| [🛡️ Support Scripts](https://github.com/user-attachments/assets/e2b9535f-5ede-401c-bb2d-da97b601a118)   | Full C2 setup  | ❎ |
 
 ## YT video (Still debaiting)
 Might make a video just for setup as well as to properly show it off as a whole.
@@ -180,3 +168,12 @@ Might make a video just for setup as well as to properly show it off as a whole.
 |-|-|-|
 | **Proxy Dashboard**<br>*Showing off Web-ui (05/06/25)*<br><video src="https://github.com/user-attachments/assets/raw/fbe96e3a-ed11-4ea2-b8f1-cb567129cba6" controls width="100%"></video> | **Terminal Output**<br>CLI outputs<br><video src="https://github.com/user-attachments/assets/raw/b7349373-e985-4d10-ba7b-87edb3844247" controls width="100%"></video> | **Starter Guide**<br>Login + commands<br><video src="https://github.com/user-attachments/assets/raw/00b6ddb0-0c9e-47aa-9e91-08e689a1d272" controls width="100%"></video> |
 | **Admin Commands**<br>Usage examples<br><video src="https://github.com/user-attachments/assets/raw/e2b9535f-5ede-401c-bb2d-da97b601a118" controls width="100%"></video> | **Attack / stress Example**<br>Filtered traffic demo<br><video src="https://github.com/user-attachments/assets/raw/531f09ef-ae28-4bcc-aae4-aaa564162acd" controls width="100%"></video> | |
+
+| Feature Demo                                                   | Description                                     | Preview |
+|----------------------------------------------------------------|-------------------------------------------------|---------|
+| [🚀 Starter Setup](https://github.com/user-attachments/assets/00b6ddb0-0c9e-47aa-9e91-08e689a1d272)  | Initial setup and certificate generation | ✅ |
+| [💻 CLI Interface](https://github.com/user-attachments/assets/b7349373-e985-4d10-ba7b-87edb3844247)  | Terminal interface and login showcase    | ✅ |
+| [🧨 Attack Management](https://github.com/user-attachments/assets/531f09ef-ae28-4bcc-aae4-aaa564162acd) | Launching and managing attacks        | ✅ |
+| [🛡️ Admin Controls](https://github.com/user-attachments/assets/e2b9535f-5ede-401c-bb2d-da97b601a118)    | User management, audit logs, system controls | ✅|
+| [🛡️ Support Scripts](https://github.com/user-attachments/assets/e2b9535f-5ede-401c-bb2d-da97b601a118)   | Full C2 setup  | ❎ |
+
