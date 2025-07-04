@@ -125,8 +125,8 @@ Remember to to customize settings via `config.json`
 
 ### 🚀 Attack
 `key is optional and doesn't need to be sent`
-`![Method] IP PORT TIME KEY`  
-Example: `![Method] 0.0.0.0 80 22 0656d970cef...`
+Example:-`![Method] IP PORT TIME KEY`  
+Example:-`![Method] 0.0.0.0 80 22 0656d970cef...`
 
 #### 👥 User Management
 | `adduser` | `deluser` | `resetpw` | `db`    | `logs`  |
