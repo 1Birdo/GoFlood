@@ -139,6 +139,7 @@ Remember to to customize settings via `config.json`
 ## 👨‍💻 Commands
 
 ### 🚀 Attack
+key is optional and doesn't need to be sent
 `![Method] IP PORT TIME KEY`  
 Example: `![Method] 0.0.0.0 80 22 0656d970cef...`
 
