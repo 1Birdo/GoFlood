@@ -37,24 +37,9 @@
 |---------------------------|--------------------|----------|-------------------------------------------|
 | Terminal Interface         | TLS 1.3            | 1337     | AES-256-GCM, P-384 ECDH                   |
 | Web Dashboard             | WebSocket + TLS    | 8443     | Mutual TLS, OCSP Stapling                 |
-| Bot Communication         | mTLS 1.3           | 7002     | X.509 Cert Pinning, CA Verification       |
-
-#### 🤖 Bot Connection Protocol
-```text
-1. Connection Initiation:
-   - Bot → Server: TCP/7002 with ClientHello (TLS 1.3)
-   
-2. Mutual Authentication:
-   - Server verifies bot cert against pinned CA
-   - Bot verifies server cert fingerprint
-   
-3. Secure Channel:
-   - Established with forward secrecy
-   - All traffic encrypted with ChaCha20-Poly1305
- ```   
+| Bot Communication         | mTLS 1.3           | 7002     | X.509 Cert Pinning, CA Verification       | 
 
  *⚠️ **Note**: In the wake of coordinated efforts such as Operation EndGame, PowerOFF, and Cronos, this project serves only as an educational and analytical reference for understanding botnet infrastructure. Real-world deployment of such tools carries significant legal risk*.
-
 
  ## 📁 Project Status
 
@@ -175,7 +160,7 @@ Example: `![Method] 0.0.0.0 80 22 0656d970cef...`
 
 | `🖥️ Multi-Arch` | `👾 Anti-Debug` | `♻️ Persist` | `💾 Lightweight` |
 |----------------|----------------|-------------|------------------|
-| x86/ARM/MIPS  | Debug Detection| Auto-Run    | Low Resources    |
+|  x86/ARM/MIPS  | Debug Detection| Auto-Run    | Low Resources    |
 
 
 | Feature Demo                                                   | Description                                     | Preview |
