@@ -152,10 +152,10 @@ Example: `![Method] 0.0.0.0 80 22 0656d970cef...`
 |----------------|----------------|-------------|------------------|
 |  x86/ARM/MIPS  | Debug Detection| Auto-Run    | Low Resources    |
 
-## YT video (Still debaiting)
+## Easy Videos (21/06/25) - All videos need updating
+### YT video (Still debaiting)
 Might make a video just for setup as well as to properly show it off as a whole.
 
-## Easy Videos (21/06/25) - All videos need updating
 
 | | | |
 |-|-|-|
