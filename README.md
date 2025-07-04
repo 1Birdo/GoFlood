@@ -140,6 +140,10 @@ Example: `![Method] 0.0.0.0 80 22 0656d970cef...`
 | `logout`/`exit` | `clear`/`cls` | `help` | `stats` | `status` |
 |-----------------|---------------|--------|---------|----------|
 | Exit session    | Clear screen  | Help   | Bot stats| C2 status|
+#### 🤖 Bot Features
+| `🖥️ Multi-Arch` | `👾 Anti-Debug` | `♻️ Persist` | `💾 Lightweight` |
+|----------------|----------------|-------------|------------------|
+|  x86/ARM/MIPS  | Debug Detection| Auto-Run    | Low Resources    |
 #### 🔐 Security
 | `📌 Pinning` | `⏱️ Rate Limit` | `🕒 Sessions` | `🛡️ Sanitize` | `🔑 TOTP` |
 |-------------|----------------|--------------|---------------|----------|
@@ -147,12 +151,8 @@ Example: `![Method] 0.0.0.0 80 22 0656d970cef...`
 | `🔒 TLS 1.3` | `🔐 Bcrypt` | `📊 Live Stats` | `⚔️ Attack Q` | `📜 Audit` |
 |-------------|------------|----------------|--------------|-----------|
 | Mutual Auth | PW Hashing | Real-time      | Priority     | Full Logs |
-#### 🤖 Bot Features
-| `🖥️ Multi-Arch` | `👾 Anti-Debug` | `♻️ Persist` | `💾 Lightweight` |
-|----------------|----------------|-------------|------------------|
-|  x86/ARM/MIPS  | Debug Detection| Auto-Run    | Low Resources    |
 
-## Easy Videos (21/06/25) - All videos need updating
+### Easy Videos (21/06/25) - All videos need updating
 ### YT video (Still debaiting)
 Might make a video just for setup as well as to properly show it off as a whole.
 
