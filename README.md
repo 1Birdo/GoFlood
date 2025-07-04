@@ -150,7 +150,6 @@ Example:-`![Method] 0.0.0.0 80 22 0656d970cef...`
 |-------------|----------------|--------------|---------------|----------|
 | CA Verify  | IP/User Throttle| Auto Timeout | Injection Proof| 2FA Codes|
 | `🔒 TLS 1.3` | `🔐 Bcrypt` | `📊 Live Stats` | `⚔️ Attack Q` | `📜 Audit` |
-|-------------|------------|----------------|--------------|-----------|
 | Mutual Auth | PW Hashing | Real-time      | Priority     | Full Logs |
 
 ### Easy Videos (21/06/25) - All videos need updating
