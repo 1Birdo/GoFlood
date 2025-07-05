@@ -1,4 +1,5 @@
-# GoFlood - DDoS Framework
+# GoFlood - DDoS Framework 
+>(Deprecated Project, Finished Just needs slight improvements)
 
 ![Go Version](https://img.shields.io/badge/go-1.21+-blue.svg)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
