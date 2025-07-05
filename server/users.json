@@ -1,17 +1,13 @@
 [
   {
     "username": "root",
-    "passwordHash": "$2a$10$MhgXXCentCfZEce1x5yvyOA1GHxOto8Iys3PCD6UxD.xPmjMvueuW",
-    "apiKey": "WsTbqsBAcCfR5bIAL26fHKd8xvuaLOgRLUYaxgf78LMDsufLXHckbXSFaIwgwPhG",
-    "expire": "2035-06-26T21:53:02.9873086+01:00",
+    "passwordHash": "$2a$10$xnrwjuRRTONaspJtnUtyauZpzAEgBt6tUy3UBXNBFVuYMsDKn9Hi2",
+    "expire": "2035-07-04T23:51:54.473096664+01:00",
     "level": "Owner",
-    "lastLogin": "2025-06-26T21:53:21.9748084+01:00",
+    "lastLogin": "2025-07-04T23:52:00.126617146+01:00",
     "failedAttempts": 0,
     "lockedUntil": "0001-01-01T00:00:00Z",
-    "createdAt": "2025-06-26T21:53:02.9883073+01:00",
-    "lastActivity": "2025-06-26T21:53:21.9748084+01:00",
-    "walletAddress": "",
-    "credits": -1,
-    "transactions": []
+    "createdAt": "2025-07-04T23:51:54.473141265+01:00",
+    "lastActivity": "2025-07-04T23:52:00.126617587+01:00"
   }
 ]

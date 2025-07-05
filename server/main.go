@@ -1843,7 +1843,7 @@ func getPrompt(userLevel int) string {
 		levelName = "BASIC"
 		levelColor = "240"
 	}
-	return fmt.Sprintf("\n\r\033[38;5;240m[\033[38;5;237mPr\033[38;5;243mo\033[38;5;246mpt\033[38;5;240m]@[%s]\033[38;5;114m► \033[0m",
+	return fmt.Sprintf("\n\r\033[38;5;240m[\033[38;5;237mPr\033[38;5;243mom\033[38;5;246mpt\033[38;5;240m]@[%s]\033[38;5;114m► \033[0m",
 		colorizeText(levelName, levelColor))
 }
 
@@ -2316,6 +2316,8 @@ func handleAddUser(conn net.Conn, parts []string) {
 	users = append(users, newUser)
 	saveUsers(users)
 	logAuditEvent("SYSTEM", "USER", fmt.Sprintf("User %s created with level %s", username, validLevel))
+	animateText(conn, fmt.Sprintf("User %s created successfully with password: %s", username, password), 15*time.Millisecond, ColorSuccess)
+
 }
 
 func handleDeleteUser(conn net.Conn, parts []string) {

