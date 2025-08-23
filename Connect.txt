@@ -1,1 +1,5 @@
+To Connect via Terminal / Openssl client on a CLI via linux or wsl use this command 
+
+
 openssl s_client -connect 127.0.0.1:420   -cert certs/client.crt -key certs/client.key   -CAfile certs/ca.crt
+
