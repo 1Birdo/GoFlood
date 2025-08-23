@@ -10,6 +10,7 @@
 
 > ### 📶 This project merges **Gostress-V2 + Gostress-Enhanced** and **BotnetGo**, offering a complete **C2 Framework solution**:
 > ### 🏗️ Proxy Client is Optional
+> ### To connect via Terminal Port via Openssl please check the **Connect.txt** file.
 ---
 
 ## 🖥️ C2 Closeups
