@@ -8,6 +8,10 @@
 ![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20WSL%20%7C%20Windows%20%7C%20macOS-blueviolet)
 ![Architecture](https://img.shields.io/badge/Architecture-Distributed-orange)
 
+## A lil Youtube Video for an example / Demostration
+https://www.youtube.com/watch?v=a1IoPvMdv-g
+
+
 > ### 📶 This project merges **Gostress-V2 + Gostress-Enhanced** and **BotnetGo**, offering a complete **C2 Framework solution**:
 > ### 🏗️ Proxy Client is Optional
 > ### 📁 To connect via Terminal Port via Openssl please check the **Connect.txt** file.
