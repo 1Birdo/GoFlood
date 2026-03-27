@@ -1,0 +1,15 @@
+{
+  "listen_addr": "0.0.0.0:7003",
+  "backend_addr": "127.0.0.1:7002",
+  "dashboard_port": "8443",
+  "admin_username": "admin",
+  "admin_password": "CHANGE_ME",
+  "cert_file": "certs/server.pem",
+  "key_file": "certs/server.key",
+  "ca_cert_file": "certs/ca.crt",
+  "stats_interval": 5,
+  "max_connections": 1000,
+  "max_buffer_size": 1048576,
+  "jwt_secret": "",
+  "enable_debug_logs": false
+}

